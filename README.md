@@ -1,6 +1,13 @@
 <div align="center">
-  <img src="assets/banner.svg" alt="Mikasa Music Bot" width="100%">
+  <img src="assets/banner.svg" alt="mikasa-music-bot" width="100%">
 </div>
+
+<div align="center">
+  <img src="assets/hero.jpg" alt="mikasa-music-bot" width="100%">
+  <br>
+  <sub><i>Local-first playback · live panel · zero stutter — rendered in 3D</i></sub>
+</div>
+
 
 <div align="center">
 
