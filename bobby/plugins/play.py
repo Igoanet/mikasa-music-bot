@@ -39,6 +39,10 @@ async def play_hndlr(
     url: str = None,
     query: str = "",
 ) -> None:
+    try:
+        await m.react("❤️")
+    except Exception:
+        pass
     if not getattr(m, "autoplay", False):
         # a real request always wins over a suggestion card or an autoplay
         # pick that is still being looked up in the background
@@ -47,7 +51,10 @@ async def play_hndlr(
         recs.cancel(m.chat.id)
     # No "searching" notice: go straight to a playback status, so the
     # request reads as streaming rather than a lookup (2026-09-30).
-    sent = await m.reply_text(m.lang["play_3"])
+    try:
+        sent = await m.reply_text(m.lang["play_3"], effect_id=5104841245755180586)
+    except Exception:
+        sent = await m.reply_text(m.lang["play_3"])
     file = None
     mention = m.from_user.mention
     media = tg.get_media(m.reply_to_message) if m.reply_to_message else None

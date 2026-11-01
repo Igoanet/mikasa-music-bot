@@ -69,74 +69,50 @@ class Inline:
         if paused and head:
             head = "\u23f8 " + head
 
-        # Row 1: the song details / progress line the caller supplies.  No
-        # "Now playing" placeholder exists any more (owner 2026-10-07) -- the
-        # caller always has the track details while a song is playing.
+        # Row 1: the song details / progress line the caller supplies.
         if head:
             rows.append(
                 [
                     self.ikb(
                         text=head,
                         callback_data="controls status %s" % chat_id,
-                        style=enums.ButtonStyle.PRIMARY,
+                        style=enums.ButtonStyle.DANGER,
                     )
                 ]
             )
 
         if not remove:
-            # Row 2 - seek (rewind / fast-forward pair)
+            # Row 2 - all 5 player controls in one row, red theme
             rows.append(
                 [
                     self.ikb(
-                        text="\u23ea  -15s",
+                        text="\u23ea -15s",
                         callback_data="controls seekb %s" % chat_id,
-                        style=enums.ButtonStyle.PRIMARY,
+                        style=enums.ButtonStyle.DANGER,
                     ),
                     self.ikb(
-                        text="+15s  \u23e9",
-                        callback_data="controls seekf %s" % chat_id,
-                        style=enums.ButtonStyle.PRIMARY,
-                    ),
-                ]
-            )
-            # Row 3 - exactly three buttons
-            rows.append(
-                [
-                    self.ikb(
-                        text="\U0001f504  Replay",
+                        text="\U0001f504 Replay",
                         callback_data="controls replay %s" % chat_id,
-                        style=enums.ButtonStyle.PRIMARY,
+                        style=enums.ButtonStyle.DANGER,
                     ),
                     self.ikb(
-                        text=("\u25b6  Play" if paused else "\u23f8  Pause"),
+                        text=("\u25b6 Play" if paused else "\u23f8 Pause"),
                         callback_data="controls %s %s" % (
                             "resume" if paused else "pause", chat_id),
                         style=enums.ButtonStyle.DANGER,
                     ),
                     self.ikb(
-                        text="\u23ed  Next",
+                        text="+15s \u23e9",
+                        callback_data="controls seekf %s" % chat_id,
+                        style=enums.ButtonStyle.DANGER,
+                    ),
+                    self.ikb(
+                        text="\u23ed Next",
                         callback_data="controls skip %s" % chat_id,
-                        style=enums.ButtonStyle.SUCCESS,
+                        style=enums.ButtonStyle.DANGER,
                     ),
                 ]
             )
-            # Row 4 - autoplay on its own
-            if autoplay is not None and (is_admin or autoplay_all):
-                _lang = _lang or {}
-                rows.append(
-                    [
-                        self.ikb(
-                            text=_lang.get(
-                                "autoplay_btn_on" if autoplay else "autoplay_btn_off",
-                                "\u267e\ufe0f Autoplay: On" if autoplay
-                                else "\u267e\ufe0f Autoplay: Off",
-                            ),
-                            callback_data="controls autoplay %s" % chat_id,
-                            style=(enums.ButtonStyle.SUCCESS if autoplay
-                                   else enums.ButtonStyle.PRIMARY),
-                        )
-                    ]
-                )
         return self.ikm(rows)
 
     def help_markup(

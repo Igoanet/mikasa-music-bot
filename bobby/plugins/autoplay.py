@@ -19,6 +19,10 @@ from bobby.helpers import _recs as recs
 @lang.language()
 @can_manage_vc
 async def _autoplay(_, m: types.Message):
+    try:
+        await m.react("❤️")
+    except Exception:
+        pass
     chat_id = m.chat.id
     status = await db.get_autoplay(chat_id)
 
@@ -29,14 +33,19 @@ async def _autoplay(_, m: types.Message):
         elif arg in {"off", "disable", "no"}:
             status = False
         else:
-            return await m.reply_text(m.lang["autoplay_usage"])
+            return await m.reply_text(
+                "<b>‘ 𝐌𝐢𝐤𝐚𝐬𝐚 𝐗 𝐌𝐮𝐬𝐢𝐜. ♪ 🩸 🫀</b>\n\n"
+                "> <b>Usage :</b> <code>/autoplay on</code> | <code>/autoplay off</code>"
+            )
         await db.set_autoplay(chat_id, status)
         if not status:
             # an autoplay pick already being looked up must not still land
             recs.cancel(chat_id)
-        return await m.reply_text(
-            m.lang["autoplay_set_on"] if status else m.lang["autoplay_set_off"]
+        msg_text = (
+            "<b>‘ 𝐌𝐢𝐤𝐚𝐬𝐚 𝐗 𝐌𝐮𝐬𝐢𝐜. ♪ 🩸 🫀</b>\n\n"
+            f"> <b>Autoplay :</b> {'<b>Enabled ✅</b>' if status else '<b>Disabled ❌</b>'}"
         )
+        return await m.reply_text(msg_text)
 
     admin_only = await db.get_play_mode(chat_id)
     force_all = await db.get_force_mode(chat_id)

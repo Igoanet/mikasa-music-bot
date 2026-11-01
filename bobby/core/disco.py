@@ -123,65 +123,12 @@ def _count_clashes(assign, spans) -> int:
 
 
 def _recolor(markup, step: int = 0):
-    """Randomise the colours while keeping touching buttons distinct.
-
-    Touching = same-row neighbours PLUS any button in the row above whose
-    horizontal span overlaps.  Rows of different lengths do not line up in
-    columns, so a full-width row touches every button beneath it.
-
-    Telegram has only three button colours, and a 1-2-3-1 grid (progress,
-    seek, controls, autoplay) cannot be coloured with zero clashes -- the
-    full-width autoplay row sits under three different colours.  So the
-    minimum is found exactly (a search over the whole panel) and one of the
-    BEST colourings is chosen at random each tick: the single unavoidable
-    clash is never worse than it must be, and it moves around instead of
-    sticking to the same pair.
-    """
+    """Keep all player panel buttons styled red (DANGER)."""
     out = copy.deepcopy(markup)
     rows = getattr(out, "inline_keyboard", []) or []
-    shape = [len(r) for r in rows]
-    spans = [_spans(n) for n in shape]
-    combos = 1
-    for n in shape:
-        combos *= 3 ** n
-    if combos > 60000 or not shape:
-        # too large to search exhaustively: keep the greedy pass
-        above_spans: list = []
-        for row in rows:
-            sp = _spans(len(row))
-            picked: list = []
-            for i, btn in enumerate(row):
-                banned = set()
-                if i > 0:
-                    banned.add(picked[i - 1][1])
-                for s2, c2 in above_spans:
-                    if _overlap(sp[i], s2):
-                        banned.add(c2)
-                allowed = [c for c in _PALETTE if c not in banned] or list(_PALETTE)
-                pick = random.choice(allowed)
-                picked.append((sp[i], pick))
-                btn.style = pick
-            above_spans = picked
-        return out
-
-    best, best_c = [], None
-    for code in range(combos):
-        x, assign = code, []
-        for n in shape:
-            row = []
-            for _ in range(n):
-                row.append(_PALETTE[x % len(_PALETTE)])
-                x //= len(_PALETTE)
-            assign.append(row)
-        c = _count_clashes(assign, spans)
-        if best_c is None or c < best_c:
-            best_c, best = c, [assign]
-        elif c == best_c:
-            best.append(assign)
-    chosen = random.choice(best)
-    for row, cols in zip(rows, chosen):
-        for btn, col in zip(row, cols):
-            btn.style = col
+    for row in rows:
+        for btn in row:
+            btn.style = enums.ButtonStyle.DANGER
     return out
 
 

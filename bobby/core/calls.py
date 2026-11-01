@@ -463,17 +463,19 @@ class TgCall(PyTgCalls):
             if not seek_time:
                 media.time = 1
                 await db.add_call(chat_id)
-                text = _lang["play_media"].format(
-                    media.url,
-                    media.title,
-                    media.duration,
-                    media.user,
+                text = (
+                    "<b>‘ 𝐌𝐢𝐤𝐚𝐬𝐚 𝐗 𝐌𝐮𝐬𝐢𝐜. ♪ 🩸 🫀</b>\n\n"
+                    f"<blockquote expandable>✨ <b>Track :</b> <a href=\"{media.url}\">{media.title}</a>\n"
+                    f"✨ <b>Duration :</b> {media.duration}\n"
+                    f"✨ <b>Requested By :</b> {media.user}\n"
+                    f"✨ <b>Stream :</b> Audio 📻</blockquote>"
                 )
                 from bobby.core.disco import progress_bar as _bar
                 keyboard = buttons.controls(
                     chat_id, status=_bar(0, getattr(media, "duration_sec", 0)),
                     autoplay=await db.get_autoplay(chat_id),
-                    _lang=_lang, is_admin=True,autoplay_all=await db.get_autoplay_all(chat_id),)
+                    _lang=_lang, is_admin=True, autoplay_all=await db.get_autoplay_all(chat_id),
+                )
                 _panel_id = getattr(message, "id", 0)
                 try:
                     if _thumb:
@@ -484,22 +486,51 @@ class TgCall(PyTgCalls):
                             ),
                             reply_markup=keyboard,
                         )
+                        try:
+                            await message.react("❤️")
+                        except Exception:
+                            pass
                     else:
                         await message.edit_text(text, reply_markup=keyboard)
                 except (ChatSendMediaForbidden, ChatSendPhotosForbidden, MessageIdInvalid):
                     if _thumb:
-                        sent = await app.send_photo(
-                            chat_id=chat_id,
-                            photo=_thumb,
-                            caption=text,
-                            reply_markup=keyboard,
-                        )
+                        try:
+                            sent = await app.send_photo(
+                                chat_id=chat_id,
+                                photo=_thumb,
+                                caption=text,
+                                reply_markup=keyboard,
+                                effect_id=5104841245755180586,
+                            )
+                        except Exception:
+                            sent = await app.send_photo(
+                                chat_id=chat_id,
+                                photo=_thumb,
+                                caption=text,
+                                reply_markup=keyboard,
+                            )
+                        try:
+                            await sent.react("❤️")
+                        except Exception:
+                            pass
                     else:
-                        sent = await app.send_message(
-                            chat_id=chat_id,
-                            text=text,
-                            reply_markup=keyboard,
-                        )
+                        try:
+                            sent = await app.send_message(
+                                chat_id=chat_id,
+                                text=text,
+                                reply_markup=keyboard,
+                                effect_id=5104841245755180586,
+                            )
+                        except Exception:
+                            sent = await app.send_message(
+                                chat_id=chat_id,
+                                text=text,
+                                reply_markup=keyboard,
+                            )
+                        try:
+                            await sent.react("❤️")
+                        except Exception:
+                            pass
                     media.message_id = sent.id
                     _panel_id = sent.id
                 # the panel's buttons cycle colours while this call is live
