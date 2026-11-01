@@ -93,23 +93,17 @@ def suggest(chat_id: int, seed: str, _lang: dict) -> None:
 
 
 def autoplay(chat_id: int, seed: str, _lang: dict) -> None:
-    """Fire-and-forget: keep the music going after the queue ran dry.
-
-    Same seeding and same newest-request-wins rule as ``suggest``; when
-    nothing fresh is left to play the chat still gets the suggestion card
-    instead of silence."""
-    token = _gen.get(chat_id, 0) + 1
-    _gen[chat_id] = token
-    task = asyncio.create_task(_autoplay(chat_id, seed, _lang, token))
-    _tasks.add(task)
-    task.add_done_callback(_tasks.discard)
+    """Disabled: suggestions must never play automatically without user click."""
+    return
 
 
 def cancel(chat_id: int) -> None:
     """Invalidate whatever this chat's pending card/autoplay task is about
-    to do.  A real /play, a /stop, or switching autoplay off must always
-    win over a lookup that started before it."""
+    to do, and delete any active card when new music starts."""
     _gen[chat_id] = _gen.get(chat_id, 0) + 1
+    old = _cards.pop(chat_id, None)
+    if old:
+        asyncio.create_task(_delete(chat_id, old))
 
 
 async def _may_autoplay(chat_id: int, token: int) -> bool:
@@ -275,43 +269,18 @@ async def _delete(chat_id: int, message_id: int) -> None:
 
 
 async def autoplay_now(chat_id: int, seed: str, _lang: dict) -> bool:
-    """Start the next related song while the voice chat is STILL up.
-
-    Called the moment the queue runs dry with autoplay on.  Returns True only
-    when playback was really handed to /play, so the caller can skip the
-    teardown and leave the assistant in the chat (owner 2026-10-18).
-    """
-    token = _gen.get(chat_id, 0) + 1
-    _gen[chat_id] = token
-    _pre_start[chat_id] = token
-    try:
-        items = await items_for(seed)
-        if not items:
-            return False
-        if _gen.get(chat_id) != token or not await db.get_autoplay(chat_id):
-            return False
-        recent = _played.setdefault(chat_id, [])
-        chosen = await _pick(chat_id, seed, items, recent)
-        if not chosen:
-            logger.info("autoplay: nothing fresh after %s in %s", seed, chat_id)
-            return False
-        item, query_text, track = chosen
-        recent.extend([item["id"], track.id])
-        del recent[:-_AUTOPLAY_MEMORY]
-        return bool(await _play(chat_id, item, query_text, track, _lang, token))
-    except Exception as ex:
-        logger.warning("autoplay hand-off failed in %s: %s: %s",
-                       chat_id, type(ex).__name__, ex)
-        return False
-    finally:
-        _pre_start.pop(chat_id, None)
+    """Disabled: suggestions must never play automatically without user click."""
+    return False
 
 
 async def _post(chat_id: int, seed: str, _lang: dict, token: int) -> None:
     try:
+        # Suggestions only appear when the bot is silent and no songs remain in queue
+        if await db.get_call(chat_id) or bool(queue.get_queue(chat_id)):
+            return
         items = await items_for(seed)
-        if _gen.get(chat_id) != token:
-            return  # a newer song end took over this chat's card
+        if _gen.get(chat_id) != token or await db.get_call(chat_id) or bool(queue.get_queue(chat_id)):
+            return
         if not items:
             logger.info("recs: nothing related to %s for chat %s", seed, chat_id)
             return
@@ -323,9 +292,7 @@ async def _post(chat_id: int, seed: str, _lang: dict, token: int) -> None:
             _lang.get("recs_text", DEFAULT_TEXT),
             reply_markup=markup(items, seed, 0, _lang),
         )
-        if _gen.get(chat_id) != token:
-            # superseded while sending: the newer card is already the live
-            # one, so this message must go instead of shadowing it
+        if _gen.get(chat_id) != token or await db.get_call(chat_id) or bool(queue.get_queue(chat_id)):
             await _delete(chat_id, sent.id)
             return
         _cards[chat_id] = sent.id

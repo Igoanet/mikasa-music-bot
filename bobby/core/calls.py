@@ -757,39 +757,17 @@ class TgCall(PyTgCalls):
             if finished is not None and finished is not media:
                 queue.purge_item(finished)
         if not media:
-            # the music stops here: offer what to play next, seeded by the
-            # track that just ended (skipped or played out). A manual /stop
-            # never comes this way, so it stays silent. Best-effort only —
-            # The leave is mandatory and happens before even resolving the
-            # language for the decorative recommendation card.
+            # The music stops here: offer suggestions only after there is no music left
+            # in queue and the assistant has left the VC. Background autoplay is disabled —
+            # a suggestion only plays if a user explicitly taps the button on the card.
             seed = getattr(finished, "seed", None)
-            # AUTOPLAY FIRST, LEAVE LAST (owner 2026-10-18): with autoplay on
-            # the next related song starts while the assistant is still IN the
-            # voice chat, so one song ending flows straight into the next.
-            # Tearing down first used to leave an empty VC and the hand-off
-            # could never resume from there.
-            if seed and await db.get_autoplay(chat_id):
-                try:
-                    from bobby.helpers import _recs as recs  # lazy: needs bobby.app
-                    _lang_ap = await lang.get_lang(chat_id)
-                    if await recs.autoplay_now(chat_id, seed, _lang_ap):
-                        logger.info(
-                            "autoplay: next song started in %s - staying in VC",
-                            chat_id,
-                        )
-                        return
-                except Exception as ex:
-                    logger.warning("autoplay hand-off failed in %s: %s: %s",
-                                   chat_id, type(ex).__name__, ex)
             stopped = await self.stop(chat_id, generation)
             if not stopped:
                 return
-            if seed:
+            if seed and not queue.get_queue(chat_id):
                 try:
                     from bobby.helpers import _recs as recs  # lazy: needs bobby.app
                     _lang = await lang.get_lang(chat_id)
-                    # autoplay already had its chance above; what is left is
-                    # the suggestion card so the group can pick one itself.
                     recs.suggest(chat_id, seed, _lang)
                 except Exception as ex:
                     logger.warning(

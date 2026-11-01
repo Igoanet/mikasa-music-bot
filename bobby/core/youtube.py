@@ -1840,23 +1840,58 @@ class YouTube:
     async def playlist(self, limit: int, user: str, url: str, video: bool) -> list[Track | None]:
         tracks = []
         try:
-            plist = await Playlist.get(url)
-            for data in plist["videos"][:limit]:
-                track = Track(
-                    id=data.get("id"),
-                    channel_name=data.get("channel", {}).get("name", ""),
-                    duration=data.get("duration"),
-                    duration_sec=utils.to_seconds(data.get("duration")),
-                    title=data.get("title")[:25],
-                    thumbnail=data.get("thumbnails")[-1].get("url").split("?")[0],
-                    url=data.get("link").split("&list=")[0],
-                    user=user,
-                    view_count="",
-                    video=video,
-                )
-                tracks.append(track)
-        except Exception:
-            pass
+            cmd = [
+                "yt-dlp",
+                "--flat-playlist",
+                "-J",
+                "--no-warnings",
+                "--playlist-end", str(limit),
+                url,
+            ]
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30.0)
+            if proc.returncode == 0 and stdout:
+                data = json.loads(stdout.decode("utf-8", errors="replace"))
+                entries = data.get("entries") or []
+                for entry in entries[:limit]:
+                    if not entry:
+                        continue
+                    v_id = entry.get("id")
+                    if not v_id:
+                        continue
+                    raw_dur = entry.get("duration")
+                    if raw_dur and isinstance(raw_dur, (int, float)):
+                        duration_sec = int(raw_dur)
+                        m_dur, s_dur = divmod(duration_sec, 60)
+                        h_dur, m_dur = divmod(m_dur, 60)
+                        duration = f"{h_dur}:{m_dur:02d}:{s_dur:02d}" if h_dur else f"{m_dur}:{s_dur:02d}"
+                    else:
+                        duration = str(entry.get("duration_string") or "0:00")
+                        duration_sec = utils.to_seconds(duration)
+                    thumbs = entry.get("thumbnails") or []
+                    thumb_url = thumbs[-1].get("url") if thumbs else f"https://img.youtube.com/vi/{v_id}/hqdefault.jpg"
+                    if thumb_url and "?" in thumb_url:
+                        thumb_url = thumb_url.split("?")[0]
+                    v_title = entry.get("title") or "Unknown"
+                    track = Track(
+                        id=v_id,
+                        channel_name=entry.get("uploader") or entry.get("channel") or "",
+                        duration=duration,
+                        duration_sec=duration_sec,
+                        title=v_title[:60],
+                        thumbnail=thumb_url,
+                        url=f"https://www.youtube.com/watch?v={v_id}",
+                        user=user,
+                        view_count=str(entry.get("view_count") or ""),
+                        video=video,
+                    )
+                    tracks.append(track)
+        except Exception as ex:
+            logger.warning("yt.playlist extraction failed for %s: %s", url, ex)
         return tracks
 
     async def download(
