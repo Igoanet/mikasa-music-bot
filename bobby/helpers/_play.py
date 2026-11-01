@@ -192,6 +192,30 @@ def checkUB(play):
                         arm_delete(umm)
                         return umm
                 except Exception as ex:
+                    # Self-healing: if the assistant account is in too many groups/channels (500 limit),
+                    # prune the oldest idle dialogs and retry joining seamlessly.
+                    if "ChannelsTooMuch" in type(ex).__name__ or "ChannelsTooMuch" in str(ex):
+                        logger.warning("Assistant reached channel limit (ChannelsTooMuch) in %s; auto-pruning idle chats...", chat_id)
+                        pruned = 0
+                        try:
+                            async for dialog in client.get_dialogs():
+                                c_id = dialog.chat.id
+                                if c_id not in db.active_calls and c_id not in [app.logger, chat_id]:
+                                    try:
+                                        await client.leave_chat(c_id)
+                                        pruned += 1
+                                        if pruned >= 10:
+                                            break
+                                    except Exception:
+                                        pass
+                            if pruned > 0:
+                                await asyncio.sleep(2)
+                                await client.join_chat(invite_link)
+                                await umm.delete()
+                                return await play(_, m, force, m3u8, video, url, query)
+                        except Exception as prune_ex:
+                            logger.error("ChannelsTooMuch recovery failed in %s: %s", chat_id, prune_ex)
+
                     logger.error(f"Error joining chat - {chat_id}: {ex}")
                     await umm.edit_text(
                         m.lang["play_invite_error"].format(type(ex).__name__)

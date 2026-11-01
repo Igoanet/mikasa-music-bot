@@ -21,7 +21,7 @@ from py_yt import Playlist, VideosSearch
 from bobby import config, logger
 from bobby.core.audius import audius
 from bobby.core.jiosaavn import clean_query, is_copy, saavn
-from bobby.core import yuki
+from bobby.core import worker_api, yuki
 from bobby.core.spool import spool
 from bobby.helpers import Track, utils
 
@@ -1900,9 +1900,14 @@ class YouTube:
             url_candidates = audius.stream_candidates(video_id)
         else:
             url_candidates = [self.base + video_id]
-        # Yuki Music API download tier (owner 2026-10-06): fetch the file
-        # through the API so the last-resort download never touches the
-        # bot-walled YouTube origin.  Falls through on any failure.
+        # Worker API tier (from Youtube (3).py) - high speed direct CDN download
+        if not is_saavn and not is_audius:
+            worker_path = await worker_api.download(video_id, video=video)
+            if worker_path:
+                logger.info("download[%s]: worker API file", video_id)
+                return worker_path
+
+        # Yuki Music API download tier (fallback)
         if not is_saavn and not is_audius and not video:
             yuki_path = await yuki.download(video_id)
             if yuki_path:
