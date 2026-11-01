@@ -460,9 +460,9 @@ class TgCall(PyTgCalls):
                 return
             # measure this play: source underrun vs consumer stall, per chat
             pulse.watch(chat_id, media.id, media.file_path, media.duration_sec)
+            media.time = seek_time if seek_time else 1
+            await db.add_call(chat_id)
             if not seek_time:
-                media.time = 1
-                await db.add_call(chat_id)
                 text = (
                     "<b>‘ 𝐌𝐢𝐤𝐚𝐬𝐚 𝐗 𝐌𝐮𝐬𝐢𝐜. ♪ 🩸 🫀</b>\n\n"
                     f"<blockquote expandable>✨ <b>Track :</b> <a href=\"{media.url}\">{media.title}</a>\n"

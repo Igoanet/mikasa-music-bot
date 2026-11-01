@@ -40,6 +40,7 @@ class MongoDB:
         # runtime-only caches (were in-memory in the Mongo version too)
         self.admin_list = {}
         self.active_calls = {}
+        self.paused = {}
         self.admin_play = []
         self.force_all = []
         self.autoplay = []
@@ -90,18 +91,33 @@ class MongoDB:
 
     # CACHE
     async def get_call(self, chat_id: int) -> bool:
-        return chat_id in self.active_calls
+        if bool(self.active_calls.get(chat_id, 0)):
+            return True
+        from bobby.core.queue import queue
+        return bool(queue.get_current(chat_id))
 
     async def add_call(self, chat_id: int) -> None:
         self.active_calls[chat_id] = 1
+        self.paused.pop(chat_id, None)
 
     async def remove_call(self, chat_id: int) -> None:
         self.active_calls.pop(chat_id, None)
+        self.paused.pop(chat_id, None)
 
-    async def playing(self, chat_id: int, paused: bool = None) -> bool | None:
+    async def playing(self, chat_id: int, paused: bool = None) -> bool:
         if paused is not None:
-            self.active_calls[chat_id] = int(not paused)
-        return bool(self.active_calls.get(chat_id, 0))
+            if paused:
+                self.paused[chat_id] = True
+            else:
+                self.paused.pop(chat_id, None)
+                self.active_calls[chat_id] = 1
+
+        is_active = bool(self.active_calls.get(chat_id, 0))
+        if not is_active:
+            from bobby.core.queue import queue
+            is_active = bool(queue.get_current(chat_id))
+
+        return is_active and not bool(self.paused.get(chat_id, False))
 
     async def get_admins(self, chat_id: int, reload: bool = False) -> list[int]:
         from bobby.helpers._admins import reload_admins
