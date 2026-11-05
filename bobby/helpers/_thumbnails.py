@@ -17,32 +17,52 @@ _HELPERS_DIR = os.path.dirname(__file__)
 _FONT_BOLD = os.path.join(_HELPERS_DIR, "Raleway-Bold.ttf")
 _FONT_LIGHT = os.path.join(_HELPERS_DIR, "Inter-Light.ttf")
 
-# Clean common YouTube noise from titles
-_TITLE_NOISE = re.compile(
-    r'\s*[\|\-\(\[]\s*(?:'
-    r'Official\s*(?:Music\s*)?Video|'
-    r'Official\s*Audio|'
-    r'Full\s*(?:Video\s*)?Song|'
-    r'Full\s*Video|'
-    r'Video\s*Song|'
-    r'Video|'
-    r'Lyric(?:s|al)?\s*Video|'
-    r'Audio|'
-    r'HD|'
-    r'HQ|'
-    r'4K|'
-    r'1080p|'
-    r'Visuali[sz]er'
-    r')[\)\]]?\s*',
-    re.IGNORECASE,
-)
+
+def clean_song_name(raw_title: str) -> str:
+    """Extract strictly the clean song name, removing actors, movies, and noise."""
+    if not raw_title:
+        return "Unknown Track"
+    t = raw_title.strip()
+    # Strip bracketed content: (Official Video), [4K], (From "Bajirao Mastani")
+    t = re.sub(r'[\(\[].*?[\)\]]', '', t).strip()
+    # Strip video/audio descriptors
+    t = re.sub(r'(?i)\b(?:official\s*(?:music\s*)?video|official\s*audio|full\s*video(?:\s*song)?|video\s*song|lyric(?:s|al)?\s*video|hd|hq|4k|1080p|visualizer)\b', '', t).strip()
+
+    # Split on pipe: first segment is universally the song title in Indian releases
+    if "|" in t:
+        parts = [p.strip() for p in t.split("|") if p.strip()]
+        if parts:
+            t = parts[0]
+
+    # Split on dash
+    if " - " in t or " – " in t or " — " in t:
+        t = re.sub(r'\s*[–—]\s*', ' - ', t)
+        parts = [p.strip() for p in t.split(" - ") if p.strip()]
+        if len(parts) >= 2:
+            p1, p2 = parts[0], parts[1]
+            p2_lower = p2.lower()
+            if any(k in p2_lower for k in ["deepika", "ranveer", "ranbir", "salman", "actor", "movie", "film", "audio", "video", "song"]):
+                t = p1
+            elif any(k in p1.lower() for k in ["xxxtentacion", "ed sheeran", "drake", "taylor swift", "ariana", "justin"]):
+                t = p2
+            else:
+                t = p1
+
+    # Strip trailing or standalone "Song", "Video", "Audio"
+    t = re.sub(r'(?i)(?:Video\s*)?Song\b', '', t).strip()
+    t = re.sub(r'(?i)\b(?:video|audio|full)\b', '', t).strip()
+
+    # Clean dangling punctuation
+    t = re.sub(r'\s*[-|:]\s*$', '', t).strip()
+    t = re.sub(r'^\s*[-|:]\s*', '', t).strip()
+    return t if t else raw_title.strip()
 
 
 class Thumbnail:
     def __init__(self):
         self.session: aiohttp.ClientSession | None = None
         try:
-            self.font_bold = ImageFont.truetype(_FONT_BOLD, 42)
+            self.font_bold = ImageFont.truetype(_FONT_BOLD, 48)
             self.font_sub = ImageFont.truetype(_FONT_BOLD, 36)
             self.font_time = ImageFont.truetype(_FONT_LIGHT, 22)
         except Exception:
@@ -62,28 +82,6 @@ class Thumbnail:
             with open(output_path, "wb") as f:
                 f.write(await resp.read())
         return output_path
-
-    @staticmethod
-    def _clean_and_split_title(title: str, channel: str) -> tuple[str, str]:
-        t = _TITLE_NOISE.sub('', title or "Unknown Track").strip()
-        t = re.sub(r'[\(\[].*?[\)\]]', '', t).strip()
-        t = re.sub(r'\s*\|\s*', ' - ', t).strip()
-        t = re.sub(r'\s*-\s*-\s*', ' - ', t).strip()
-        t = re.sub(r'\s*-\s*$', '', t).strip()
-        t = re.sub(r'^\s*-\s*', '', t).strip()
-
-        if " - " in t:
-            parts = [p.strip() for p in t.split(" - ") if p.strip()]
-            if len(parts) >= 2:
-                return parts[0] + " -", parts[1]
-            elif len(parts) == 1:
-                return parts[0] + " -", ""
-
-        words = t.split()
-        if len(words) <= 3:
-            return t + " -", ""
-        mid = len(words) // 2
-        return " ".join(words[:mid]) + " -", " ".join(words[mid:])
 
     @staticmethod
     def _draw_controls(draw: ImageDraw.ImageDraw, cx: int, cy: int, color=(255, 255, 255, 255)) -> None:
@@ -120,11 +118,9 @@ class Thumbnail:
     def _create_metallic_candy_red_background(W: int, H: int, seed_id: str) -> Image.Image:
         y_coords, x_coords = np.mgrid[0:H, 0:W]
 
-        # Multi-point lighting with deeper darks (top-left, bottom-right, vignettes)
         d_tr = np.sqrt(((x_coords - W * 0.88) / (W * 0.55))**2 + ((y_coords - 0) / (H * 0.65))**2)
         d_bl = np.sqrt(((x_coords - 0) / (W * 0.55))**2 + ((y_coords - H) / (H * 0.55))**2)
 
-        # Deeper dark regions in corners and behind elements
         d_tl_dark = np.sqrt(((x_coords - 0) / (W * 0.45))**2 + ((y_coords - 0) / (H * 0.45))**2)
         d_br_dark = np.sqrt(((x_coords - W) / (W * 0.45))**2 + ((y_coords - H) / (H * 0.45))**2)
         d_rm_dark = np.sqrt(((x_coords - W * 0.65) / (W * 0.35))**2 + ((y_coords - H * 0.25) / (H * 0.35))**2)
@@ -141,7 +137,6 @@ class Thumbnail:
         arr[:, :, 1] = g_base + (g_bright - g_base) * (light ** 1.4)
         arr[:, :, 2] = b_base + (b_bright - b_base) * (light ** 1.4)
 
-        # Micro-metallic flake noise
         seed = abs(hash(seed_id)) % 100000
         rng = np.random.RandomState(seed)
         micro_noise = rng.normal(0, 1, (H, W)).astype(np.float32)
@@ -233,10 +228,7 @@ class Thumbnail:
                 t = i / (num_bars - 1)
 
                 if t < 0.40:
-                    if bar_rng.random() < 0.25:
-                        bar_h = bar_rng.randint(6, 12)
-                    else:
-                        bar_h = bar_rng.randint(2, 5)
+                    bar_h = bar_rng.randint(6, 12) if bar_rng.random() < 0.25 else bar_rng.randint(2, 5)
                 elif t < 0.58:
                     bar_h = int(bar_rng.randint(4, 22) * (0.6 + 0.4 * (t - 0.40) / 0.18))
                 elif t < 0.88:
@@ -257,21 +249,26 @@ class Thumbnail:
 
             base.paste(card_rgba, (cover_x, cover_y), card_rgba)
 
-            # 5. Right Side: Clean 2-Line Typography, Progress Bar & Controls
+            # 5. Right Side: Just Song Name, Bold & Clean!
             info_x = 640
             draw = ImageDraw.Draw(base)
 
-            line1, line2 = self._clean_and_split_title(song.title, song.channel_name)
+            pure_name = clean_song_name(song.title)
 
-            if len(line1) > 24:
-                line1 = line1[:22] + "..."
-            if len(line2) > 24:
-                line2 = line2[:22] + "..."
-
-            ty = 250
-            draw.text((info_x, ty), line1, font=self.font_bold, fill=(255, 255, 255, 255))
-            if line2:
-                draw.text((info_x, ty + 54), line2, font=self.font_sub, fill=(255, 255, 255, 255))
+            # If title fits on one line (<= 20 chars), place nicely above the bar
+            if len(pure_name) <= 20:
+                draw.text((info_x, 305), pure_name, font=self.font_bold, fill=(255, 255, 255, 255))
+            else:
+                words = pure_name.split()
+                mid = len(words) // 2
+                l1 = " ".join(words[:mid])
+                l2 = " ".join(words[mid:])
+                if len(l1) > 22:
+                    l1 = l1[:20] + "..."
+                if len(l2) > 22:
+                    l2 = l2[:20] + "..."
+                draw.text((info_x, 260), l1, font=self.font_bold, fill=(255, 255, 255, 255))
+                draw.text((info_x, 318), l2, font=self.font_bold, fill=(255, 255, 255, 255))
 
             # Progress Bar
             bar_y = 400

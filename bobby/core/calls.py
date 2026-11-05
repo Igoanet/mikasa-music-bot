@@ -463,13 +463,15 @@ class TgCall(PyTgCalls):
             media.time = seek_time if seek_time else 1
             await db.add_call(chat_id)
             if not seek_time:
-                from bobby.helpers import emojis
+                from bobby.helpers import emojis, clean_song_name
+                clean_track = clean_song_name(media.title)
                 text = (
-                    f"<b>{emojis.FIRE} ‘ 𝐌𝐢𝐤𝐚𝐬𝐚 𝐗 𝐌𝐮𝐬𝐢𝐜 ’</b>\n\n"
-                    f"🔺 <b>Track :</b> <a href=\"{media.url}\">{media.title}</a>\n"
+                    f"{emojis.HEADPHONE} ‘ <b>𝐌𝐢𝐤𝐚𝐬𝐚 𝐗 𝐌𝐮𝐬𝐢𝐜</b> ’\n\n"
+                    f"<blockquote expandable>"
+                    f"{emojis.DISC} <b>Track :</b> <a href=\"{media.url}\">{clean_track}</a>\n"
                     f"{emojis.CLOCK} <b>Duration :</b> {media.duration}\n"
                     f"{emojis.USER} <b>Requested By :</b> {media.user}\n"
-                    f"{emojis.RADIO} <b>Stream :</b> Audio Live {emojis.WAVE}"
+                    f"</blockquote>"
                 )
                 from bobby.core.disco import progress_bar as _bar
                 keyboard = buttons.controls(
