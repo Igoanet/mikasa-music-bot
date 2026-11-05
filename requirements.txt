@@ -11,6 +11,7 @@ idna==3.20
 Kurigram==2.2.26
 multidict==6.9.1
 ntgcalls==3.0.0
+numpy>=2.0.0
 packaging==26.3
 pillow==12.3.0
 propcache==0.5.4

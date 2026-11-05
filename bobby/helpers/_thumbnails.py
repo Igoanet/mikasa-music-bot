@@ -6,6 +6,7 @@ import math
 import os
 import random
 import aiohttp
+import numpy as np
 from PIL import (Image, ImageDraw, ImageEnhance,
                  ImageFilter, ImageFont, ImageOps)
 
@@ -77,54 +78,109 @@ class Thumbnail:
 
     @staticmethod
     def _create_brushed_crimson_background(W: int, H: int, seed_id: str) -> Image.Image:
-        base = Image.new("RGBA", (W, H), (155, 12, 30, 255))
-        draw = ImageDraw.Draw(base)
+        arr = np.zeros((H, W, 4), dtype=np.uint8)
+
+        # Radial gradient centered slightly left and above center
+        cx, cy = W * 0.40, H * 0.38
+        max_dist = math.sqrt((max(cx, W - cx))**2 + (max(cy, H - cy))**2)
+
+        y_coords, x_coords = np.mgrid[0:H, 0:W]
+        dist = np.sqrt((x_coords - cx)**2 + (y_coords - cy)**2) / max_dist
+        dist = np.clip(dist, 0, 1)
+
+        falloff = dist ** 1.5
+
+        # Cherry red center → deep crimson edges
+        r_c, g_c, b_c = 215, 30, 42
+        r_e, g_e, b_e = 55, 3, 8
+
+        arr[:, :, 0] = (r_c + (r_e - r_c) * falloff).astype(np.uint8)
+        arr[:, :, 1] = (g_c + (g_e - g_c) * falloff).astype(np.uint8)
+        arr[:, :, 2] = (b_c + (b_e - b_c) * falloff).astype(np.uint8)
+        arr[:, :, 3] = 255
+
+        base = Image.fromarray(arr, "RGBA")
+
+        # Specular highlight — bright elliptical hotspot upper-left
+        h_arr = np.zeros((H, W, 4), dtype=np.uint8)
+        hx, hy = W * 0.36, H * 0.32
+
+        h_dist = np.sqrt(((x_coords - hx) / (W * 0.35))**2 + ((y_coords - hy) / (H * 0.42))**2)
+        h_dist = np.clip(h_dist, 0, 1)
+
+        h_alpha = np.exp(-4.0 * h_dist**2) * 85
+        h_arr[:, :, 0] = 255
+        h_arr[:, :, 1] = 180
+        h_arr[:, :, 2] = 175
+        h_arr[:, :, 3] = h_alpha.astype(np.uint8)
+
+        base = Image.alpha_composite(base, Image.fromarray(h_arr, "RGBA"))
+
+        # Secondary subtle highlight for depth
+        h2_arr = np.zeros((H, W, 4), dtype=np.uint8)
+        h2x, h2y = W * 0.55, H * 0.50
+        h2_dist = np.sqrt(((x_coords - h2x) / (W * 0.50))**2 + ((y_coords - h2y) / (H * 0.60))**2)
+        h2_dist = np.clip(h2_dist, 0, 1)
+        h2_alpha = np.exp(-5.0 * h2_dist**2) * 30
+        h2_arr[:, :, 0] = 255
+        h2_arr[:, :, 1] = 120
+        h2_arr[:, :, 2] = 120
+        h2_arr[:, :, 3] = h2_alpha.astype(np.uint8)
+
+        base = Image.alpha_composite(base, Image.fromarray(h2_arr, "RGBA"))
+
+        # Fine horizontal brushing — satin metal texture
+        b_arr = np.zeros((H, W, 4), dtype=np.uint8)
+        rng = np.random.RandomState(hash(seed_id) % 100000)
 
         for y in range(H):
-            ratio = y / H
-            r = int(185 - 65 * ratio)
-            g = int(16 - 10 * ratio)
-            b = int(32 - 16 * ratio)
-            draw.line([(0, y), (W, y)], fill=(r, g, b, 255))
+            if rng.random() < 0.75:
+                alpha = rng.randint(2, 9)
+                if rng.random() > 0.45:
+                    b_arr[y, :, 0] = 255
+                    b_arr[y, :, 1] = 200
+                    b_arr[y, :, 2] = 195
+                    b_arr[y, :, 3] = alpha
+                else:
+                    b_arr[y, :, 0] = 25
+                    b_arr[y, :, 1] = 1
+                    b_arr[y, :, 2] = 4
+                    b_arr[y, :, 3] = alpha
 
-        brush = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        b_draw = ImageDraw.Draw(brush)
-        random.seed(hash(seed_id) % 100000)
+        base = Image.alpha_composite(base, Image.fromarray(b_arr, "RGBA"))
 
-        for _ in range(1500):
-            by = random.randint(0, H - 1)
-            bx = random.randint(0, W - 150)
-            bw = random.randint(100, 450)
-            balp = random.randint(10, 32)
-            b_draw.line([(bx, by), (bx + bw, by)], fill=(255, 130, 150, balp), width=1)
+        # Longer horizontal streaks for metallic depth
+        streak = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        s_draw = ImageDraw.Draw(streak)
 
-        for _ in range(50000):
-            nx = random.randint(0, W - 1)
-            ny = random.randint(0, H - 1)
-            nalp = random.randint(12, 40)
-            color = (255, 210, 220, nalp) if random.random() > 0.45 else (45, 2, 8, nalp)
-            b_draw.point((nx, ny), fill=color)
+        for _ in range(2500):
+            sy = rng.randint(0, H - 1)
+            sx = rng.randint(0, W)
+            sw = rng.randint(W // 4, W)
+            salp = rng.randint(1, 4)
+            if rng.random() > 0.4:
+                s_draw.line([(sx, sy), (min(sx + sw, W - 1), sy)], fill=(255, 170, 170, salp), width=1)
+            else:
+                s_draw.line([(sx, sy), (min(sx + sw, W - 1), sy)], fill=(40, 2, 6, salp), width=1)
 
-        base = Image.alpha_composite(base, brush)
+        base = Image.alpha_composite(base, streak)
 
-        glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        g_draw = ImageDraw.Draw(glow)
-        for rad in range(720, 100, -35):
-            alpha = int(19 * (1 - rad / 720))
-            g_draw.ellipse([640 - rad, 320 - rad, 640 + rad, 320 + rad], fill=(245, 45, 70, alpha))
-        base = Image.alpha_composite(base, glow)
+        # Subtle radial vignette
+        vig = np.zeros((H, W, 4), dtype=np.uint8)
+        v_cx, v_cy = W * 0.45, H * 0.45
+        v_dist = np.sqrt(((x_coords - v_cx) / (W * 0.55))**2 + ((y_coords - v_cy) / (H * 0.55))**2)
+        v_dist = np.clip(v_dist, 0, 1)
+        v_mask = v_dist > 0.55
+        v_alpha = np.zeros_like(v_dist)
+        v_alpha[v_mask] = ((v_dist[v_mask] - 0.55) / 0.45) ** 2.2 * 100
+        vig[:, :, 3] = np.clip(v_alpha, 0, 255).astype(np.uint8)
 
-        vignette = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        v_draw = ImageDraw.Draw(vignette)
-        for i in range(110):
-            alpha = int((1 - i / 110) * 110)
-            v_draw.rectangle([0, i, W, i + 1], fill=(45, 2, 7, alpha))
-            v_draw.rectangle([0, H - i - 1, W, H - i], fill=(35, 1, 6, int(alpha * 1.1)))
-            v_draw.rectangle([i, 0, i + 1, H], fill=(40, 2, 7, int(alpha * 0.7)))
-            v_draw.rectangle([W - i - 1, 0, W - i, H], fill=(40, 2, 7, int(alpha * 0.7)))
-        base = Image.alpha_composite(base, vignette)
+        base = Image.alpha_composite(base, Image.fromarray(vig, "RGBA"))
 
-        return base
+        # Final slight blur for smoothness
+        base_rgb = base.convert("RGB")
+        base_rgb = base_rgb.filter(ImageFilter.GaussianBlur(0.7))
+        return base_rgb.convert("RGBA")
 
     async def generate(self, song: Track, size=(1280, 720)) -> str:
         try:
