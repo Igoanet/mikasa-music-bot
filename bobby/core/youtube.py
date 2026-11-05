@@ -1633,10 +1633,17 @@ class YouTube:
             return live.file_path
 
         if not video:
-            cached = Path(f"downloads/{track.id}.webm")
-            if cached.exists():
-                logger.info("play_source[%s]: cached file", track.id)
-                return str(cached)
+            for ext in ("mp3", "webm", "m4a", "mp4"):
+                cached = Path(f"downloads/{track.id}.{ext}")
+                if cached.exists() and cached.stat().st_size > 100000:
+                    logger.info("play_source[%s]: cached file (%s)", track.id, ext)
+                    return str(cached)
+
+            if not saavn.is_saavn(track.id) and not audius.is_audius(track.id):
+                worker_path = await self._try(worker_api.download, track.id, False)
+                if worker_path:
+                    logger.info("play_source[%s]: worker API high-speed file", track.id)
+                    return worker_path
             # LOCAL FIRST (owner 2026-10-11): a file on disk cannot be
             # starved by the network, which is what made the VC stutter
             # mid-song while several groups streamed at once.

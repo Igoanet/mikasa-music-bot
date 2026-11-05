@@ -93,7 +93,7 @@ class MongoDB:
     async def get_call(self, chat_id: int) -> bool:
         if bool(self.active_calls.get(chat_id, 0)):
             return True
-        from bobby.core.queue import queue
+        from bobby import queue
         return bool(queue.get_current(chat_id))
 
     async def add_call(self, chat_id: int) -> None:
@@ -114,7 +114,7 @@ class MongoDB:
 
         is_active = bool(self.active_calls.get(chat_id, 0))
         if not is_active:
-            from bobby.core.queue import queue
+            from bobby import queue
             is_active = bool(queue.get_current(chat_id))
 
         return is_active and not bool(self.paused.get(chat_id, False))
