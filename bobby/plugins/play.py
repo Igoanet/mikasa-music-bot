@@ -39,10 +39,7 @@ async def play_hndlr(
     url: str = None,
     query: str = "",
 ) -> None:
-    try:
-        await m.react("❤️")
-    except Exception:
-        pass
+    # No self-reactions
     if not getattr(m, "autoplay", False):
         # a real request always wins over a suggestion card or an autoplay
         # pick that is still being looked up in the background

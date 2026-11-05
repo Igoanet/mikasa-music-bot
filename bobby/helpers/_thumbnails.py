@@ -14,7 +14,7 @@ from bobby import config
 from bobby.helpers import Track
 
 _HELPERS_DIR = os.path.dirname(__file__)
-_FONT_BOLD = os.path.join(_HELPERS_DIR, "Raleway-Bold.ttf")
+_FONT_BOLD = os.path.join(_HELPERS_DIR, "SegoeUI-Bold.ttf")
 _FONT_LIGHT = os.path.join(_HELPERS_DIR, "Inter-Light.ttf")
 
 

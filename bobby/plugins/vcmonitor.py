@@ -133,7 +133,7 @@ class MikasaVCConsumer:
                 continue
             except Exception as exc:
                 exc_name = type(exc).__name__
-                if exc_name in ("ChannelInvalid", "ChatIdInvalid", "ChatWriteForbidden", "UserBannedInChannel", "PeerIdInvalid"):
+                if any(k in exc_name for k in ("ChannelInvalid", "ChatIdInvalid", "ChatWriteForbidden", "UserBanned", "PeerIdInvalid")):
                     logger.debug("VC monitor dropping unsendable event for chat %s: %s", chat_id, exc_name)
                     self.store.ack_event(int(row["id"]))
                 else:

@@ -489,10 +489,7 @@ class TgCall(PyTgCalls):
                             ),
                             reply_markup=keyboard,
                         )
-                        try:
-                            await message.react("❤️")
-                        except Exception:
-                            pass
+                        pass
                     else:
                         await message.edit_text(text, reply_markup=keyboard)
                 except (ChatSendMediaForbidden, ChatSendPhotosForbidden, MessageIdInvalid):

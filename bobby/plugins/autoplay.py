@@ -19,10 +19,7 @@ from bobby.helpers import _recs as recs
 @lang.language()
 @can_manage_vc
 async def _autoplay(_, m: types.Message):
-    try:
-        await m.react("❤️")
-    except Exception:
-        pass
+    # No self-reactions
     chat_id = m.chat.id
     status = await db.get_autoplay(chat_id)
 
