@@ -132,8 +132,13 @@ class MikasaVCConsumer:
                 await asyncio.sleep(wait)
                 continue
             except Exception as exc:
-                logger.info("VC monitor publish failed: %s", type(exc).__name__)
-                self.store.release_event(int(row["id"]))
+                exc_name = type(exc).__name__
+                if exc_name in ("ChannelInvalid", "ChatIdInvalid", "ChatWriteForbidden", "UserBannedInChannel", "PeerIdInvalid"):
+                    logger.debug("VC monitor dropping unsendable event for chat %s: %s", chat_id, exc_name)
+                    self.store.ack_event(int(row["id"]))
+                else:
+                    logger.info("VC monitor publish failed: %s", exc_name)
+                    self.store.release_event(int(row["id"]))
                 continue
 
             sent_id = getattr(sent, "id", None)
