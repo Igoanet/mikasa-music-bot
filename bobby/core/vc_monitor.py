@@ -116,7 +116,7 @@ class VoiceChatMonitor:
                     chat_ids.add(full_id)
                     self.store.remember_chat(full_id)
 
-            target_chats = list(chat_ids) if chat_ids else self.store.known_chats(limit=100)
+            target_chats = list(chat_ids)
             for c_id in target_chats:
                 if self.store.is_enabled(c_id):
                     self.store.record_event(

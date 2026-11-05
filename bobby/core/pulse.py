@@ -408,6 +408,8 @@ class _NetPulse:
 
 
 def _run(chat_id: int, track_id: str, media_path: str, duration: int, stop: threading.Event) -> None:
+    if not os.path.exists("/proc"):
+        return
     tag = f"pulse[{chat_id}] {track_id}"
     try:
         pid = _find_ffmpeg(media_path.encode(), stop)
