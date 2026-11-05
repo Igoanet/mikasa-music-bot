@@ -212,7 +212,13 @@ class Thumbnail:
             shadow = shadow.filter(ImageFilter.GaussianBlur(18))
             base.alpha_composite(shadow, (cover_x - 30, cover_y - 30))
 
-            cover_img = ImageOps.fit(raw_thumb, (cover_size, cover_size), method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+            # Contain the full poster inside the square (no cropping)
+            cover_bg = Image.new("RGBA", (cover_size, cover_size), (15, 15, 15, 255))
+            contained = ImageOps.contain(raw_thumb, (cover_size, cover_size), method=Image.Resampling.LANCZOS)
+            paste_x = (cover_size - contained.width) // 2
+            paste_y = (cover_size - contained.height) // 2
+            cover_bg.paste(contained, (paste_x, paste_y))
+            cover_img = cover_bg
             mask = Image.new("L", (cover_size, cover_size), 0)
             m_draw = ImageDraw.Draw(mask)
             m_draw.rounded_rectangle([0, 0, cover_size, cover_size], radius=radius, fill=255)
