@@ -243,58 +243,40 @@ class Thumbnail:
             shadow = shadow.filter(ImageFilter.GaussianBlur(14))
             base.alpha_composite(shadow, (cover_x - 20, cover_y - 20))
 
-            # Album Art Fitting (Un-cropped, entire artwork fully visible)
-            bg_fill = ImageOps.fit(raw_thumb, (cover_size, cover_size), method=Image.Resampling.LANCZOS, centering=(0.5, 0.4))
-            blurred_fill = bg_fill.filter(ImageFilter.GaussianBlur(18))
-            blurred_fill = ImageEnhance.Brightness(blurred_fill).enhance(0.65)
-            card_base = blurred_fill.convert("RGBA")
+            # Album Art Fitting (Proper clean poster, no blurry glassic effect)
+            card_art = ImageOps.fit(raw_thumb, (cover_size, cover_size), method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+            card_base = card_art.convert("RGBA")
 
-            contained = ImageOps.contain(raw_thumb, (cover_size, cover_size), method=Image.Resampling.LANCZOS)
-            paste_x = (cover_size - contained.width) // 2
-            paste_y = (cover_size - contained.height) // 2
-            card_base.paste(contained.convert("RGBA"), (paste_x, paste_y))
+            # Bottom Black Gradient Overlay (Tray)
+            tray = Image.new("RGBA", (cover_size, cover_size), (0, 0, 0, 0))
+            t_draw = ImageDraw.Draw(tray)
+            for ty in range(300, cover_size):
+                alpha = int(255 * min(1.0, ((ty - 300) / 60.0) ** 1.3))
+                t_draw.line([(0, ty), (cover_size, ty)], fill=(0, 0, 0, alpha))
+            card_base.alpha_composite(tray)
 
-            # 3. Bottom Black Gradient Overlay (Tray)
-            black_overlay = Image.new("RGBA", (cover_size, cover_size), (0, 0, 0, 0))
-            bo_draw = ImageDraw.Draw(black_overlay)
+            # Green Audio Equalizer Bars (Exact reference order, sizes, and neon lime color)
+            eq_draw = ImageDraw.Draw(card_base)
+            bar_heights = [
+                0, 0, 0, 0, 3, 3, 4, 4, 4, 3, 2, 1, 1, 2, 4, 2, 4, 3, 2, 1,
+                0, 0, 0, 1, 2, 4, 5, 5, 4, 2, 3, 7, 13, 18, 21, 22, 20, 17,
+                13, 9, 6, 5, 5, 5, 5, 4, 1, 0, 4, 6, 7, 7, 7, 6, 6, 7, 8,
+                14, 21, 30, 39, 47, 52, 50, 46, 41, 33, 25, 13, 8, 4, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0
+            ]
+            baseline_y = 364
+            bar_x_start = 24
+            bar_color = (88, 235, 112, 255)
 
-            grad_h = 110
-            solid_black_h = 36
-            start_y = cover_size - grad_h
-
-            for i in range(grad_h - solid_black_h):
-                alpha = int(255 * (i / (grad_h - solid_black_h))**1.6)
-                cur_y = start_y + i
-                bo_draw.line([(0, cur_y), (cover_size, cur_y)], fill=(0, 0, 0, alpha))
-
-            bo_draw.rectangle([0, cover_size - solid_black_h, cover_size, cover_size], fill=(0, 0, 0, 255))
-            card_base = Image.alpha_composite(card_base, black_overlay)
-
-            # 4. Green Audio Equalizer Bars (Spanning full width of card)
-            wave_margin = 22
-            wave_w = cover_size - wave_margin * 2
-            bw = 3
-            gap = 3
-            bar_step = bw + gap
-            num_bars = wave_w // bar_step
-            actual_wave_w = num_bars * bar_step - gap
-            start_bx = (cover_size - actual_wave_w) // 2
-            wave_baseline = cover_size - 12
-
-            w_draw = ImageDraw.Draw(card_base)
-            bar_seed = abs(hash(song.id + "_eq")) % 100000
-            bar_rng = np.random.RandomState(bar_seed)
-
-            for i in range(num_bars):
-                bx = start_bx + i * bar_step
-                norm = i / (num_bars - 1)
-
-                envelope = math.exp(-6.5 * (norm - 0.58)**2)
-                flutter = bar_rng.uniform(0.75, 1.25)
-                bar_h = max(3, int((envelope * 32.0 + 3.0) * flutter))
-
-                color = (88, 235, 112, 255)
-                w_draw.rounded_rectangle([bx, wave_baseline - bar_h, bx + bw - 1, wave_baseline], radius=1, fill=color)
+            for idx, h in enumerate(bar_heights):
+                if h <= 0:
+                    continue
+                bx = bar_x_start + idx * 4
+                top_y = baseline_y - h
+                if h >= 4:
+                    eq_draw.rounded_rectangle([bx, top_y, bx + 2, baseline_y], radius=1, fill=bar_color)
+                else:
+                    eq_draw.rectangle([bx, top_y, bx + 2, baseline_y], fill=bar_color)
 
             # Apply rounded corner mask
             mask = Image.new("L", (cover_size, cover_size), 0)
