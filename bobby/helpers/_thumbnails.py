@@ -4,7 +4,7 @@
 
 import math
 import os
-import random
+import re
 import aiohttp
 import numpy as np
 from PIL import (Image, ImageDraw, ImageEnhance,
@@ -17,13 +17,31 @@ _HELPERS_DIR = os.path.dirname(__file__)
 _FONT_BOLD = os.path.join(_HELPERS_DIR, "Raleway-Bold.ttf")
 _FONT_LIGHT = os.path.join(_HELPERS_DIR, "Inter-Light.ttf")
 
+# Common YouTube title noise to strip
+_TITLE_NOISE = re.compile(
+    r'\s*[\|\-\(\[]\s*(?:'
+    r'Official\s*(?:Music\s*)?Video|'
+    r'Official\s*Audio|'
+    r'Full\s*(?:Video\s*)?Song|'
+    r'Video\s*Song|'
+    r'Lyric(?:s|al)?\s*Video|'
+    r'Audio|'
+    r'HD|'
+    r'HQ|'
+    r'4K|'
+    r'1080p|'
+    r'Visuali[sz]er'
+    r')[\)\]]?\s*',
+    re.IGNORECASE,
+)
+
 
 class Thumbnail:
     def __init__(self):
         self.session: aiohttp.ClientSession | None = None
         try:
-            self.font_bold = ImageFont.truetype(_FONT_BOLD, 46)
-            self.font_sub = ImageFont.truetype(_FONT_BOLD, 40)
+            self.font_bold = ImageFont.truetype(_FONT_BOLD, 42)
+            self.font_sub = ImageFont.truetype(_FONT_BOLD, 36)
             self.font_time = ImageFont.truetype(_FONT_LIGHT, 22)
         except Exception:
             self.font_bold = ImageFont.load_default()
@@ -44,35 +62,45 @@ class Thumbnail:
         return output_path
 
     @staticmethod
+    def _clean_title(title: str) -> str:
+        cleaned = _TITLE_NOISE.sub('', title).strip()
+        cleaned = re.sub(r'\s*\|\s*$', '', cleaned).strip()
+        cleaned = re.sub(r'\s*[\(\[].*$', '', cleaned).strip()
+        return cleaned if cleaned else title.strip()
+
+    @staticmethod
     def _draw_controls(draw: ImageDraw.ImageDraw, cx: int, cy: int, color=(255, 255, 255, 255)) -> None:
-        # Circular play button matching reference
+        # Play button with subtle glow
+        glow_r = 42
+        for gr in range(glow_r, 32, -1):
+            alpha = int(25 * (1 - (gr - 32) / (glow_r - 32)))
+            draw.ellipse([cx - gr, cy - gr, cx + gr, cy + gr], fill=(255, 255, 255, alpha))
+
         r = 32
         draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(255, 255, 255, 255))
-        tri_pts = [(cx - 7, cy - 13), (cx - 7, cy + 13), (cx + 12, cy)]
+        tri_pts = [(cx - 8, cy - 14), (cx - 8, cy + 14), (cx + 13, cy)]
         draw.polygon(tri_pts, fill=(160, 15, 30, 255))
 
-        # Previous button (|<<)
-        px, py = cx - 95, cy
-        draw.polygon([(px + 4, py - 13), (px + 4, py + 13), (px - 10, py)], fill=color)
-        draw.polygon([(px + 18, py - 13), (px + 18, py + 13), (px + 4, py)], fill=color)
-        draw.rectangle([px - 15, py - 13, px - 11, py + 13], fill=color)
+        # Previous — simple single triangle ◀
+        px, py = cx - 110, cy
+        draw.polygon([(px + 12, py - 15), (px + 12, py + 15), (px - 8, py)], fill=color)
+        draw.rectangle([px - 13, py - 15, px - 9, py + 15], fill=color)
 
-        # Next button (>>|)
-        nx, ny = cx + 95, cy
-        draw.polygon([(nx - 4, ny - 13), (nx - 4, ny + 13), (nx + 10, ny)], fill=color)
-        draw.polygon([(nx - 18, ny - 13), (nx - 18, ny + 13), (nx - 4, ny)], fill=color)
-        draw.rectangle([nx + 11, ny - 13, nx + 15, ny + 13], fill=color)
+        # Next — simple single triangle ▶
+        nx, ny = cx + 110, cy
+        draw.polygon([(nx - 12, ny - 15), (nx - 12, ny + 15), (nx + 8, ny)], fill=color)
+        draw.rectangle([nx + 9, ny - 15, nx + 13, ny + 15], fill=color)
 
-        # Shuffle button
-        sx, sy = cx - 190, cy
+        # Shuffle — crossed arrows
+        sx, sy = cx - 220, cy
         draw.line([(sx - 16, sy + 9), (sx - 6, sy + 9), (sx + 6, sy - 9), (sx + 16, sy - 9)], fill=color, width=3)
         draw.polygon([(sx + 13, sy - 15), (sx + 20, sy - 9), (sx + 13, sy - 3)], fill=color)
         draw.line([(sx - 16, sy - 9), (sx - 6, sy - 9), (sx - 1, sy - 2)], fill=color, width=3)
         draw.line([(sx + 1, sy + 2), (sx + 6, sy + 9), (sx + 16, sy + 9)], fill=color, width=3)
         draw.polygon([(sx + 13, sy + 3), (sx + 20, sy + 9), (sx + 13, sy + 15)], fill=color)
 
-        # Repeat button
-        rx, ry = cx + 190, cy
+        # Repeat — loop rectangle with arrow
+        rx, ry = cx + 220, cy
         draw.rounded_rectangle([rx - 16, ry - 12, rx + 16, ry + 12], radius=6, outline=color, width=3)
         draw.polygon([(rx + 11, ry + 7), (rx + 19, ry + 12), (rx + 11, ry + 17)], fill=color)
 
@@ -80,7 +108,6 @@ class Thumbnail:
     def _create_brushed_crimson_background(W: int, H: int, seed_id: str) -> Image.Image:
         arr = np.zeros((H, W, 4), dtype=np.uint8)
 
-        # Radial gradient centered slightly left and above center
         cx, cy = W * 0.40, H * 0.38
         max_dist = math.sqrt((max(cx, W - cx))**2 + (max(cy, H - cy))**2)
 
@@ -90,7 +117,6 @@ class Thumbnail:
 
         falloff = dist ** 1.5
 
-        # Cherry red center → deep crimson edges
         r_c, g_c, b_c = 215, 30, 42
         r_e, g_e, b_e = 55, 3, 8
 
@@ -101,22 +127,17 @@ class Thumbnail:
 
         base = Image.fromarray(arr, "RGBA")
 
-        # Specular highlight — bright elliptical hotspot upper-left
         h_arr = np.zeros((H, W, 4), dtype=np.uint8)
         hx, hy = W * 0.36, H * 0.32
-
         h_dist = np.sqrt(((x_coords - hx) / (W * 0.35))**2 + ((y_coords - hy) / (H * 0.42))**2)
         h_dist = np.clip(h_dist, 0, 1)
-
         h_alpha = np.exp(-4.0 * h_dist**2) * 85
         h_arr[:, :, 0] = 255
         h_arr[:, :, 1] = 180
         h_arr[:, :, 2] = 175
         h_arr[:, :, 3] = h_alpha.astype(np.uint8)
-
         base = Image.alpha_composite(base, Image.fromarray(h_arr, "RGBA"))
 
-        # Secondary subtle highlight for depth
         h2_arr = np.zeros((H, W, 4), dtype=np.uint8)
         h2x, h2y = W * 0.55, H * 0.50
         h2_dist = np.sqrt(((x_coords - h2x) / (W * 0.50))**2 + ((y_coords - h2y) / (H * 0.60))**2)
@@ -126,10 +147,8 @@ class Thumbnail:
         h2_arr[:, :, 1] = 120
         h2_arr[:, :, 2] = 120
         h2_arr[:, :, 3] = h2_alpha.astype(np.uint8)
-
         base = Image.alpha_composite(base, Image.fromarray(h2_arr, "RGBA"))
 
-        # Fine horizontal brushing — satin metal texture
         b_arr = np.zeros((H, W, 4), dtype=np.uint8)
         rng = np.random.RandomState(hash(seed_id) % 100000)
 
@@ -149,7 +168,6 @@ class Thumbnail:
 
         base = Image.alpha_composite(base, Image.fromarray(b_arr, "RGBA"))
 
-        # Longer horizontal streaks for metallic depth
         streak = Image.new("RGBA", (W, H), (0, 0, 0, 0))
         s_draw = ImageDraw.Draw(streak)
 
@@ -165,7 +183,6 @@ class Thumbnail:
 
         base = Image.alpha_composite(base, streak)
 
-        # Subtle radial vignette
         vig = np.zeros((H, W, 4), dtype=np.uint8)
         v_cx, v_cy = W * 0.45, H * 0.45
         v_dist = np.sqrt(((x_coords - v_cx) / (W * 0.55))**2 + ((y_coords - v_cy) / (H * 0.55))**2)
@@ -177,7 +194,6 @@ class Thumbnail:
 
         base = Image.alpha_composite(base, Image.fromarray(vig, "RGBA"))
 
-        # Final slight blur for smoothness
         base_rgb = base.convert("RGB")
         base_rgb = base_rgb.filter(ImageFilter.GaussianBlur(0.7))
         return base_rgb.convert("RGBA")
@@ -196,11 +212,10 @@ class Thumbnail:
             await self.save_thumb(temp, song.thumbnail)
             W, H = size
 
-            # 1. Brushed Crimson Canvas (ditto reference)
             base = self._create_brushed_crimson_background(W, H, song.id)
             raw_thumb = Image.open(temp).convert("RGBA")
 
-            # 2. Rounded Album Art with Drop Shadow
+            # Rounded Album Art with Drop Shadow
             cover_x = 110
             cover_y = 130
             cover_size = 460
@@ -225,7 +240,7 @@ class Thumbnail:
             cover_img.putalpha(mask)
             base.paste(cover_img, (cover_x, cover_y), cover_img)
 
-            # 3. Mini Green Waveform inside bottom of album cover (ditto reference)
+            # Mini Green Waveform inside bottom of album cover
             wave_w = 170
             wave_x = cover_x + (cover_size - wave_w) // 2
             wave_y = cover_y + cover_size - 40
@@ -246,11 +261,11 @@ class Thumbnail:
 
             base = Image.alpha_composite(base, wave_canvas)
 
-            # 4. Right Side: Ditto Typography, Progress Bar & Playback Controls
+            # Right Side: Typography, Progress Bar & Controls
             info_x = 640
             draw = ImageDraw.Draw(base)
 
-            title_text = (song.title or "Unknown Track").strip()
+            title_text = self._clean_title(song.title or "Unknown Track")
             channel_name = (song.channel_name or "Mikasa Stream").strip()
 
             if " - " in title_text:
@@ -261,31 +276,31 @@ class Thumbnail:
                 line1 = f"{channel_name} -"
                 line2 = title_text
 
-            if len(line1) > 26:
-                line1 = line1[:24] + "..."
-            if len(line2) > 26:
-                line2 = line2[:24] + "..."
+            if len(line1) > 22:
+                line1 = line1[:20] + "..."
+            if len(line2) > 22:
+                line2 = line2[:20] + "..."
 
             ty = 250
             draw.text((info_x, ty), line1, font=self.font_bold, fill=(255, 255, 255, 255))
-            draw.text((info_x, ty + 56), line2, font=self.font_sub, fill=(255, 255, 255, 255))
+            draw.text((info_x, ty + 52), line2, font=self.font_sub, fill=(255, 255, 255, 255))
 
             # Progress Bar
-            bar_y = 405
+            bar_y = 400
             bar_len = 540
 
-            draw.rounded_rectangle([info_x, bar_y, info_x + bar_len, bar_y + 8], radius=4, fill=(255, 255, 255, 255))
+            draw.rounded_rectangle([info_x, bar_y, info_x + bar_len, bar_y + 6], radius=3, fill=(255, 255, 255, 255))
             knob_x = info_x + int(bar_len * 0.30)
-            knob_y = bar_y + 4
-            draw.ellipse([knob_x - 9, knob_y - 9, knob_x + 9, knob_y + 9], fill=(255, 255, 255, 255))
+            knob_y = bar_y + 3
+            draw.ellipse([knob_x - 8, knob_y - 8, knob_x + 8, knob_y + 8], fill=(255, 255, 255, 255))
 
-            draw.text((info_x, bar_y + 24), "0:46", font=self.font_time, fill=(255, 255, 255, 235))
+            draw.text((info_x, bar_y + 20), "0:46", font=self.font_time, fill=(255, 255, 255, 235))
             duration_text = str(song.duration or "00:00")
-            draw.text((info_x + bar_len - 60, bar_y + 24), duration_text, font=self.font_time, fill=(255, 255, 255, 235))
+            draw.text((info_x + bar_len - 60, bar_y + 20), duration_text, font=self.font_time, fill=(255, 255, 255, 235))
 
             # Controls
             controls_cx = info_x + bar_len // 2
-            controls_cy = 520
+            controls_cy = 510
             self._draw_controls(draw, controls_cx, controls_cy, color=(255, 255, 255, 255))
 
             base.save(output, "PNG")
