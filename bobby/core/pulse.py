@@ -51,10 +51,16 @@ own thread), but a blocked loop still delays commands and is worth a line.
 """
 
 import asyncio
-import fcntl
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
 import os
 import struct
-import termios
+try:
+    import termios
+except ImportError:
+    termios = None
 import threading
 import time
 
@@ -176,6 +182,8 @@ def _fill(fd: int | None, target: str) -> int | None:
         # the fd number could be recycled once ntgcalls closes the pipe;
         # make sure it is still OUR end of THIS pipe before asking
         if os.readlink(f"/proc/self/fd/{fd}") != target:
+            return None
+        if not fcntl or not termios:
             return None
         buf = fcntl.ioctl(fd, termios.FIONREAD, b"\0\0\0\0")
         return struct.unpack("i", buf)[0]
