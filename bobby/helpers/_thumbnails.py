@@ -250,30 +250,29 @@ class Thumbnail:
             # Bottom Black Gradient Overlay (Tray)
             tray = Image.new("RGBA", (cover_size, cover_size), (0, 0, 0, 0))
             t_draw = ImageDraw.Draw(tray)
-            for ty in range(300, cover_size):
-                alpha = int(255 * min(1.0, ((ty - 300) / 60.0) ** 1.3))
+            for ty in range(295, cover_size):
+                factor = (ty - 295) / (cover_size - 295)
+                alpha = int((factor ** 1.8) * 230)
                 t_draw.line([(0, ty), (cover_size, ty)], fill=(0, 0, 0, alpha))
             card_base.alpha_composite(tray)
 
-            # Green Audio Equalizer Bars (Exact reference order, sizes, and neon lime color)
+            # Green Audio Equalizer Bars (Spans start to end of frame, thicker 3px sticks)
             eq_draw = ImageDraw.Draw(card_base)
             bar_heights = [
-                0, 0, 0, 0, 3, 3, 4, 4, 4, 3, 2, 1, 1, 2, 4, 2, 4, 3, 2, 1,
-                0, 0, 0, 1, 2, 4, 5, 5, 4, 2, 3, 7, 13, 18, 21, 22, 20, 17,
-                13, 9, 6, 5, 5, 5, 5, 4, 1, 0, 4, 6, 7, 7, 7, 6, 6, 7, 8,
-                14, 21, 30, 39, 47, 52, 50, 46, 41, 33, 25, 13, 8, 4, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0
+                4, 6, 7, 5, 4, 8, 5, 4, 4, 6, 7, 5, 4, 8, 5, 4,
+                4, 6, 7, 5, 4, 8, 5, 4, 8, 13, 13, 19, 19, 18, 22, 24,
+                21, 25, 22, 17, 17, 16, 10, 12, 7, 8, 8, 6, 9, 7, 5, 8,
+                8, 6, 9, 7, 5, 8, 6, 12, 19, 22, 31, 33, 40, 44, 48, 50,
+                50, 50, 48, 45, 43, 34, 30, 25, 17, 15, 7, 6, 4, 3, 5, 7,
+                4, 6, 4, 3, 5, 7, 4, 6, 4, 3
             ]
-            baseline_y = 364
-            bar_x_start = 24
+            baseline_y = 365
             bar_color = (88, 235, 112, 255)
 
             for idx, h in enumerate(bar_heights):
-                if h <= 0:
-                    continue
-                bx = bar_x_start + idx * 4
+                bx = 6 + idx * 4
                 top_y = baseline_y - h
-                if h >= 4:
+                if h >= 5:
                     eq_draw.rounded_rectangle([bx, top_y, bx + 2, baseline_y], radius=1, fill=bar_color)
                 else:
                     eq_draw.rectangle([bx, top_y, bx + 2, baseline_y], fill=bar_color)
