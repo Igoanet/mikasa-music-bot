@@ -104,7 +104,19 @@ class VoiceChatMonitor:
                 except Exception:
                     pass
 
-            target_chats = self.store.known_chats(limit=100)
+            chat_ids = set()
+            for c in (chats or {}).values():
+                cid = getattr(c, "id", None)
+                if cid:
+                    c_name = type(c).__name__
+                    if c_name in ("Channel", "ChannelForbidden"):
+                        full_id = -int(f"100{abs(int(cid))}") if abs(int(cid)) < 1000000000000 else -abs(int(cid))
+                    else:
+                        full_id = -abs(int(cid))
+                    chat_ids.add(full_id)
+                    self.store.remember_chat(full_id)
+
+            target_chats = list(chat_ids) if chat_ids else self.store.known_chats(limit=100)
             for c_id in target_chats:
                 if self.store.is_enabled(c_id):
                     self.store.record_event(
@@ -138,6 +150,13 @@ class VoiceChatMonitor:
 
     async def run(self) -> None:
         self._running = True
+        for client in self.clients_provider():
+            try:
+                async for dialog in client.get_dialogs(limit=100):
+                    if dialog.chat and str(dialog.chat.type) in ("ChatType.SUPERGROUP", "ChatType.GROUP"):
+                        self.store.remember_chat(dialog.chat.id)
+            except Exception as ex:
+                logger.debug("pre-seed dialogs error: %s", ex)
         clients = self.clients_provider()
         for client in clients:
             self.attach_client(client)

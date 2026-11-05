@@ -174,32 +174,55 @@ class MikasaVCConsumer:
 _consumer: MikasaVCConsumer | None = None
 
 
+@app.on_message(filters.group, group=99)
+async def _auto_register_group(_, message: types.Message):
+    """Auto-register any group where the bot is present so it is monitored by default."""
+    if message.chat and message.chat.id:
+        store.remember_chat(int(message.chat.id))
+
+
 @app.on_message(filters.group & filters.command(["vcmonitor"]))
 async def vcmonitor_command(_, message: types.Message) -> None:
     chat_id = int(message.chat.id)
     store.remember_chat(chat_id)
 
-    # Verify admin privileges
-    if message.from_user:
-        try:
-            member = await app.get_chat_member(chat_id, message.from_user.id)
-            is_admin = member.status in {enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER}
-            can_manage_vc = (
-                member.status == enums.ChatMemberStatus.OWNER
-                or getattr(member.privileges, "can_manage_video_chats", False)
-            )
-            if not is_admin or not can_manage_vc:
-                await message.reply_text(
-                    "⚠️ You need the <b>Manage Video Chats</b> admin permission to configure VC monitoring."
-                )
-                return
-        except Exception:
-            pass
-
     args = [part.lower() for part in (message.command or [])[1:]]
     command = args[0] if args else "status"
 
     if command in {"on", "off"}:
+        # Permission check: Group owner or Admin with 'can_change_info'
+        is_authorized = False
+        if message.sender_chat and message.sender_chat.id == chat_id:
+            # Anonymous admin sending as the chat itself
+            is_authorized = True
+        elif message.from_user:
+            from bobby import config
+            from bobby.core.mongo import db
+            if message.from_user.id == config.OWNER_ID or await db.is_sudo(message.from_user.id):
+                is_authorized = True
+            else:
+                try:
+                    member = await app.get_chat_member(chat_id, message.from_user.id)
+                    if member.status == enums.ChatMemberStatus.OWNER:
+                        is_authorized = True
+                    elif member.status == enums.ChatMemberStatus.ADMINISTRATOR:
+                        privs = getattr(member, "privileges", None)
+                        if privs and getattr(privs, "can_change_info", False):
+                            is_authorized = True
+                        else:
+                            return await message.reply_text(
+                                "⚠️ You need the <b>Change Group Info</b> admin permission to toggle VC monitoring.",
+                                parse_mode=enums.ParseMode.HTML,
+                            )
+                except Exception as ex:
+                    logger.warning("Failed to check chat member privileges: %s", ex)
+
+        if not is_authorized:
+            return await message.reply_text(
+                "⚠️ Only group administrators with <b>Change Group Info</b> rights can toggle VC monitoring.",
+                parse_mode=enums.ParseMode.HTML,
+            )
+
         enabled = command == "on"
         store.set_enabled(chat_id, enabled)
         await message.reply_text(
@@ -207,7 +230,7 @@ async def vcmonitor_command(_, message: types.Message) -> None:
             + (
                 "Join notices will be announced and automatically deleted after 5 seconds."
                 if enabled
-                else "VC join notices are now silenced for this group."
+                else "VC join notices are now turned off for this group."
             ),
             parse_mode=enums.ParseMode.HTML,
         )
@@ -216,7 +239,8 @@ async def vcmonitor_command(_, message: types.Message) -> None:
     # Status check
     setting = store.get_setting(chat_id)
     health = store.get_health(chat_id)
-    enabled_text = "ON" if setting.get("enabled", True) else "OFF"
+    is_active = setting.get("enabled", True)
+    enabled_text = "ON (Default)" if is_active else "OFF"
     assistant_count = len(userbot.clients) if hasattr(userbot, "clients") else 0
 
     status = (health or {}).get("status", "ready")
@@ -233,8 +257,9 @@ async def vcmonitor_command(_, message: types.Message) -> None:
         f"• Assistants Online: <code>{assistant_count}</code>\n"
         f"• Health: <code>{status}</code>\n"
         f"• Last Activity: <code>{last_seen_str}</code>\n"
-        f"• Auto-Delete: <code>5s</code>\n\n"
-        f"Usage: <code>/vcmonitor on|off|status</code>",
+        f"• Auto-Delete: <code>5s</code>\n"
+        f"• Managed By: Admins with <b>Change Group Info</b> rights\n\n"
+        f"Usage: <code>/vcmonitor on</code> | <code>/vcmonitor off</code> | <code>/vcmonitor status</code>",
         parse_mode=enums.ParseMode.HTML,
     )
 
