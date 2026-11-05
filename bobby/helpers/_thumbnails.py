@@ -221,8 +221,13 @@ class Thumbnail:
             await self.save_thumb(temp, song.thumbnail)
             W, H = size
 
-            # 1. Brushed Metallic Candy Red Background
-            base = self._create_metallic_candy_red_background(W, H, song.id)
+            # 1. Brushed Metallic Background
+            bg_path = os.path.join(os.path.dirname(__file__), "background.jpg")
+            if os.path.exists(bg_path):
+                with Image.open(bg_path) as bg_img:
+                    base = bg_img.convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
+            else:
+                base = self._create_metallic_candy_red_background(W, H, song.id)
             raw_thumb = Image.open(temp).convert("RGB")
 
             # 2. Rounded Left Frame / Album Card
