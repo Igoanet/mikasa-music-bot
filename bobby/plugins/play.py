@@ -39,8 +39,15 @@ async def play_hndlr(
     url: str = None,
     query: str = "",
 ) -> None:
-    # No self-reactions
+    # React to user's post
     if not getattr(m, "autoplay", False):
+        try:
+            await m.react("❤️")
+        except Exception:
+            try:
+                await m.react("👍")
+            except Exception:
+                pass
         # a real request always wins over a suggestion card or an autoplay
         # pick that is still being looked up in the background
         from bobby.helpers import _recs as recs
