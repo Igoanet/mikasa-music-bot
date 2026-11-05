@@ -312,7 +312,7 @@ class Thumbnail:
 
             # Song Title (Century Gothic Bold, clean single or two lines)
             if len(pure_name) <= 22:
-                draw.text((info_x, 235), pure_name, font=self.font_bold, fill=(255, 255, 255, 255))
+                draw.text((info_x, 246), pure_name, font=self.font_bold, fill=(255, 255, 255, 255))
             else:
                 words = pure_name.split()
                 mid = len(words) // 2
@@ -322,8 +322,8 @@ class Thumbnail:
                     l1 = l1[:22] + "..."
                 if len(l2) > 24:
                     l2 = l2[:22] + "..."
-                draw.text((info_x, 210), l1, font=self.font_bold, fill=(255, 255, 255, 255))
-                draw.text((info_x, 255), l2, font=self.font_bold, fill=(255, 255, 255, 255))
+                draw.text((info_x, 215), l1, font=self.font_bold, fill=(255, 255, 255, 255))
+                draw.text((info_x, 260), l2, font=self.font_bold, fill=(255, 255, 255, 255))
 
             # Progress Bar
             bar_y = 320
