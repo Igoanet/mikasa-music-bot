@@ -120,21 +120,26 @@ class Thumbnail:
     def _create_metallic_candy_red_background(W: int, H: int, seed_id: str) -> Image.Image:
         y_coords, x_coords = np.mgrid[0:H, 0:W]
 
-        # Multi-point lighting sheen matching reference
-        d_tr = np.sqrt(((x_coords - W * 0.85) / (W * 0.7))**2 + ((y_coords - 0) / (H * 0.8))**2)
-        d_bl = np.sqrt(((x_coords - 0) / (W * 0.6))**2 + ((y_coords - H) / (H * 0.6))**2)
-        d_c = np.sqrt(((x_coords - W * 0.35) / (W * 0.5))**2 + ((y_coords - H * 0.25) / (H * 0.5))**2)
+        # Multi-point lighting with deeper darks (top-left, bottom-right, vignettes)
+        d_tr = np.sqrt(((x_coords - W * 0.88) / (W * 0.55))**2 + ((y_coords - 0) / (H * 0.65))**2)
+        d_bl = np.sqrt(((x_coords - 0) / (W * 0.55))**2 + ((y_coords - H) / (H * 0.55))**2)
 
-        light = 0.45 * np.exp(-1.5 * d_tr**2) + 0.35 * np.exp(-1.8 * d_bl**2) + 0.40 * np.exp(-1.2 * d_c**2)
+        # Deeper dark regions in corners and behind elements
+        d_tl_dark = np.sqrt(((x_coords - 0) / (W * 0.45))**2 + ((y_coords - 0) / (H * 0.45))**2)
+        d_br_dark = np.sqrt(((x_coords - W) / (W * 0.45))**2 + ((y_coords - H) / (H * 0.45))**2)
+        d_rm_dark = np.sqrt(((x_coords - W * 0.65) / (W * 0.35))**2 + ((y_coords - H * 0.25) / (H * 0.35))**2)
+
+        light = 0.50 * np.exp(-1.8 * d_tr**2) + 0.45 * np.exp(-1.8 * d_bl**2)
+        light = light - 0.20 * np.exp(-1.2 * d_tl_dark**2) - 0.25 * np.exp(-1.2 * d_br_dark**2) - 0.15 * np.exp(-1.5 * d_rm_dark**2)
         light = np.clip(light, 0, 1)
 
         arr = np.zeros((H, W, 3), dtype=np.float32)
-        r_base, g_base, b_base = 85.0, 5.0, 10.0
-        r_bright, g_bright, b_bright = 245.0, 70.0, 80.0
+        r_base, g_base, b_base = 58.0, 2.0, 5.0
+        r_bright, g_bright, b_bright = 250.0, 75.0, 85.0
 
-        arr[:, :, 0] = r_base + (r_bright - r_base) * (light ** 0.9)
-        arr[:, :, 1] = g_base + (g_bright - g_base) * (light ** 1.3)
-        arr[:, :, 2] = b_base + (b_bright - b_base) * (light ** 1.3)
+        arr[:, :, 0] = r_base + (r_bright - r_base) * (light ** 1.1)
+        arr[:, :, 1] = g_base + (g_bright - g_base) * (light ** 1.4)
+        arr[:, :, 2] = b_base + (b_bright - b_base) * (light ** 1.4)
 
         # Micro-metallic flake noise
         seed = abs(hash(seed_id)) % 100000
@@ -142,18 +147,18 @@ class Thumbnail:
         micro_noise = rng.normal(0, 1, (H, W)).astype(np.float32)
         fine_noise = rng.normal(0, 1, (H, W)).astype(np.float32)
 
-        arr[:, :, 0] += micro_noise * 14.0 + fine_noise * 8.0
-        arr[:, :, 1] += micro_noise * 10.0 + fine_noise * 5.0
-        arr[:, :, 2] += micro_noise * 10.0 + fine_noise * 5.0
+        arr[:, :, 0] += micro_noise * 13.0 + fine_noise * 7.0
+        arr[:, :, 1] += micro_noise * 9.0 + fine_noise * 4.0
+        arr[:, :, 2] += micro_noise * 9.0 + fine_noise * 4.0
 
-        sparkle_mask = rng.random((H, W)) > 0.97
-        sparkle_intensity = rng.uniform(15, 45, (H, W)).astype(np.float32) * sparkle_mask
+        sparkle_mask = rng.random((H, W)) > 0.975
+        sparkle_intensity = rng.uniform(15, 40, (H, W)).astype(np.float32) * sparkle_mask
         arr[:, :, 0] += sparkle_intensity
-        arr[:, :, 1] += sparkle_intensity * 0.7
-        arr[:, :, 2] += sparkle_intensity * 0.7
+        arr[:, :, 1] += sparkle_intensity * 0.65
+        arr[:, :, 2] += sparkle_intensity * 0.65
 
         arr = np.clip(arr, 0, 255).astype(np.uint8)
-        base = Image.fromarray(arr, "RGB").filter(ImageFilter.GaussianBlur(0.4))
+        base = Image.fromarray(arr, "RGB").filter(ImageFilter.GaussianBlur(0.35))
         return base.convert("RGBA")
 
     async def generate(self, song: Track, size=(1280, 720)) -> str:
@@ -170,7 +175,7 @@ class Thumbnail:
             await self.save_thumb(temp, song.thumbnail)
             W, H = size
 
-            # 1. Metallic Candy Red Canvas (exact match to reference)
+            # 1. Metallic Candy Red Background with deeper darks
             base = self._create_metallic_candy_red_background(W, H, song.id)
             raw_thumb = Image.open(temp).convert("RGB")
 
@@ -183,7 +188,7 @@ class Thumbnail:
             # Drop shadow
             shadow = Image.new("RGBA", (cover_size + 60, cover_size + 60), (0, 0, 0, 0))
             s_draw = ImageDraw.Draw(shadow)
-            s_draw.rounded_rectangle([30, 30, cover_size + 30, cover_size + 30], radius=radius, fill=(0, 0, 0, 220))
+            s_draw.rounded_rectangle([30, 30, cover_size + 30, cover_size + 30], radius=radius, fill=(0, 0, 0, 230))
             shadow = shadow.filter(ImageFilter.GaussianBlur(18))
             base.alpha_composite(shadow, (cover_x - 30, cover_y - 30))
 
@@ -192,11 +197,10 @@ class Thumbnail:
             card_rgba = card_img.convert("RGBA")
 
             # 3. Black Dark Bottom Frame Overlay
-            # Fades to solid black where the equalizer sits
             black_overlay = Image.new("RGBA", (cover_size, cover_size), (0, 0, 0, 0))
             bo_draw = ImageDraw.Draw(black_overlay)
 
-            grad_h = 130
+            grad_h = 135
             solid_black_h = 45
             start_y = cover_size - grad_h
 
@@ -208,31 +212,42 @@ class Thumbnail:
             bo_draw.rectangle([0, cover_size - solid_black_h, cover_size, cover_size], fill=(0, 0, 0, 255))
             card_rgba = Image.alpha_composite(card_rgba, black_overlay)
 
-            # 4. Green Equalizer Waveform Bars (covering nearly the whole frame)
-            wave_margin = 25
+            # 4. Green Equalizer Bars (not in order, clear gaps, proper size)
+            wave_margin = 35
             wave_w = cover_size - wave_margin * 2
-            bw = 3
-            gap = 2
+            bw = 2
+            gap = 3
             bar_step = bw + gap
             num_bars = wave_w // bar_step
             actual_wave_w = num_bars * bar_step - gap
             start_bx = (cover_size - actual_wave_w) // 2
-            wave_baseline = cover_size - 12
+            wave_baseline = cover_size - 14
 
             w_draw = ImageDraw.Draw(card_rgba)
+
+            bar_seed = abs(hash(song.id + "_eq")) % 100000
+            bar_rng = np.random.RandomState(bar_seed)
 
             for i in range(num_bars):
                 bx = start_bx + i * bar_step
                 t = i / (num_bars - 1)
 
-                base_h = 4.0
-                swell = 8.0 * math.exp(-35.0 * (t - 0.28)**2)
-                peak = 34.0 * math.exp(-22.0 * (t - 0.72)**2)
-                flutter = (math.sin(i * 1.8) * 0.5 + math.cos(i * 3.1) * 0.5) * (swell + peak + 2.0) * 0.25
+                if t < 0.40:
+                    if bar_rng.random() < 0.25:
+                        bar_h = bar_rng.randint(6, 12)
+                    else:
+                        bar_h = bar_rng.randint(2, 5)
+                elif t < 0.58:
+                    bar_h = int(bar_rng.randint(4, 22) * (0.6 + 0.4 * (t - 0.40) / 0.18))
+                elif t < 0.88:
+                    cluster_envelope = math.sin((t - 0.58) / 0.30 * math.pi)
+                    raw_peak = bar_rng.choice([16, 25, 34, 42, 48, 22, 38, 28, 45, 18, 50, 32])
+                    bar_h = max(4, int(raw_peak * (0.6 + 0.4 * cluster_envelope)))
+                else:
+                    bar_h = max(2, int(bar_rng.randint(3, 10) * (1.0 - (t - 0.88) / 0.12)))
 
-                bar_h = max(3, int(base_h + swell + peak + flutter))
-                color = (85, 230, 115, 255)
-                w_draw.rounded_rectangle([bx, wave_baseline - bar_h, bx + bw, wave_baseline], radius=1, fill=color)
+                color = (95, 240, 120, 255)
+                w_draw.rectangle([bx, wave_baseline - bar_h, bx + bw - 1, wave_baseline], fill=color)
 
             # Apply rounded corner mask to the entire card
             mask = Image.new("L", (cover_size, cover_size), 0)
