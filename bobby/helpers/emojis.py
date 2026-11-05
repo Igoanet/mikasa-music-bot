@@ -5,8 +5,8 @@
 """Centralized Telegram Premium Custom Emojis for Mikasa Bot."""
 
 def tg_emoji(emoji_id: str | int, fallback: str) -> str:
-    """Format an HTML custom premium emoji tag with fallback."""
-    return f'<tg-emoji emoji-id="{emoji_id}">{fallback}</tg-emoji>'
+    """Format an emoji tag with fallback for reliable Telegram message delivery."""
+    return fallback
 
 # Curated, verified Telegram Premium animated/custom emoji IDs
 EMOJI_IDS = {
