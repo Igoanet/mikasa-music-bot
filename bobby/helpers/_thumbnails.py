@@ -216,9 +216,9 @@ class Thumbnail:
             raw_thumb = Image.open(temp).convert("RGBA")
 
             # Rounded Album Art with Drop Shadow
-            cover_x = 110
-            cover_y = 130
-            cover_size = 460
+            cover_x = 100
+            cover_y = 100
+            cover_size = 500
             radius = 36
 
             shadow = Image.new("RGBA", (cover_size + 60, cover_size + 60), (0, 0, 0, 0))
@@ -227,37 +227,57 @@ class Thumbnail:
             shadow = shadow.filter(ImageFilter.GaussianBlur(18))
             base.alpha_composite(shadow, (cover_x - 30, cover_y - 30))
 
-            # Contain the full poster inside the square (no cropping)
-            cover_bg = Image.new("RGBA", (cover_size, cover_size), (15, 15, 15, 255))
-            contained = ImageOps.contain(raw_thumb, (cover_size, cover_size), method=Image.Resampling.LANCZOS)
+            # Scale thumbnail to fill the square — blur-extend to fill gaps, no black bars
+            thumb_rgb = raw_thumb.convert("RGB")
+            # Fit thumbnail to fill the square (crop to fill, centered)
+            fill_img = ImageOps.fit(thumb_rgb, (cover_size, cover_size), method=Image.Resampling.LANCZOS, centering=(0.5, 0.3))
+            # Also get contained version (full image, no crop)
+            contained = ImageOps.contain(thumb_rgb, (cover_size, cover_size), method=Image.Resampling.LANCZOS)
+            # Build blurred background from the fill version
+            blurred_bg = fill_img.filter(ImageFilter.GaussianBlur(20))
+            # Darken the blurred bg slightly
+            blurred_bg = ImageEnhance.Brightness(blurred_bg).enhance(0.4)
+            cover_bg = blurred_bg.convert("RGBA")
+            # Paste the contained (full) image centered on top
             paste_x = (cover_size - contained.width) // 2
             paste_y = (cover_size - contained.height) // 2
-            cover_bg.paste(contained, (paste_x, paste_y))
-            cover_img = cover_bg
+            cover_bg.paste(contained.convert("RGBA"), (paste_x, paste_y))
+            # Apply rounded mask
             mask = Image.new("L", (cover_size, cover_size), 0)
             m_draw = ImageDraw.Draw(mask)
             m_draw.rounded_rectangle([0, 0, cover_size, cover_size], radius=radius, fill=255)
-            cover_img.putalpha(mask)
-            base.paste(cover_img, (cover_x, cover_y), cover_img)
+            cover_bg.putalpha(mask)
+            base.paste(cover_bg, (cover_x, cover_y), cover_bg)
 
-            # Mini Green Waveform inside bottom of album cover
-            wave_w = 170
-            wave_x = cover_x + (cover_size - wave_w) // 2
-            wave_y = cover_y + cover_size - 40
+            # Green Waveform — full width of album art, at the very bottom, no pill background
+            wave_margin = 20
+            wave_x = cover_x + wave_margin
+            wave_w = cover_size - wave_margin * 2
+            wave_bottom = cover_y + cover_size - 14   # sits just above the rounded bottom edge
 
             wave_canvas = Image.new("RGBA", (W, H), (0, 0, 0, 0))
             w_draw = ImageDraw.Draw(wave_canvas)
-            w_draw.rounded_rectangle([wave_x - 15, wave_y - 25, wave_x + wave_w + 15, wave_y + 25], radius=16, fill=(10, 14, 12, 230))
 
-            num_bars = 24
-            bw = 4
-            spacing = (wave_w - (num_bars * bw)) // (num_bars - 1)
+            num_bars = 38
+            bw = 5
+            gap = 3
+            total_bar_width = num_bars * bw + (num_bars - 1) * gap
+            wave_start_x = cover_x + (cover_size - total_bar_width) // 2
+
             for i in range(num_bars):
-                bx = wave_x + i * (bw + spacing)
-                dist = abs(i - num_bars / 2) / (num_bars / 2)
-                factor = math.cos(dist * (math.pi / 2))
-                h = max(4, int(5 + 26 * (factor ** 1.8) + (math.sin(i * 1.5) * 4)))
-                w_draw.rounded_rectangle([bx, wave_y + 16 - h, bx + bw, wave_y + 16], radius=2, fill=(105, 235, 125, 255))
+                bx = wave_start_x + i * (bw + gap)
+                # Natural waveform shape — higher in the center, lower at edges
+                norm = i / (num_bars - 1)   # 0 → 1
+                # bell curve with some variation
+                bell = math.exp(-6.0 * (norm - 0.5) ** 2)
+                variation = abs(math.sin(i * 0.8 + 1.2)) * 0.4
+                bar_h = max(4, int((bell * 0.7 + variation * 0.3) * 42 + 4))
+                # gradient green: brighter at top
+                g_color = (80, 220, 100, 255)
+                w_draw.rounded_rectangle(
+                    [bx, wave_bottom - bar_h, bx + bw, wave_bottom],
+                    radius=2, fill=g_color
+                )
 
             base = Image.alpha_composite(base, wave_canvas)
 
@@ -266,20 +286,24 @@ class Thumbnail:
             draw = ImageDraw.Draw(base)
 
             title_text = self._clean_title(song.title or "Unknown Track")
-            channel_name = (song.channel_name or "Mikasa Stream").strip()
 
+            # Smart title split: "Artist - Song" → line1=Artist, line2=Song
+            # Avoid using channel_name as line1 when the title already has an artist
             if " - " in title_text:
                 parts = title_text.split(" - ", 1)
-                line1 = f"{parts[0]} -"
-                line2 = parts[1]
+                line1 = parts[0].strip()
+                line2 = parts[1].strip()
             else:
-                line1 = f"{channel_name} -"
-                line2 = title_text
+                # No dash in title — just show on two lines
+                words = title_text.split()
+                mid = max(1, len(words) // 2)
+                line1 = " ".join(words[:mid])
+                line2 = " ".join(words[mid:])
 
-            if len(line1) > 22:
-                line1 = line1[:20] + "..."
-            if len(line2) > 22:
-                line2 = line2[:20] + "..."
+            if len(line1) > 20:
+                line1 = line1[:18] + "..."
+            if len(line2) > 20:
+                line2 = line2[:18] + "..."
 
             ty = 250
             draw.text((info_x, ty), line1, font=self.font_bold, fill=(255, 255, 255, 255))
