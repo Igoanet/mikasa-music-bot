@@ -465,11 +465,11 @@ class TgCall(PyTgCalls):
             if not seek_time:
                 from bobby.helpers import emojis
                 text = (
-                    f"<b>{emojis.HEADPHONE} ‘ 𝐌𝐢𝐤𝐚𝐬𝐚 𝐗 𝐌𝐮𝐬𝐢𝐜 ’</b>\n\n"
-                    f"<blockquote expandable>{emojis.DISC} <b>Track :</b> <a href=\"{media.url}\">{media.title}</a>\n"
+                    f"<b>{emojis.FIRE} ‘ 𝐌𝐢𝐤𝐚𝐬𝐚 𝐗 𝐌𝐮𝐬𝐢𝐜 ’</b>\n\n"
+                    f"🔺 <b>Track :</b> <a href=\"{media.url}\">{media.title}</a>\n"
                     f"{emojis.CLOCK} <b>Duration :</b> {media.duration}\n"
                     f"{emojis.USER} <b>Requested By :</b> {media.user}\n"
-                    f"{emojis.RADIO} <b>Stream :</b> Audio Live {emojis.WAVE}</blockquote>"
+                    f"{emojis.RADIO} <b>Stream :</b> Audio Live {emojis.WAVE}"
                 )
                 from bobby.core.disco import progress_bar as _bar
                 keyboard = buttons.controls(
