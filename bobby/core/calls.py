@@ -510,10 +510,6 @@ class TgCall(PyTgCalls):
                                 caption=text,
                                 reply_markup=keyboard,
                             )
-                        try:
-                            await sent.react("❤️")
-                        except Exception:
-                            pass
                     else:
                         try:
                             sent = await app.send_message(
@@ -528,10 +524,6 @@ class TgCall(PyTgCalls):
                                 text=text,
                                 reply_markup=keyboard,
                             )
-                        try:
-                            await sent.react("❤️")
-                        except Exception:
-                            pass
                     media.message_id = sent.id
                     _panel_id = sent.id
                 # the panel's buttons cycle colours while this call is live
