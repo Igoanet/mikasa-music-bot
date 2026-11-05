@@ -91,10 +91,7 @@ class MongoDB:
 
     # CACHE
     async def get_call(self, chat_id: int) -> bool:
-        if bool(self.active_calls.get(chat_id, 0)):
-            return True
-        from bobby import queue
-        return bool(queue.get_current(chat_id))
+        return bool(self.active_calls.get(chat_id, 0))
 
     async def add_call(self, chat_id: int) -> None:
         self.active_calls[chat_id] = 1
@@ -113,10 +110,6 @@ class MongoDB:
                 self.active_calls[chat_id] = 1
 
         is_active = bool(self.active_calls.get(chat_id, 0))
-        if not is_active:
-            from bobby import queue
-            is_active = bool(queue.get_current(chat_id))
-
         return is_active and not bool(self.paused.get(chat_id, False))
 
     async def get_admins(self, chat_id: int, reload: bool = False) -> list[int]:

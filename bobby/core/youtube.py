@@ -1578,16 +1578,15 @@ class YouTube:
         local = await spool.wrap(url)
         return local if await spool.prime(local, timeout=timeout) else None
 
-    async def _try(self, resolver, *args) -> str | None:
-        """Run a stream-URL resolver with full exception containment — a
-        resolver bug (e.g. get_cookies raising before its own try/except)
-        must never skip the caller's next tier, above all the download
-        fallback. Logs only the exception type: URLs can carry keys."""
+    async def _try(self, resolver, *args, timeout: float = 30.0) -> str | None:
+        """Run a stream-URL resolver with full exception containment and timeout.
+        A resolver bug or hung network connection must never skip or stall the
+        caller's next tier, above all the download fallback."""
         try:
-            return await resolver(*args)
+            return await asyncio.wait_for(resolver(*args), timeout=timeout)
         except Exception as ex:
             logger.warning(
-                "resolver %s failed: %s",
+                "resolver %s failed/timed out: %s",
                 getattr(resolver, "__name__", str(resolver)),
                 type(ex).__name__,
             )
@@ -1717,6 +1716,19 @@ class YouTube:
             )
             return path
         if not saavn.is_saavn(track.id) and not audius.is_audius(track.id):
+            # 1. Local Cache check for video
+            cached_vid = Path(f"downloads/{track.id}.mp4")
+            if cached_vid.exists() and cached_vid.stat().st_size > 100000:
+                logger.info("play_source[%s]: cached video file (mp4)", track.id)
+                return str(cached_vid)
+
+            # 2. High-speed Worker API video tier
+            worker_vid = await self._try(worker_api.download, track.id, True, timeout=60.0)
+            if worker_vid:
+                logger.info("play_source[%s]: worker API high-speed video file", track.id)
+                return worker_vid
+
+            # 3. Direct streams
             url = await self._try(self._api_direct_url, track, True)
             if not url:
                 url = await self._try(self._yt_direct_url, track, True)
