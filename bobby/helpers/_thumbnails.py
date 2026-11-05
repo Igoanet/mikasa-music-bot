@@ -250,13 +250,13 @@ class Thumbnail:
             # Bottom Black Gradient Overlay (Tray)
             tray = Image.new("RGBA", (cover_size, cover_size), (0, 0, 0, 0))
             t_draw = ImageDraw.Draw(tray)
-            for ty in range(295, cover_size):
-                factor = (ty - 295) / (cover_size - 295)
-                alpha = int((factor ** 1.8) * 230)
+            for ty in range(280, cover_size):
+                factor = min(1.0, (ty - 280) / 50.0)
+                alpha = int((factor ** 1.6) * 255)
                 t_draw.line([(0, ty), (cover_size, ty)], fill=(0, 0, 0, alpha))
             card_base.alpha_composite(tray)
 
-            # Green Audio Equalizer Bars (Spans start to end of frame, thicker 3px sticks)
+            # Green Audio Equalizer Bars (Exact Frame 2 soft pastel sage mint, 3px sticks)
             eq_draw = ImageDraw.Draw(card_base)
             bar_heights = [
                 4, 6, 7, 5, 4, 8, 5, 4, 4, 6, 7, 5, 4, 8, 5, 4,
@@ -267,7 +267,7 @@ class Thumbnail:
                 4, 6, 4, 3, 5, 7, 4, 6, 4, 3
             ]
             baseline_y = 365
-            bar_color = (88, 235, 112, 255)
+            bar_color = (147, 182, 139, 255)
 
             for idx, h in enumerate(bar_heights):
                 bx = 6 + idx * 4
