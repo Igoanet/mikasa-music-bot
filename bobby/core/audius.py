@@ -100,7 +100,7 @@ class Audius:
             duration=f"{minutes}:{seconds:02d}",
             duration_sec=duration_sec,
             message_id=m_id,
-            title=title[:25],
+            title=title[:100],
             thumbnail=image or None,
             url=link,
             view_count="",

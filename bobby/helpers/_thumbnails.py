@@ -199,10 +199,10 @@ class Thumbnail:
                 line1 = f"{channel_name} -"
                 line2 = title_text
 
-            if len(line1) > 22:
-                line1 = line1[:20] + "..."
-            if len(line2) > 22:
-                line2 = line2[:20] + "..."
+            if len(line1) > 26:
+                line1 = line1[:24] + "..."
+            if len(line2) > 26:
+                line2 = line2[:24] + "..."
 
             ty = 250
             draw.text((info_x, ty), line1, font=self.font_bold, fill=(255, 255, 255, 255))

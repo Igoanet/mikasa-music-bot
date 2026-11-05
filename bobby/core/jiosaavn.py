@@ -265,7 +265,7 @@ class JioSaavn:
                     duration=f"{minutes}:{seconds:02d}",
                     duration_sec=duration_sec,
                     message_id=m_id,
-                    title=title[:25],
+                    title=title[:100],
                     thumbnail=image.replace("http://", "https://", 1) or None,
                     url=perma_url,
                     view_count="",
