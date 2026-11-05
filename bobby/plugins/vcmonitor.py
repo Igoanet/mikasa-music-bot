@@ -29,7 +29,8 @@ _NOTICE_DELETE = max(0.0, float(os.getenv("VC_NOTICE_DELETE", "5")))
 
 
 def _join_notice(identity: PublicIdentity) -> str:
-    """Format voice-chat join notice, one detail per line with 5s autodelete."""
+    """Format voice-chat join notice with premium professional custom emojis."""
+    from bobby.helpers import emojis
     name = html.escape(str(getattr(identity, "name", "") or "user")[:256], quote=True)
     username = getattr(identity, "username", None)
     try:
@@ -38,17 +39,21 @@ def _join_notice(identity: PublicIdentity) -> str:
         peer = 0
     kind = getattr(identity, "kind", "user")
     if kind == "channel":
-        public_id, heading = str(-1000000000000 - abs(peer)), "🎧 <b>Channel in VC</b>"
+        public_id, heading = str(-1000000000000 - abs(peer)), f"{emojis.HEADPHONE} <b>Channel Joined VC</b>"
     elif kind == "chat":
-        public_id, heading = str(-abs(peer)), "🎧 <b>Chat in VC</b>"
+        public_id, heading = str(-abs(peer)), f"{emojis.HEADPHONE} <b>Chat Joined VC</b>"
     else:
-        public_id, heading = str(peer), "🎧 <b>Joined VC</b>"
+        public_id, heading = str(peer), f"{emojis.HEADPHONE} <b>Joined Voice Chat</b>"
     now = datetime.now(timezone.utc).astimezone()
-    lines = [heading, f"👤 {name}"]
+    time_str = now.strftime('%I:%M %p').lstrip('0')
+    lines = [
+        heading,
+        f"{emojis.USER} <b>User :</b> {name}",
+    ]
     if username:
-        lines.append(f"🔖 <code>@{html.escape(str(username)[:64], quote=True)}</code>")
-    lines.append(f"🆔 <code>{public_id}</code>")
-    lines.append(f"🕐 {now.strftime('%I:%M %p').lstrip('0')}")
+        lines.append(f"{emojis.TAG} <b>Username :</b> <code>@{html.escape(str(username)[:64], quote=True)}</code>")
+    lines.append(f"{emojis.ID} <b>ID :</b> <code>{public_id}</code>")
+    lines.append(f"{emojis.CLOCK} <b>Time :</b> <code>{time_str}</code>")
     return "\n".join(lines)
 
 

@@ -22,6 +22,12 @@ class Inline:
             "rocket": "5312536423174695369",   # 🚀
             "phone": "5294177943033741467",    # 📱
             "channel": "5294117873442037255",  # 📡
+            "play": "5472164871950836470",     # ▶️
+            "pause": "5472097746192182068",    # ⏸️
+            "next": "5472164871950836471",     # ⏭️
+            "replay": "5447183459486379525",   # 🔄
+            "disc": "5271965913665510227",     # 💿
+            "music": "5456140656643778548",    # 🎵
         }
 
     def cancel_dl(self, text) -> types.InlineKeyboardMarkup:
@@ -91,15 +97,17 @@ class Inline:
                         style=enums.ButtonStyle.DANGER,
                     ),
                     self.ikb(
-                        text="\U0001f504 Replay",
+                        text="Replay",
                         callback_data="controls replay %s" % chat_id,
                         style=enums.ButtonStyle.DANGER,
+                        icon_custom_emoji_id=self.prem["replay"],
                     ),
                     self.ikb(
-                        text=("\u25b6 Play" if paused else "\u23f8 Pause"),
+                        text=("Play" if paused else "Pause"),
                         callback_data="controls %s %s" % (
                             "resume" if paused else "pause", chat_id),
                         style=enums.ButtonStyle.DANGER,
+                        icon_custom_emoji_id=self.prem["play" if paused else "pause"],
                     ),
                     self.ikb(
                         text="+15s \u23e9",
@@ -107,9 +115,10 @@ class Inline:
                         style=enums.ButtonStyle.DANGER,
                     ),
                     self.ikb(
-                        text="\u23ed Next",
+                        text="Next",
                         callback_data="controls skip %s" % chat_id,
                         style=enums.ButtonStyle.DANGER,
+                        icon_custom_emoji_id=self.prem["next"],
                     ),
                 ]
             )
