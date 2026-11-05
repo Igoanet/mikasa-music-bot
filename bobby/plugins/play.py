@@ -121,6 +121,9 @@ async def play_hndlr(
     if not file:
         return await sent.edit_text(m.lang["play_usage"])
 
+    from bobby.helpers import clean_song_name
+    file.title = clean_song_name(file.title)
+
     # get_live keeps a LIVE metadata track even when every extracted feed is
     # unreadable, so an ended/private/broken broadcast is reported explicitly
     # instead of being queued as if it were an ordinary VOD.

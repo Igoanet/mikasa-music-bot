@@ -92,15 +92,15 @@ class Inline:
             rows.append(
                 [
                     self.ikb(
-                        text="\u23ea -15s",
-                        callback_data="controls seekb %s" % chat_id,
-                        style=enums.ButtonStyle.DANGER,
-                    ),
-                    self.ikb(
                         text="Replay",
                         callback_data="controls replay %s" % chat_id,
                         style=enums.ButtonStyle.DANGER,
                         icon_custom_emoji_id=self.prem["replay"],
+                    ),
+                    self.ikb(
+                        text="\u23ea -15s",
+                        callback_data="controls seekb %s" % chat_id,
+                        style=enums.ButtonStyle.DANGER,
                     ),
                     self.ikb(
                         text=("Play" if paused else "Pause"),

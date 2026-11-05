@@ -12,6 +12,7 @@ data/
 downloads/
 logs/
 *.log
+log.txt
 cache/
 spool/
 *.mp3

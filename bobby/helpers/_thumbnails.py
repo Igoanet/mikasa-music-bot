@@ -14,8 +14,16 @@ from bobby import config
 from bobby.helpers import Track
 
 _HELPERS_DIR = os.path.dirname(__file__)
-_FONT_BOLD = os.path.join(_HELPERS_DIR, "SegoeUI-Bold.ttf")
+_FONT_BOLD = os.path.join(_HELPERS_DIR, "CenturyGothic-Bold.ttf")
 _FONT_LIGHT = os.path.join(_HELPERS_DIR, "Inter-Light.ttf")
+
+KNOWN_LABELS = {
+    "sony music", "sony music india", "t-series", "tseries", "zee music company",
+    "zee music", "tips official", "tips", "yrf", "yash raj films", "saregama",
+    "saregama music", "speed records", "lahari music", "aditya music", "geet mp3",
+    "white hill music", "eros now", "shemaroo", "desimelodies", "desi melodies",
+    "t-series apna punjab", "t-series bhakti sagar", "vevo", "sonymusicindiavevo"
+}
 
 
 def clean_song_name(raw_title: str) -> str:
@@ -23,38 +31,70 @@ def clean_song_name(raw_title: str) -> str:
     if not raw_title:
         return "Unknown Track"
     t = raw_title.strip()
-    # Strip bracketed content: (Official Video), [4K], (From "Bajirao Mastani")
-    t = re.sub(r'[\(\[].*?[\)\]]', '', t).strip()
-    # Strip video/audio descriptors
-    t = re.sub(r'(?i)\b(?:official\s*(?:music\s*)?video|official\s*audio|full\s*video(?:\s*song)?|video\s*song|lyric(?:s|al)?\s*video|hd|hq|4k|1080p|visualizer)\b', '', t).strip()
 
-    # Split on pipe: first segment is universally the song title in Indian releases
-    if "|" in t:
-        parts = [p.strip() for p in t.split("|") if p.strip()]
+    had_pipe = '|' in t
+
+    # 1. Strip bracketed content: (Official Video), [4K], (From "Movie"), (Audio), (Lyrics), etc.
+    t = re.sub(r'[\(\[].*?[\)\]]', '', t).strip()
+
+    # 2. If title has pipe '|', split on '|'
+    # In Indian / commercial tracks, everything after the first pipe is movie/actors/credits
+    if '|' in t:
+        parts = [p.strip() for p in t.split('|') if p.strip()]
         if parts:
             t = parts[0]
 
-    # Split on dash
-    if " - " in t or " – " in t or " — " in t:
-        t = re.sub(r'\s*[–—]\s*', ' - ', t)
-        parts = [p.strip() for p in t.split(" - ") if p.strip()]
-        if len(parts) >= 2:
-            p1, p2 = parts[0], parts[1]
-            p2_lower = p2.lower()
-            if any(k in p2_lower for k in ["deepika", "ranveer", "ranbir", "salman", "actor", "movie", "film", "audio", "video", "song"]):
-                t = p1
-            elif any(k in p1.lower() for k in ["xxxtentacion", "ed sheeran", "drake", "taylor swift", "ariana", "justin"]):
-                t = p2
+    # 3. Clean common noise words anywhere
+    noise_patterns = [
+        r'(?i)\b(?:official\s*(?:music\s*)?video|official\s*audio|official\s*lyric\s*video)\b',
+        r'(?i)\b(?:full\s*(?:video\s*)?song|video\s*song|audio\s*song|lyric(?:s|al)?\s*video)\b',
+        r'(?i)\b(?:music\s*video|lyric\s*video|visualizer|audio|video|lyrics?)\b',
+        r'(?i)\b(?:hd|hq|4k|1080p|720p)\b',
+        r'(?i)\b(?:remastered|remix|version)\b',
+    ]
+    for np in noise_patterns:
+        t = re.sub(np, '', t).strip()
+
+    # Handle cases where "Song" got glued like "Deewani MastaniSong"
+    t = re.sub(r'(?i)(?<=[a-zA-Z])Song\b', '', t).strip()
+    t = re.sub(r'(?i)\bSong\b', '', t).strip()
+
+    # 4. Handle dashes: "Artist - Title" or "Channel - Song - Artist" or "Song - Movie"
+    if ' - ' in t or ' – ' in t or ' — ' in t or '-' in t:
+        dash_regex = r'\s*[\-–—]\s*'
+        segments = [s.strip() for s in re.split(dash_regex, t) if s.strip()]
+
+        # Filter out known label names from segments
+        filtered = []
+        for s in segments:
+            s_clean = re.sub(r'[^a-zA-Z0-9 ]', '', s).strip().lower()
+            if s_clean not in KNOWN_LABELS:
+                filtered.append(s)
+        if filtered:
+            segments = filtered
+
+        if len(segments) >= 2:
+            s0, s1 = segments[0], segments[1]
+            actor_keywords = ["deepika", "ranveer", "ranbir", "salman", "actor", "movie", "film",
+                              "shreya", "arijit", "pritam", "anirudh", "shah rukh", "alia", "vicky"]
+            if had_pipe:
+                # If title originally had '|', the first part before '-' was the song, second part was movie/video
+                t = s0
+            elif any(k in s1.lower() for k in actor_keywords):
+                t = s0
+            elif any(k in s0.lower() for k in actor_keywords):
+                t = s1
             else:
-                t = p1
+                # In western standard "Artist - Title", the song title is the right side (s1)
+                t = s1 if len(segments) == 2 and not any(k in s1.lower() for k in ["movie", "ost", "soundtrack"]) else s0
+        elif len(segments) == 1:
+            t = segments[0]
 
-    # Strip trailing or standalone "Song", "Video", "Audio"
-    t = re.sub(r'(?i)(?:Video\s*)?Song\b', '', t).strip()
-    t = re.sub(r'(?i)\b(?:video|audio|full)\b', '', t).strip()
+    # Clean dangling punctuation and spaces
+    t = re.sub(r'^\s*[-|:,.]+\s*', '', t)
+    t = re.sub(r'\s*[-|:,.]+\s*$', '', t)
+    t = re.sub(r'\s+', ' ', t).strip()
 
-    # Clean dangling punctuation
-    t = re.sub(r'\s*[-|:]\s*$', '', t).strip()
-    t = re.sub(r'^\s*[-|:]\s*', '', t).strip()
     return t if t else raw_title.strip()
 
 

@@ -465,6 +465,7 @@ class TgCall(PyTgCalls):
             if not seek_time:
                 from bobby.helpers import emojis, clean_song_name
                 clean_track = clean_song_name(media.title)
+                media.title = clean_track
                 text = (
                     f"{emojis.HEADPHONE} ‘ <b>𝐌𝐢𝐤𝐚𝐬𝐚 𝐗 𝐌𝐮𝐬𝐢𝐜</b> ’\n\n"
                     f"<blockquote expandable>"
