@@ -604,20 +604,54 @@ class TgCall(PyTgCalls):
             return await self._recover_track_failure(
                 chat_id, message, generation
             )
-        except ChatAdminRequired:
+        except (ChatAdminRequired, exceptions.NoActiveGroupCall):
             # auto_start=True means py-tgcalls tries to CREATE the voice
             # chat, which needs the assistant to have the 'Manage Voice
-            # Chats' admin right. No right + no running VC = unjoinable;
-            # this must surface as a clear message, not a frozen
-            # "Downloading..." (the retry loop's generic handler re-raises
-            # it here — only GROUPCALL_FORBIDDEN/timeout are recoverable).
+            # Chats' admin right. If assistant lacks rights, fallback to bot client.
             logger.warning(
-                "can't auto-start VC in %s: assistant is not admin", chat_id
+                "can't auto-start VC in %s: assistant is not admin, attempting bot fallback...", chat_id
             )
+            created = False
+            try:
+                import random
+                from pyrogram.raw.functions.phone import CreateGroupCall
+                peer = await app.resolve_peer(chat_id)
+                await app.invoke(
+                    CreateGroupCall(
+                        peer=peer,
+                        random_id=random.randint(10000, 99999999),
+                    )
+                )
+                created = True
+                logger.info("Bot fallback successfully created video chat in %s", chat_id)
+            except Exception as bot_vc_err:
+                logger.warning("Bot auto-start VC fallback failed in %s: %s", chat_id, bot_vc_err)
+
+            if created:
+                await asyncio.sleep(2)
+                try:
+                    return await self._play_media(
+                        chat_id, message, media, seek_time, generation,
+                    )
+                except Exception as retry_err:
+                    logger.warning("Playback retry after VC creation failed in %s: %s", chat_id, retry_err)
+
             await self.stop(chat_id, generation)
-            await message.edit_text(
-                _lang.get("error_vc_admin", _lang["error_no_call"])
+            assistant_name = getattr(client, "name", None) or "@MikasaMusicAssistant"
+            err_text = (
+                f"⚠️ <b>No Active Voice Chat</b>\n\n"
+                f"There is no active voice chat running in this group.\n\n"
+                f"👉 <b>How to solve:</b>\n"
+                f"1. Start a Voice Chat in this group, <b>OR</b>\n"
+                f"2. Promote assistant (<code>{assistant_name}</code>) to Admin with <b>Manage Voice Chats</b> permission so it can auto-start."
             )
+            try:
+                await message.edit_text(err_text)
+            except Exception:
+                try:
+                    await app.send_message(chat_id, err_text)
+                except Exception:
+                    pass
         except TimeoutError as e:
             # join failed even after the retry: no voice chat the assistant
             # can start/join, or it's restricted in this group

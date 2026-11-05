@@ -212,7 +212,17 @@ async def play_hndlr(
         queue.drop_item(m.chat.id, file)
         return await sent.delete()
 
-    await anon.play_media(chat_id=m.chat.id, message=sent, media=file)
+    try:
+        await anon.play_media(chat_id=m.chat.id, message=sent, media=file)
+    except Exception as play_err:
+        logger.error("play_media fallback caught error in %s: %s", m.chat.id, play_err, exc_info=True)
+        try:
+            await sent.edit_text(
+                f"⚠️ <b>Playback Failed</b>\n\n<code>{type(play_err).__name__}</code>\n\nPlease ensure a Voice Chat is started in this group and try again."
+            )
+        except Exception:
+            pass
+        return
     if not tracks:
         return
     added = playlist_to_queue(m.chat.id, tracks)
