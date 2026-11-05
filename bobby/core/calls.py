@@ -83,6 +83,7 @@ class TgCall(PyTgCalls):
         self.clients = []
         self._joining: set[int] = set()  # chats with a JoinGroupCall in flight
         self._lifecycle = CallLifecycle()
+        self._pending_vc_retry: dict[int, tuple] = {}
 
     async def pause(self, chat_id: int) -> bool:
         client = await db.get_assistant(chat_id)
@@ -568,9 +569,6 @@ class TgCall(PyTgCalls):
             return await self._recover_track_failure(
                 chat_id, message, generation
             )
-        except exceptions.NoActiveGroupCall:
-            await self.stop(chat_id, generation)
-            await message.edit_text(_lang["error_no_call"])
         except exceptions.NoAudioSourceFound:
             if self._is_live(media):
                 if live_attempt < 1:
@@ -605,27 +603,46 @@ class TgCall(PyTgCalls):
                 chat_id, message, generation
             )
         except (ChatAdminRequired, exceptions.NoActiveGroupCall):
-            # auto_start=True means py-tgcalls tries to CREATE the voice
-            # chat, which needs the assistant to have the 'Manage Voice
-            # Chats' admin right. If assistant lacks rights, fallback to bot client.
             logger.warning(
-                "can't auto-start VC in %s: assistant is not admin, attempting bot fallback...", chat_id
+                "can't auto-start VC in %s: assistant lacks admin or call inactive, attempting auto-promote & create call...", chat_id
             )
             created = False
             try:
+                ub_client = await db.get_client(chat_id)
+                # 1. Attempt to promote assistant to admin with can_manage_video_chats if bot has promote rights
+                try:
+                    from pyrogram.types import ChatPrivileges
+                    bot_member = await app.get_chat_member(chat_id, "me")
+                    if bot_member.privileges and bot_member.privileges.can_promote_members:
+                        await app.promote_chat_member(
+                            chat_id=chat_id,
+                            user_id=ub_client.id,
+                            privileges=ChatPrivileges(can_manage_video_chats=True),
+                        )
+                        logger.info("Bot auto-promoted assistant %s with Manage VC in %s", ub_client.id, chat_id)
+                        await asyncio.sleep(1)
+                except Exception as promo_err:
+                    logger.warning("Auto-promote assistant failed in %s: %s", chat_id, promo_err)
+
+                # 2. Assistant userbot invokes CreateGroupCall (user accounts can create group calls; bots cannot)
                 import random
                 from pyrogram.raw.functions.phone import CreateGroupCall
-                peer = await app.resolve_peer(chat_id)
-                await app.invoke(
+                try:
+                    peer = await ub_client.resolve_peer(chat_id)
+                except Exception:
+                    await ub_client.get_chat(chat_id)
+                    peer = await ub_client.resolve_peer(chat_id)
+
+                await ub_client.invoke(
                     CreateGroupCall(
                         peer=peer,
                         random_id=random.randint(10000, 99999999),
                     )
                 )
                 created = True
-                logger.info("Bot fallback successfully created video chat in %s", chat_id)
-            except Exception as bot_vc_err:
-                logger.warning("Bot auto-start VC fallback failed in %s: %s", chat_id, bot_vc_err)
+                logger.info("Assistant %s successfully created group call in %s", ub_client.id, chat_id)
+            except Exception as ub_vc_err:
+                logger.warning("Auto-start VC fallback failed in %s: %s", chat_id, ub_vc_err)
 
             if created:
                 await asyncio.sleep(2)
@@ -636,20 +653,28 @@ class TgCall(PyTgCalls):
                 except Exception as retry_err:
                     logger.warning("Playback retry after VC creation failed in %s: %s", chat_id, retry_err)
 
+            self._pending_vc_retry[chat_id] = (media, seek_time)
             await self.stop(chat_id, generation)
             assistant_name = getattr(client, "name", None) or "@MikasaMusicAssistant"
+            from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+            retry_markup = InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔄 Retry Playback", callback_data=f"retry_vc {chat_id}")]
+            ])
+            bot_username = getattr(app, "username", "MikasaMusic_Bot") or "MikasaMusic_Bot"
             err_text = (
                 f"⚠️ <b>No Active Voice Chat</b>\n\n"
                 f"There is no active voice chat running in this group.\n\n"
                 f"👉 <b>How to solve:</b>\n"
-                f"1. Start a Voice Chat in this group, <b>OR</b>\n"
-                f"2. Promote assistant (<code>{assistant_name}</code>) to Admin with <b>Manage Voice Chats</b> permission so it can auto-start."
+                f"1. <b>Start a Voice Chat</b> in this group (from group header), <b>OR</b>\n"
+                f"2. Give @{bot_username} permission to <b>Add New Admins</b> (so the bot can auto-start voice chats), <b>OR</b>\n"
+                f"3. Promote assistant (<code>{assistant_name}</code>) to Admin with <b>Manage Voice Chats</b> permission.\n\n"
+                f"<i>After starting the voice chat or granting rights, tap the button below:</i>"
             )
             try:
-                await message.edit_text(err_text)
+                await message.edit_text(err_text, reply_markup=retry_markup)
             except Exception:
                 try:
-                    await app.send_message(chat_id, err_text)
+                    await app.send_message(chat_id, err_text, reply_markup=retry_markup)
                 except Exception:
                     pass
         except TimeoutError as e:

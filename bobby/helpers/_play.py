@@ -146,6 +146,23 @@ def checkUB(play):
                                 f"@{client.username}" if client.username else None,
                             )
                         )
+                # Proactively ensure assistant has can_manage_video_chats right if the bot is admin
+                try:
+                    needs_rights = True
+                    if member.status == enums.ChatMemberStatus.ADMINISTRATOR and member.privileges and member.privileges.can_manage_video_chats:
+                        needs_rights = False
+                    if needs_rights:
+                        bot_member = await app.get_chat_member(chat_id, "me")
+                        if bot_member.privileges and bot_member.privileges.can_promote_members:
+                            from pyrogram.types import ChatPrivileges
+                            await app.promote_chat_member(
+                                chat_id=chat_id,
+                                user_id=client.id,
+                                privileges=ChatPrivileges(can_manage_video_chats=True),
+                            )
+                            logger.info("Bot proactively promoted assistant %s with Manage VC in %s", client.id, chat_id)
+                except Exception as promo_err:
+                    logger.debug("Proactive assistant promotion in %s: %s", chat_id, promo_err)
             except errors.ChatAdminRequired:
                 return await clean_reply(m, m.lang["admin_required"])
             except errors.PeerIdInvalid:
@@ -191,6 +208,18 @@ def checkUB(play):
                         )
                         arm_delete(umm)
                         return umm
+                try:
+                    bot_member = await app.get_chat_member(chat_id, "me")
+                    if bot_member.privileges and bot_member.privileges.can_promote_members:
+                        from pyrogram.types import ChatPrivileges
+                        await app.promote_chat_member(
+                            chat_id=chat_id,
+                            user_id=client.id,
+                            privileges=ChatPrivileges(can_manage_video_chats=True),
+                        )
+                        logger.info("Bot promoted newly joined assistant %s with Manage VC in %s", client.id, chat_id)
+                except Exception:
+                    pass
                 except Exception as ex:
                     # Self-healing: if the assistant account is in too many groups/channels (500 limit),
                     # prune the oldest idle dialogs and retry joining seamlessly.

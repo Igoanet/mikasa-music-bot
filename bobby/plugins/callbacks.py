@@ -381,3 +381,28 @@ async def _settings_cb(_, query: types.CallbackQuery):
             _autoplay,
         )
     )
+
+
+@app.on_callback_query(filters.regex(r"^retry_vc ") & ~app.bl_users)
+@lang.language()
+async def _retry_vc(_, query: types.CallbackQuery):
+    try:
+        chat_id = int(query.data.split()[1])
+    except Exception:
+        return await _safe_answer(query)
+
+    if query.message.chat.id != chat_id:
+        return await _safe_answer(query, query.lang.get("user_no_perms", "Not allowed"), show_alert=True)
+
+    pending = getattr(anon, "_pending_vc_retry", {}).pop(chat_id, None)
+    if not pending:
+        return await _safe_answer(query, "No pending song to retry. Please send /play <song> again.", show_alert=True)
+
+    media, seek_time = pending
+    await _safe_answer(query, "🔄 Retrying voice chat connection...")
+    try:
+        await query.message.edit_text("🔄 <b>Connecting to voice chat...</b>")
+    except Exception:
+        pass
+
+    await anon.play_media(chat_id, query.message, media, seek_time)
