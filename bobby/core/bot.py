@@ -240,6 +240,7 @@ class Bot(pyrogram.Client):
                 pyrogram.types.BotCommand("import", "Import an exported queue"),
                 pyrogram.types.BotCommand("stop", "Stop and clear the queue"),
                 pyrogram.types.BotCommand("playmode", "Playback settings"),
+                pyrogram.types.BotCommand("vcmonitor", "VC join monitor (admins)"),
                 pyrogram.types.BotCommand("lang", "Change bot language"),
                 pyrogram.types.BotCommand("ping", "Check bot status"),
                 pyrogram.types.BotCommand("help", "Help & all commands"),

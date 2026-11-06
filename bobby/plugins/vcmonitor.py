@@ -186,8 +186,17 @@ async def _auto_register_group(_, message: types.Message):
         store.remember_chat(int(message.chat.id))
 
 
-@app.on_message(filters.group & filters.command(["vcmonitor"]))
+@app.on_message(filters.command(["vcmonitor", "vcmon", "vcm"]) & ~app.bl_users)
 async def vcmonitor_command(_, message: types.Message) -> None:
+    if message.chat.type == enums.ChatType.PRIVATE:
+        return await message.reply_text(
+            "🎧 <b>VC Monitor</b> is a group feature.\n\n"
+            "By default, VC monitoring is <b>automatically ON</b> for every group.\n"
+            "When someone joins the voice chat, Mikasa announces their join.\n\n"
+            "Only group admins with <b>Change Group Info</b> rights can toggle it off using <code>/vcmonitor off</code> in the group.",
+            parse_mode=enums.ParseMode.HTML,
+        )
+
     chat_id = int(message.chat.id)
     store.remember_chat(chat_id)
 
@@ -233,7 +242,7 @@ async def vcmonitor_command(_, message: types.Message) -> None:
         await message.reply_text(
             f"🎧 <b>VC Monitor {'enabled' if enabled else 'disabled'}.</b>\n"
             + (
-                "Join notices will be announced and automatically deleted after 5 seconds."
+                "Join notices will be announced and automatically deleted after 60 seconds."
                 if enabled
                 else "VC join notices are now turned off for this group."
             ),
