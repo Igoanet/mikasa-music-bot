@@ -256,31 +256,26 @@ class Thumbnail:
                 t_draw.line([(0, ty), (cover_size, ty)], fill=(0, 0, 0, alpha))
             card_base.alpha_composite(tray)
 
-            # Green Audio Equalizer Bars (Exact 69 bars extracted from Frame 2 reference)
+            # Green Audio Equalizer Bars (Spanning edge-to-edge horizontally across frame)
             eq_draw = ImageDraw.Draw(card_base)
-            baseline_y = 366
+            baseline_y = 365
             bar_color = (138, 178, 132, 255)
-            ref_bars = [
-                (40, 41, 3), (43, 45, 4), (47, 49, 5), (51, 53, 6), (55, 56, 6), (59, 60, 5), (63, 64, 3),
-                (68, 68, 2), (71, 72, 2), (74, 76, 3), (78, 80, 5), (82, 84, 5), (86, 88, 5), (90, 92, 5),
-                (94, 95, 4), (98, 99, 3), (102, 103, 2), (114, 115, 2), (117, 119, 4), (121, 123, 6),
-                (125, 127, 7), (129, 131, 7), (133, 134, 7), (137, 138, 5), (141, 142, 3), (145, 146, 4),
-                (149, 150, 9), (153, 154, 14), (157, 158, 19), (160, 162, 22), (164, 166, 22), (168, 170, 21),
-                (172, 174, 18), (176, 178, 14), (180, 181, 10), (184, 185, 7), (188, 189, 6), (192, 193, 6),
-                (196, 197, 7), (199, 201, 6), (203, 205, 5), (207, 209, 2), (211, 213, 1), (215, 217, 5),
-                (219, 221, 7), (223, 224, 8), (227, 228, 8), (231, 232, 8), (235, 236, 8), (238, 240, 7),
-                (242, 244, 8), (246, 248, 10), (250, 252, 15), (254, 256, 22), (258, 259, 31), (262, 263, 40),
-                (266, 267, 48), (270, 271, 53), (274, 275, 53), (277, 279, 49), (281, 283, 43), (285, 287, 35),
-                (289, 291, 27), (293, 295, 20), (297, 299, 14), (301, 302, 9), (305, 306, 5), (309, 310, 2),
-                (313, 313, 2)
+            bar_heights = [
+                3, 4, 5, 5, 6, 6, 5, 4, 3, 2, 2, 3, 4, 5, 5, 5,
+                5, 4, 4, 3, 2, 2, 2, 2, 2, 4, 6, 7, 7, 7, 7, 6,
+                4, 3, 4, 8, 12, 16, 20, 22, 22, 21, 20, 17, 14, 11, 8, 7,
+                6, 6, 7, 6, 6, 5, 2, 2, 3, 6, 7, 8, 8, 8, 8, 8,
+                7, 8, 9, 11, 15, 21, 28, 35, 42, 48, 52, 53, 51, 48, 43, 37,
+                31, 25, 19, 15, 10, 7, 4, 2, 2
             ]
 
-            for x1, x2, h in ref_bars:
+            for idx, h in enumerate(bar_heights):
+                bx = 6 + idx * 4
                 top_y = baseline_y - int(h)
                 if h >= 5:
-                    eq_draw.rounded_rectangle([x1, top_y, x2, baseline_y], radius=1, fill=bar_color)
+                    eq_draw.rounded_rectangle([bx, top_y, bx + 2, baseline_y], radius=1, fill=bar_color)
                 else:
-                    eq_draw.rectangle([x1, top_y, x2, baseline_y], fill=bar_color)
+                    eq_draw.rectangle([bx, top_y, bx + 2, baseline_y], fill=bar_color)
 
             # Apply rounded corner mask
             mask = Image.new("L", (cover_size, cover_size), 0)
