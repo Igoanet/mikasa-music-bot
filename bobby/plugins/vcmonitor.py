@@ -25,7 +25,7 @@ store: VCMonitorStore = get_store()
 monitor: VoiceChatMonitor | None = None
 _consumer_task: asyncio.Task | None = None
 
-_NOTICE_DELETE = max(0.0, float(os.getenv("VC_NOTICE_DELETE", "5")))
+_NOTICE_DELETE = max(0.0, float(os.getenv("VC_NOTICE_DELETE", "60")))
 
 
 def _join_notice(identity: PublicIdentity) -> str:
@@ -262,7 +262,7 @@ async def vcmonitor_command(_, message: types.Message) -> None:
         f"• Assistants Online: <code>{assistant_count}</code>\n"
         f"• Health: <code>{status}</code>\n"
         f"• Last Activity: <code>{last_seen_str}</code>\n"
-        f"• Auto-Delete: <code>5s</code>\n"
+        f"• Auto-Delete: <code>60s</code>\n"
         f"• Managed By: Admins with <b>Change Group Info</b> rights\n\n"
         f"Usage: <code>/vcmonitor on</code> | <code>/vcmonitor off</code> | <code>/vcmonitor status</code>",
         parse_mode=enums.ParseMode.HTML,

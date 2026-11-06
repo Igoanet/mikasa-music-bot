@@ -210,7 +210,7 @@ class Thumbnail:
     async def generate(self, song: Track, size=(1024, 576)) -> str:
         try:
             temp = f"cache/temp_{song.id}.jpg"
-            output = f"cache/{song.id}.png"
+            output = f"cache/{song.id}_v3.png"
             if os.path.exists(output):
                 try:
                     os.utime(output)

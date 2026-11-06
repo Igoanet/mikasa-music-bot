@@ -193,13 +193,15 @@ class VoiceChatMonitor:
             if not peer_id or peer_id == assistant_id:
                 continue
 
-            if getattr(p, "left", False):
+            just_joined = getattr(p, "just_joined", False)
+            left = getattr(p, "left", False)
+            if left:
                 if chat_id in self._known_participants:
                     self._known_participants[chat_id].discard(peer_id)
                 continue
 
             known = self._known_participants.setdefault(chat_id, set())
-            if peer_id in known:
+            if not just_joined and peer_id in known:
                 continue
 
             known.add(peer_id)
@@ -280,7 +282,11 @@ class VoiceChatMonitor:
                 except Exception:
                     pass
 
-                for cid in self.store.known_chats(limit=30):
+                for cid in list(self._chat_to_call.keys()):
+                    if cid not in chat_candidates:
+                        chat_candidates.append(cid)
+
+                for cid in self.store.known_chats(limit=3):
                     if cid not in chat_candidates:
                         chat_candidates.append(cid)
 
