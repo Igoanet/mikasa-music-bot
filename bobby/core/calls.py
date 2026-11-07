@@ -482,6 +482,9 @@ class TgCall(PyTgCalls):
                     _lang=_lang, is_admin=True, autoplay_all=await db.get_autoplay_all(chat_id),
                 )
                 _panel_id = getattr(message, "id", 0)
+                loader = getattr(message, "_loader", None)
+                if loader:
+                    loader.stop()
                 sent = None
                 if _thumb:
                     try:

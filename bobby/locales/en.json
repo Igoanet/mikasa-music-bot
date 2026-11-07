@@ -20,7 +20,7 @@
     "dl_cancel": "🚫 Download cancelled by {0}.",
     "dl_complete": "<tg-emoji emoji-id=\"5895514131896733546\">✅</tg-emoji>  <b>Download complete</b> — processing…\nTime: {0}s",
     "dl_cancelling": "🚫 Cancelling the download…",
-    "dl_active": "<tg-emoji emoji-id=\"5258113901106580375\">⏳</tg-emoji>  That file is already downloading — please wait.",
+    "dl_active": "<tg-emoji emoji-id=\"5226828843926460895\">⏳</tg-emoji>  That file is already downloading — please wait.",
     "dl_limit": "Failed to process the file. The maximum download limit is <b>200 MB</b>.",
     "dl_progress": "<u><b>Downloading file</b></u>\n\n<b>Progress:</b> {0} / {1} [{2:.1f}%]\n<b>Speed:</b> {3}/s | <b>ETA:</b> {4}",
     "dl_not_found": "That download was already cancelled.",
@@ -88,7 +88,7 @@
     "play_now": "Play Now",
     "play_next": "<tg-emoji emoji-id=\"5316567469702264826\">⏭</tg-emoji>  <b>Next up</b> — fetching from the queue…",
     "play_invite": "Hold on a moment...\n\nInviting {0} assistant to your chat.",
-    "play_searching": "<tg-emoji emoji-id=\"5258113901106580375\">⏳</tg-emoji>  <b>Preparing…</b>",
+    "play_searching": "<tg-emoji emoji-id=\"5226828843926460895\">⏳</tg-emoji>  <b>Preparing…</b>",
     "play_downloading": "🚀 <b>Downloading…</b>",
     "play_retry_alt": "<tg-emoji emoji-id=\"5904692292324692386\">⚠️</tg-emoji>  <b>Upload Blocked</b>\n\nYouTube locked that version — trying another upload of the same song…",
     "force_mode": "Force play",
@@ -164,9 +164,9 @@
     "shuffle_empty": "<tg-emoji emoji-id=\"5893163582194978381\">❌</tg-emoji>  Not enough tracks in the queue to shuffle.",
     "shuffle_done": "🔀 Queue shuffled — {0} tracks mixed by {1}.",
     "song_usage": "<tg-emoji emoji-id=\"5220053623211305785\">❓</tg-emoji>  Usage: /song [song name or YouTube link]",
-    "song_searching": "<tg-emoji emoji-id=\"5258113901106580375\">⏳</tg-emoji>  <b>Preparing…</b>",
+    "song_searching": "<tg-emoji emoji-id=\"5226828843926460895\">⏳</tg-emoji>  <b>Preparing…</b>",
     "song_not_found": "<tg-emoji emoji-id=\"5893163582194978381\">❌</tg-emoji>  No results found for that.",
-    "song_downloading": "<tg-emoji emoji-id=\"5258113901106580375\">⏳</tg-emoji>  Downloading <b>{0}</b>...",
+    "song_downloading": "<tg-emoji emoji-id=\"5226828843926460895\">⏳</tg-emoji>  Downloading <b>{0}</b>...",
     "song_uploading": "📤 Uploading...",
     "song_caption": "<tg-emoji emoji-id=\"5334665104677941170\">🎵</tg-emoji>  <b>{0}</b>\n\nRequested by {1}",
     "song_failed": "<tg-emoji emoji-id=\"5893163582194978381\">❌</tg-emoji>  Couldn't download that song. Try another one.",
@@ -224,5 +224,5 @@
     "autoplay_btn_off": "🔁 Autoplay: Off",
     "autoplay_toggle_on": "Autoplay is ON — when the queue ends I'll keep playing similar songs.",
     "autoplay_toggle_off": "Autoplay is OFF — when the queue ends I'll only suggest songs.",
-    "play_3": "<tg-emoji emoji-id=\"5258113901106580375\">⏳</tg-emoji>  <b>Preparing playback…</b>"
+    "play_3": "<tg-emoji emoji-id=\"5226828843926460895\">⏳</tg-emoji>  <b>Preparing playback…</b>"
 }

@@ -59,6 +59,8 @@ async def play_hndlr(
         sent = await m.reply_text(m.lang["play_3"], effect_id=5104841245755180586, parse_mode=enums.ParseMode.HTML)
     except Exception:
         sent = await m.reply_text(m.lang["play_3"], parse_mode=enums.ParseMode.HTML)
+    from bobby.helpers.playback_loader import PlaybackLoader
+    loader = PlaybackLoader(sent).start()
     file = None
     mention = m.from_user.mention
     media = tg.get_media(m.reply_to_message) if m.reply_to_message else None
@@ -79,6 +81,7 @@ async def play_hndlr(
             )
 
             if not tracks:
+                loader.stop()
                 return await sent.edit_text(m.lang["playlist_error"])
 
             file = tracks[0]
@@ -101,6 +104,7 @@ async def play_hndlr(
             )
 
         if not file:
+            loader.stop()
             logger.info(
                 "play: nothing found for url=%r in chat %s", url, m.chat.id
             )
@@ -118,6 +122,7 @@ async def play_hndlr(
         else:
             file = await yt.search(query, sent.id, video=video)
         if not file:
+            loader.stop()
             logger.info(
                 "play: nothing found for query=%r in chat %s", query, m.chat.id
             )
@@ -126,6 +131,7 @@ async def play_hndlr(
             )
 
     if not file:
+        loader.stop()
         return await sent.edit_text(m.lang["play_usage"])
 
     from bobby.helpers import clean_song_name
@@ -135,12 +141,14 @@ async def play_hndlr(
     # unreadable, so an ended/private/broken broadcast is reported explicitly
     # instead of being queued as if it were an ordinary VOD.
     if file.duration == "🔴 LIVE" and not file.file_path:
+        loader.stop()
         logger.info("play: live source unavailable for %s", file.id)
         return await sent.edit_text(
             m.lang["play_not_found"].format(config.SUPPORT_CHAT)
         )
 
     if file.duration_sec > config.DURATION_LIMIT:
+        loader.stop()
         return await sent.edit_text(
             m.lang["play_duration_limit"].format(config.DURATION_LIMIT // 60)
         )
@@ -159,6 +167,7 @@ async def play_hndlr(
     file.user = mention
     claim = getattr(m, "autoplay_claim", None)
     if claim is not None and not await claim():
+        loader.stop()
         # a real /play, /stop or autoplay-off landed while this background
         # pick was being prepared — that request owns the chat now.  Checked
         # here because nothing awaits between this point and the queue.
@@ -170,6 +179,7 @@ async def play_hndlr(
         position = queue.add(m.chat.id, file)
 
         if position != 0 or await db.get_call(m.chat.id):
+            loader.stop()
             # A YouTube live feed is signed and expires.  Keep the LIVE
             # identity in the queue but resolve its direct feed when it
             # reaches the voice call (play_source's live branch).
@@ -206,12 +216,14 @@ async def play_hndlr(
         )
 
     if not file.file_path:
+        loader.stop()
         logger.info("play: source resolution failed for %s", file.id)
         return await sent.edit_text(
             m.lang["play_not_found"].format(config.SUPPORT_CHAT)
         )
 
     if claim is not None and not await claim(final=True):
+        loader.stop()
         # resolving the source can take a while; a /stop or a real /play that
         # landed meanwhile owns the chat, so this pick must leave the queue
         # instead of reviving playback behind them
@@ -222,6 +234,7 @@ async def play_hndlr(
     try:
         await anon.play_media(chat_id=m.chat.id, message=sent, media=file)
     except Exception as play_err:
+        loader.stop()
         logger.error("play_media fallback caught error in %s: %s", m.chat.id, play_err, exc_info=True)
         try:
             await sent.edit_text(
