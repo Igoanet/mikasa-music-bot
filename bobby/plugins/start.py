@@ -17,8 +17,9 @@ async def _help(_, m: types.Message):
         text=m.lang["help_menu"],
         reply_markup=buttons.help_markup(
             m.lang,
-            staff=bool(m.from_user, owner=message.from_user.id == config.OWNER_ID)
+            staff=bool(m.from_user)
             and (m.from_user.id == config.OWNER_ID or m.from_user.id in app.sudoers),
+            owner=bool(m.from_user and m.from_user.id == config.OWNER_ID),
         ),
     )
 

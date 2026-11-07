@@ -286,7 +286,7 @@ class VoiceChatMonitor:
                     if cid not in chat_candidates:
                         chat_candidates.append(cid)
 
-                for cid in self.store.known_chats(limit=3):
+                for cid in self.store.known_chats(limit=50):
                     if cid not in chat_candidates:
                         chat_candidates.append(cid)
 

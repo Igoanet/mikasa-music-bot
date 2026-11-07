@@ -221,7 +221,7 @@ class Bot(pyrogram.Client):
         # (/manage /massban /chatlink /unban /bans) is never offered to
         # anyone else (2026-09-29).
         try:
-            await self.set_bot_commands([
+            cmd_list = [
                 pyrogram.types.BotCommand("play", "Play a song in the voice chat"),
                 pyrogram.types.BotCommand("playforce", "Skip current & play now (admins)"),
                 pyrogram.types.BotCommand("vplay", "Play a video in the voice chat"),
@@ -244,7 +244,17 @@ class Bot(pyrogram.Client):
                 pyrogram.types.BotCommand("lang", "Change bot language"),
                 pyrogram.types.BotCommand("ping", "Check bot status"),
                 pyrogram.types.BotCommand("help", "Help & all commands"),
-            ])
+            ]
+            await self.set_bot_commands(cmd_list)
+            for sc in (
+                pyrogram.types.BotCommandScopeAllGroupChats(),
+                pyrogram.types.BotCommandScopeAllChatAdministrators(),
+                pyrogram.types.BotCommandScopeAllPrivateChats(),
+            ):
+                try:
+                    await self.set_bot_commands(cmd_list, scope=sc)
+                except Exception:
+                    pass
             await self.set_bot_commands(
                 [
                     pyrogram.types.BotCommand("owner", "Owner panel"),

@@ -4,6 +4,7 @@
 
 
 import json
+import re
 from functools import wraps
 from pathlib import Path
 
@@ -27,6 +28,68 @@ lang_codes = {
     "zh": "中文"
 }
 
+# Mapping of raw unicode emojis to verified Telegram Premium animated custom emoji tags
+# Curated exclusively from paneer's specified packs
+PREMIUM_EMOJI_MAP = {
+    "⚠️": "5904692292324692386",  # Animated Alert (ProtectStatus)
+    "❗️": "5893072412924187198",  # Animated Important (ProtectStatus)
+    "✅": "5895514131896733546",  # Animated Check (ProtectStatus)
+    "❌": "5893163582194978381",  # Animated Cross (ProtectStatus)
+    "⏳": "5258113901106580375",  # Animated Hourglass (vector_icons)
+    "⌛": "5258113901106580375",  # Animated Hourglass (vector_icons)
+    "⏱": "5902050947567194830",  # Animated Clock (ProtectStatus)
+    "⏰": "5902050947567194830",  # Animated Clock (ProtectStatus)
+    "🎵": "5334665104677941170",  # Animated Music (vector_icons)
+    "🎶": "5892966078123872045",  # Animated Notes (ProtectStatus)
+    "🎧": "6246810588052199536",  # Animated Headphone (Statausproxtara)
+    "⏸": "5278619986238122736",  # Animated Pause (vector_icons)
+    "⏭": "5316567469702264826",  # Animated Next (AdaptiveStatus)
+    "🔁": "5292226786229236118",  # Animated Replay (vector_icons)
+    "🔄": "5292226786229236118",  # Animated Reload (vector_icons)
+    "⏹": "5319109106793986870",  # Animated Stop (AdaptiveStatus)
+    "▶️": "5316567469702264826",  # Animated Play (AdaptiveStatus)
+    "📊": "5895444149699612825",  # Animated Stats (ProtectStatus)
+    "📈": "5319164151094849427",  # Animated Ping/Signal (AdaptiveStatus)
+    "🗑": "5904542823167824187",  # Animated Trash (ProtectStatus)
+    "🛡": "5902016123972358349",  # Animated Shield (ProtectStatus)
+    "🤖": "5355051922862653659",  # Animated Bot (OutlineEmoji)
+    "⚡": "5893450623449305489",  # Animated Lightning (ProtectStatus)
+    "✨": "5893321843149902412",  # Animated Sparkles (ProtectStatus)
+    "🔥": "5893185207355315979",  # Animated Fire (ProtectStatus)
+    "❤️": "5442678635909621223",  # Animated Heart (OutlineEmoji)
+    "⭐": "5893494861612455015",  # Animated Star (ProtectStatus)
+    "⭐️": "5893494861612455015",  # Animated Star (ProtectStatus)
+    "👥": "5316705578670636235",  # Animated Users (AdaptiveStatus)
+    "👤": "5902335789798265487",  # Animated User (ProtectStatus)
+    "🔗": "5902449142575141204",  # Animated Link (ProtectStatus)
+    "⚔️": "5453991094435997597",  # Animated Sword (vector_icons)
+    "🕊": "5316691250659737086",  # Animated Dove (AdaptiveStatus)
+    "🔔": "5431374840332302296",  # Animated Bell (vector_icons)
+    "🚀": "5372917041193828849",  # Animated Rocket (OutlineEmoji)
+    "⚙️": "5893161718179173515",  # Animated Settings (ProtectStatus)
+    "📌": "5895440460322706085",  # Animated Pin (ProtectStatus)
+    "👑": "5893376775781617954",  # Animated Crown (ProtectStatus)
+    "💎": "5264892613630111886",  # Animated Diamond (vector_icons)
+}
+
+_EMOJI_REGEX = re.compile("|".join(re.escape(k) for k in sorted(PREMIUM_EMOJI_MAP.keys(), key=len, reverse=True)))
+
+
+def _format_premium_emojis(text: str) -> str:
+    """Transform standard unicode emojis in locale strings to premium tags with clean padding."""
+    if not isinstance(text, str):
+        return text
+    def _repl(match):
+        char = match.group(0)
+        eid = PREMIUM_EMOJI_MAP.get(char)
+        if not eid:
+            return char
+        return f'<tg-emoji emoji-id="{eid}">{char}</tg-emoji>  '
+    res = _EMOJI_REGEX.sub(_repl, text)
+    # Normalize duplicate consecutive whitespace after an emoji tag
+    res = re.sub(r'(</tg-emoji>)\s+', r'\1  ', res)
+    return res
+
 
 class Language:
     """
@@ -43,7 +106,14 @@ class Language:
         lang_files = {file.stem: file for file in self.lang_dir.glob("*.json")}
         for lang_code, lang_file in lang_files.items():
             with open(lang_file, "r", encoding="utf-8") as file:
-                languages[lang_code] = json.load(file)
+                raw_data = json.load(file)
+                processed = {}
+                for k, v in raw_data.items():
+                    if isinstance(v, str):
+                        processed[k] = _format_premium_emojis(v)
+                    else:
+                        processed[k] = v
+                languages[lang_code] = processed
         # English is the complete reference: a string missing from another
         # locale falls back to it instead of raising KeyError in a handler.
         base = languages.get("en", {})
@@ -89,9 +159,7 @@ class Language:
                     return await chat.leave()
 
                 lang_code = await db.get_lang(chat.id)
-                lang_dict = self.languages[lang_code]
-
-                setattr(fallen, "lang", lang_dict)
+                fallen.lang = self.languages[lang_code]
                 try:
                     return await func(*args, **kwargs)
                 except (errors.FloodWait, errors.SlowmodeWait):
