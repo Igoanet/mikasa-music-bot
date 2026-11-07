@@ -81,6 +81,12 @@ EMOJI_IDS = {
     "search": "6255612376201039503",      # 🔍 Rnxtcx
     "lock": "6258239736545021832",        # 🔒 Rnxtcx
     "key": "6257963359694491109",         # 🔑 Rnxtcx
+
+    # VC Join Notice
+    "vc_user": "5238154170174820439",     # 👩‍🎓 KawaiiEmoji
+    "vc_username": "5902335789798265487", # 👤 ProtectStatus
+    "vc_id": "5233298782661134388",       # 🧐 KawaiiEmoji
+    "vc_time": "5893102202817352158",     # 🕞 ProtectStatus
 }
 
 # Pre-formatted HTML tags
@@ -130,4 +136,9 @@ SEARCH = tg_emoji(EMOJI_IDS["search"], "🔍")
 TRASH = tg_emoji(EMOJI_IDS["trash"], "🗑️")
 LOCK = tg_emoji(EMOJI_IDS["lock"], "🔒")
 KEY = tg_emoji(EMOJI_IDS["key"], "🔑")
+
+VC_USER = tg_emoji(EMOJI_IDS["vc_user"], "👩‍🎓")
+VC_USERNAME = tg_emoji(EMOJI_IDS["vc_username"], "👤")
+VC_ID = tg_emoji(EMOJI_IDS["vc_id"], "🧐")
+VC_TIME = tg_emoji(EMOJI_IDS["vc_time"], "⏱️")
 SHIELD = tg_emoji(EMOJI_IDS["shield"], "🛡️")
