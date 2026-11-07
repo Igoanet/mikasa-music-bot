@@ -25,8 +25,11 @@ class Inline:
             "channel": EMOJI_IDS["radio"],
             "play": EMOJI_IDS["play"],
             "pause": EMOJI_IDS["pause"],
-            "next": EMOJI_IDS["next"],
-            "replay": EMOJI_IDS["replay"],
+            "next": EMOJI_IDS["rnxtcx_forward"],
+            "replay": EMOJI_IDS["rnxtcx_replay"],
+            "mic": EMOJI_IDS["rnxtcx_mic"],
+            "back": EMOJI_IDS["rnxtcx_backward"],
+            "more": EMOJI_IDS["rnxtcx_more"],
             "disc": EMOJI_IDS["disc"],
             "music": EMOJI_IDS["music"],
         }
@@ -99,27 +102,29 @@ class Inline:
                         icon_custom_emoji_id=self.prem["replay"],
                     ),
                     self.ikb(
-                        text="\u23ea -15s",
-                        callback_data="controls seekb %s" % chat_id,
+                        text="Next",
+                        callback_data="controls skip %s" % chat_id,
                         style=enums.ButtonStyle.DANGER,
+                        icon_custom_emoji_id=self.prem["next"],
                     ),
                     self.ikb(
                         text=("Play" if paused else "Pause"),
                         callback_data="controls %s %s" % (
                             "resume" if paused else "pause", chat_id),
                         style=enums.ButtonStyle.DANGER,
-                        icon_custom_emoji_id=self.prem["play" if paused else "pause"],
+                        icon_custom_emoji_id=self.prem["mic"],
                     ),
                     self.ikb(
-                        text="+15s \u23e9",
-                        callback_data="controls seekf %s" % chat_id,
+                        text="Back",
+                        callback_data="controls seekb %s" % chat_id,
                         style=enums.ButtonStyle.DANGER,
+                        icon_custom_emoji_id=self.prem["back"],
                     ),
                     self.ikb(
-                        text="Next",
-                        callback_data="controls skip %s" % chat_id,
+                        text="More",
+                        callback_data="controls autoplay %s" % chat_id,
                         style=enums.ButtonStyle.DANGER,
-                        icon_custom_emoji_id=self.prem["next"],
+                        icon_custom_emoji_id=self.prem["more"],
                     ),
                 ]
             )
