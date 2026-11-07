@@ -99,7 +99,7 @@ ID = tg_emoji(EMOJI_IDS["id"], "🆔")
 CLOCK = tg_emoji(EMOJI_IDS["clock"], "⏱️")
 DURATION = tg_emoji(EMOJI_IDS["duration"], "⏳")
 
-SWORD = tg_emoji(EMOJI_IDS["sword"], "⚔️")
+SWORD = "⚔️"  # Normal unicode as requested (without premium)
 DOVE = tg_emoji(EMOJI_IDS["dove"], "🕊️")
 CROWN = tg_emoji(EMOJI_IDS["crown"], "👑")
 DIAMOND = tg_emoji(EMOJI_IDS["diamond"], "💎")

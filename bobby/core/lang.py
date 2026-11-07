@@ -62,7 +62,6 @@ PREMIUM_EMOJI_MAP = {
     "👥": "5316705578670636235",  # Animated Users (AdaptiveStatus)
     "👤": "5902335789798265487",  # Animated User (ProtectStatus)
     "🔗": "5902449142575141204",  # Animated Link (ProtectStatus)
-    "⚔️": "5453991094435997597",  # Animated Sword (vector_icons)
     "🕊": "5316740183222140641",  # Animated Flying Dove (AdaptiveStatus)
     "🕊️": "5316740183222140641", # Animated Flying Dove (AdaptiveStatus)
     "🔔": "5431374840332302296",  # Animated Bell (vector_icons)
