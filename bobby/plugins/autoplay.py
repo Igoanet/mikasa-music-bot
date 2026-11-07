@@ -40,7 +40,7 @@ async def _autoplay(_, m: types.Message):
             recs.cancel(chat_id)
         from bobby.helpers import emojis
         msg_text = (
-            f"<b>‘ {emojis.HEADPHONE} ˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪ 🕊</b>\n\n"
+            f"<b>‘ {emojis.HEADPHONE} ˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪ {emojis.DOVE}</b>\n\n"
             f"> <b>Autoplay :</b> {'<b>Enabled ' + emojis.CHECK + '</b>' if status else '<b>Disabled ' + emojis.CROSS + '</b>'}"
         )
         return await m.reply_text(msg_text)

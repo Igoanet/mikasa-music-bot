@@ -44,7 +44,7 @@ EMOJI_IDS = {
 
     # Aesthetic, Status & Vibe (Animated)
     "sword": "5453991094435997597",       # ⚔️ vector_icons (Animated)
-    "dove": "5316691250659737086",        # 🕊 AdaptiveStatus (Animated)
+    "dove": "5316740183222140641",        # 🕊️ AdaptiveStatus (Animated Flying Bird)
     "crown": "5893376775781617954",       # 👑 ProtectStatus (Animated)
     "diamond": "5264892613630111886",     # 💎 vector_icons (Animated)
     "fire": "5893185207355315979",        # 🔥 ProtectStatus (Animated)
