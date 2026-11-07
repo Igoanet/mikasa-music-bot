@@ -242,13 +242,6 @@ async def _controls(_, query: types.CallbackQuery):
             except Exception:
                 pass
         else:
-            raw_text = (query.message.caption.html if query.message.caption else getattr(query.message.text, "html", "")) or ""
-            mtext = re.sub(
-                r"\n\n<blockquote>.*?</blockquote>",
-                "",
-                raw_text,
-                flags=re.DOTALL,
-            )
             keyboard = buttons.controls(
                 chat_id,
                 status=_panel_row1(chat_id),
@@ -258,11 +251,12 @@ async def _controls(_, query: types.CallbackQuery):
                 is_admin=True,
                 autoplay_all=await db.get_autoplay_all(chat_id),
             )
-            new_text = f"{mtext}\n\n<blockquote>{reply}</blockquote>" if reply else mtext
-            if query.message.photo:
-                await query.edit_message_caption(caption=new_text, reply_markup=keyboard)
-            else:
-                await query.edit_message_text(text=new_text, reply_markup=keyboard)
+            try:
+                await query.edit_message_reply_markup(reply_markup=keyboard)
+            except Exception:
+                pass
+            if reply:
+                await _safe_answer(query, reply)
     except Exception:
         pass
 
