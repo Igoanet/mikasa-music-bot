@@ -79,14 +79,20 @@ def _format_premium_emojis(text: str) -> str:
     """Transform standard unicode emojis in locale strings to premium tags with clean padding."""
     if not isinstance(text, str):
         return text
-    def _repl(match):
-        char = match.group(0)
-        eid = PREMIUM_EMOJI_MAP.get(char)
-        if not eid:
-            return char
-        return f'<tg-emoji emoji-id="{eid}">{char}</tg-emoji>  '
-    res = _EMOJI_REGEX.sub(_repl, text)
-    # Normalize duplicate consecutive whitespace after an emoji tag
+    parts = re.split(r'(<tg-emoji[^>]*>.*?</tg-emoji>)', text)
+    processed = []
+    for part in parts:
+        if part.startswith('<tg-emoji'):
+            processed.append(part)
+        else:
+            def _repl(match):
+                char = match.group(0)
+                eid = PREMIUM_EMOJI_MAP.get(char)
+                if not eid:
+                    return char
+                return f'<tg-emoji emoji-id="{eid}">{char}</tg-emoji>  '
+            processed.append(_EMOJI_REGEX.sub(_repl, part))
+    res = "".join(processed)
     res = re.sub(r'(</tg-emoji>)\s+', r'\1  ', res)
     return res
 
