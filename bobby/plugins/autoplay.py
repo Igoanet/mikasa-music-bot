@@ -38,9 +38,10 @@ async def _autoplay(_, m: types.Message):
         if not status:
             # an autoplay pick already being looked up must not still land
             recs.cancel(chat_id)
+        from bobby.helpers import emojis
         msg_text = (
-            "<b>‘ 𝐌𝐢𝐤𝐚𝐬𝐚 𝐗 𝐌𝐮𝐬𝐢𝐜. ♪ 🩸 🫀</b>\n\n"
-            f"> <b>Autoplay :</b> {'<b>Enabled ✅</b>' if status else '<b>Disabled ❌</b>'}"
+            f"<b>‘ {emojis.HEADPHONE} ˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪ 🕊</b>\n\n"
+            f"> <b>Autoplay :</b> {'<b>Enabled ' + emojis.CHECK + '</b>' if status else '<b>Disabled ' + emojis.CROSS + '</b>'}"
         )
         return await m.reply_text(msg_text)
 

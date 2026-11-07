@@ -16,18 +16,19 @@ class Inline:
         # Premium animated emoji (document IDs from Telegram's official packs).
         # Icons render only while the bot owner's account has Telegram Premium
         # (server-side check); otherwise buttons show text only, no error.
+        from bobby.helpers.emojis import EMOJI_IDS
         self.prem = {
-            "cross": "5447183459486379525",    # ❌
-            "star": "5471952986970267163",     # ⭐
-            "rocket": "5312536423174695369",   # 🚀
-            "phone": "5294177943033741467",    # 📱
-            "channel": "5294117873442037255",  # 📡
-            "play": "5472164871950836470",     # ▶️
-            "pause": "5472097746192182068",    # ⏸️
-            "next": "5472164871950836471",     # ⏭️
-            "replay": "5447183459486379525",   # 🔄
-            "disc": "5271965913665510227",     # 💿
-            "music": "5456140656643778548",    # 🎵
+            "cross": EMOJI_IDS["cross"],
+            "star": EMOJI_IDS["star"],
+            "rocket": EMOJI_IDS["ping"],
+            "phone": EMOJI_IDS["tag"],
+            "channel": EMOJI_IDS["radio"],
+            "play": EMOJI_IDS["play"],
+            "pause": EMOJI_IDS["pause"],
+            "next": EMOJI_IDS["next"],
+            "replay": EMOJI_IDS["replay"],
+            "disc": EMOJI_IDS["disc"],
+            "music": EMOJI_IDS["music"],
         }
 
     def cancel_dl(self, text) -> types.InlineKeyboardMarkup:

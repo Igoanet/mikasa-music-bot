@@ -468,10 +468,10 @@ class TgCall(PyTgCalls):
                 clean_track = clean_song_name(media.title)
                 media.title = clean_track
                 text = (
-                    f"{emojis.HEADPHONE} ‘ <b>𝐌𝐢𝐤𝐚𝐬𝐚 𝐗 𝐌𝐮𝐬𝐢𝐜</b> ’\n\n"
+                    f"{emojis.HEADPHONE} ‘ <b>˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪ 🕊</b> ’\n\n"
                     f"<blockquote expandable>"
-                    f"{emojis.DISC} <b>Track :</b> <a href=\"{media.url}\">{clean_track}</a>\n"
-                    f"{emojis.CLOCK} <b>Duration :</b> {media.duration}\n"
+                    f"{emojis.MUSIC} <b>Track :</b> <a href=\"{media.url}\">{clean_track}</a>\n"
+                    f"{emojis.DURATION} <b>Duration :</b> {media.duration}\n"
                     f"{emojis.USER} <b>Requested By :</b> {media.user}\n"
                     f"</blockquote>"
                 )

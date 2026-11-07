@@ -188,9 +188,10 @@ async def _auto_register_group(_, message: types.Message):
 
 @app.on_message(filters.command(["vcmonitor", "vcmon", "vcm"]) & ~app.bl_users)
 async def vcmonitor_command(_, message: types.Message) -> None:
+    from bobby.helpers import emojis
     if message.chat.type == enums.ChatType.PRIVATE:
         return await message.reply_text(
-            "🎧 <b>VC Monitor</b> is a group feature.\n\n"
+            f"{emojis.HEADPHONE} <b>VC Monitor</b> is a group feature.\n\n"
             "By default, VC monitoring is <b>automatically ON</b> for every group.\n"
             "When someone joins the voice chat, Mikasa announces their join.\n\n"
             "Only group admins with <b>Change Group Info</b> rights can toggle it off using <code>/vcmonitor off</code> in the group.",
@@ -225,7 +226,7 @@ async def vcmonitor_command(_, message: types.Message) -> None:
                             is_authorized = True
                         else:
                             return await message.reply_text(
-                                "⚠️ You need the <b>Change Group Info</b> admin permission to toggle VC monitoring.",
+                                f"{emojis.ALERT} You need the <b>Change Group Info</b> admin permission to toggle VC monitoring.",
                                 parse_mode=enums.ParseMode.HTML,
                             )
                 except Exception as ex:
@@ -233,14 +234,14 @@ async def vcmonitor_command(_, message: types.Message) -> None:
 
         if not is_authorized:
             return await message.reply_text(
-                "⚠️ Only group administrators with <b>Change Group Info</b> rights can toggle VC monitoring.",
+                f"{emojis.ALERT} Only group administrators with <b>Change Group Info</b> rights can toggle VC monitoring.",
                 parse_mode=enums.ParseMode.HTML,
             )
 
         enabled = command == "on"
         store.set_enabled(chat_id, enabled)
         await message.reply_text(
-            f"🎧 <b>VC Monitor {'enabled' if enabled else 'disabled'}.</b>\n"
+            f"{emojis.HEADPHONE} <b>VC Monitor {'enabled ' + emojis.CHECK if enabled else 'disabled ' + emojis.CROSS}.</b>\n"
             + (
                 "Join notices will be announced and automatically deleted after 60 seconds."
                 if enabled
@@ -266,7 +267,7 @@ async def vcmonitor_command(_, message: types.Message) -> None:
     )
 
     await message.reply_text(
-        f"🎧 <b>VC Monitor Status</b>\n\n"
+        f"{emojis.HEADPHONE} <b>VC Monitor Status</b>\n\n"
         f"• Status: <b>{enabled_text}</b>\n"
         f"• Assistants Online: <code>{assistant_count}</code>\n"
         f"• Health: <code>{status}</code>\n"
