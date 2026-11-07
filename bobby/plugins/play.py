@@ -6,7 +6,7 @@
 import re
 from pathlib import Path
 
-from pyrogram import filters, types
+from pyrogram import enums, filters, types
 
 from bobby import anon, app, config, db, lang, logger, queue, tg, yt
 from bobby.helpers import buttons, utils
@@ -56,9 +56,9 @@ async def play_hndlr(
     # No "searching" notice: go straight to a playback status, so the
     # request reads as streaming rather than a lookup (2026-09-30).
     try:
-        sent = await m.reply_text(m.lang["play_3"], effect_id=5104841245755180586)
+        sent = await m.reply_text(m.lang["play_3"], effect_id=5104841245755180586, parse_mode=enums.ParseMode.HTML)
     except Exception:
-        sent = await m.reply_text(m.lang["play_3"])
+        sent = await m.reply_text(m.lang["play_3"], parse_mode=enums.ParseMode.HTML)
     file = None
     mention = m.from_user.mention
     media = tg.get_media(m.reply_to_message) if m.reply_to_message else None

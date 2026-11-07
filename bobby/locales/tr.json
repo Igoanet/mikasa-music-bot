@@ -29,7 +29,7 @@
     "error_no_file": "İndirme başarısız oldu.\n\nSorun devam ederse, <a href={0}>destek sohbetine</a> bildirin.",
     "error_tg_server": "<u><b>Telegram sunucu hatası</b></u>\n\nTelegram iç sorunlar yaşıyor. Sıra temizleniyor ve görüntülü sohbetten ayrılıyorum.",
     "error_rtmp": "RTMP yayını desteklenmiyor. Lütfen RTMP yayınını durdurun ve yerine bir görüntülü sohbet başlatın.",
-    "eval_error": "⚠️ Kod parçacığı yürütülürken hata oluştu\n\n",
+    "eval_error": "<tg-emoji emoji-id=\"5904692292324692386\">⚠️</tg-emoji>  Kod parçacığı yürütülürken hata oluştu\n\n",
     "eval_inp": "Ne?",
     "eval_out": "<b>Çıktı:</b>\n<code>{0}</code>",
     "gcast_usage": "Mesajı yayınlamak için bir mesaja yanıt verin.",
