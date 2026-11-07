@@ -56,7 +56,7 @@ def _join_notice(identity: PublicIdentity) -> str:
     items.append(f"{emojis.VC_TIME}  Time :  {time_str}")
     
     body = "\n\n".join(items)
-    return f"{heading}\n\n<blockquote>{body}</blockquote>" 
+    return f"{heading}\n\n<blockquote expandable>{body}</blockquote>" 
 
 
 class MikasaVCConsumer:
