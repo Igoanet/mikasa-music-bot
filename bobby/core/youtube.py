@@ -1638,32 +1638,32 @@ class YouTube:
                     logger.info("play_source[%s]: cached file (%s)", track.id, ext)
                     return str(cached)
 
-            if not saavn.is_saavn(track.id) and not audius.is_audius(track.id):
-                worker_path = await self._try(worker_api.download, track.id, False)
-                if worker_path:
-                    logger.info("play_source[%s]: worker API high-speed file", track.id)
-                    return worker_path
-            # LOCAL FIRST (owner 2026-10-11): a file on disk cannot be
-            # starved by the network, which is what made the VC stutter
-            # mid-song while several groups streamed at once.
-            _local = await self._try(self._yuki_local, track)
-            if _local:
-                logger.info('play_source[' + str(track.id) + ']: local file (jitter-free)')
-                return _local
-            # streaming stays as the fallback when the download is slow/fails
-            _u = await self._try(self._yuki_stream, track)
-            _u = await self._try(self._spooled, _u)
-            if _u:
-                logger.info('play_source[' + str(track.id) + ']: yuki API stream (primary)')
-                return _u
+            # 1. Instant catalogue stream (JioSaavn 320kbps CDN) — fast 0.5s playback
             if saavn.is_saavn(track.id) or audius.is_audius(track.id):
-                url = await self._try(self.stream_url, track)
+                url = await self._try(self.stream_url, track, timeout=6.0)
             else:
                 url = await self._catalogue_mirror_stream(track)
-            url = await self._try(self._spooled, url)
+            url = await self._try(self._spooled, url, timeout=8.0)
             if url:
                 logger.info("play_source[%s]: catalogue CDN stream (spooled)", track.id)
                 return url
+
+            if not saavn.is_saavn(track.id) and not audius.is_audius(track.id):
+                worker_path = await self._try(worker_api.download, track.id, False, timeout=5.0)
+                if worker_path:
+                    logger.info("play_source[%s]: worker API high-speed file", track.id)
+                    return worker_path
+
+            _local = await self._try(self._yuki_local, track, timeout=5.0)
+            if _local:
+                logger.info('play_source[' + str(track.id) + ']: local file (jitter-free)')
+                return _local
+
+            _u = await self._try(self._yuki_stream, track, timeout=5.0)
+            _u = await self._try(self._spooled, _u, timeout=5.0)
+            if _u:
+                logger.info('play_source[' + str(track.id) + ']: yuki API stream (primary)')
+                return _u
             url = await self._try(self._api_direct_url, track, False, 3)
             url = await self._try(self._spooled, url)
             if url:

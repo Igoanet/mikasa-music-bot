@@ -468,7 +468,7 @@ class TgCall(PyTgCalls):
                 clean_track = clean_song_name(media.title)
                 media.title = clean_track
                 text = (
-                    f"{emojis.HEADPHONE}  <b>˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪ {emojis.DOVE}</b>\n\n"
+                    f"{emojis.HEADPHONE}  <b>˹ᴍɪᴋᴀꜱᴀ 𓆩{emojis.SWORD}𓆪 ᴍᴜꜱɪᴄ♪ {emojis.DOVE}</b>\n\n"
                     f"<blockquote expandable>"
                     f"{emojis.MUSIC}  <b>Track :</b>  <a href=\"{media.url}\">{clean_track}</a>\n\n"
                     f"{emojis.DURATION}  <b>Duration :</b>  {media.duration}\n\n"
@@ -482,20 +482,24 @@ class TgCall(PyTgCalls):
                     _lang=_lang, is_admin=True, autoplay_all=await db.get_autoplay_all(chat_id),
                 )
                 _panel_id = getattr(message, "id", 0)
-                try:
-                    if _thumb:
-                        await message.edit_media(
+                sent = None
+                if _thumb:
+                    try:
+                        # Attempt edit_media in case message was already a media message
+                        sent = await message.edit_media(
                             media=InputMediaPhoto(
                                 media=_thumb,
                                 caption=text,
                             ),
                             reply_markup=keyboard,
                         )
-                        pass
-                    else:
-                        await message.edit_text(text, reply_markup=keyboard)
-                except (ChatSendMediaForbidden, ChatSendPhotosForbidden, MessageIdInvalid):
-                    if _thumb:
+                    except Exception:
+                        # Text message cannot be converted to photo via edit_media in Telegram:
+                        # Delete the 'Preparing playback...' text and send the photo poster cleanly
+                        try:
+                            await message.delete()
+                        except Exception:
+                            pass
                         try:
                             sent = await app.send_photo(
                                 chat_id=chat_id,
@@ -505,26 +509,31 @@ class TgCall(PyTgCalls):
                                 effect_id=5104841245755180586,
                             )
                         except Exception:
-                            sent = await app.send_photo(
-                                chat_id=chat_id,
-                                photo=_thumb,
-                                caption=text,
-                                reply_markup=keyboard,
-                            )
-                    else:
-                        try:
-                            sent = await app.send_message(
-                                chat_id=chat_id,
-                                text=text,
-                                reply_markup=keyboard,
-                                effect_id=5104841245755180586,
-                            )
-                        except Exception:
-                            sent = await app.send_message(
-                                chat_id=chat_id,
-                                text=text,
-                                reply_markup=keyboard,
-                            )
+                            try:
+                                sent = await app.send_photo(
+                                    chat_id=chat_id,
+                                    photo=_thumb,
+                                    caption=text,
+                                    reply_markup=keyboard,
+                                )
+                            except Exception as ex_photo:
+                                logger.warning("Failed to send photo card: %s; sending text card", ex_photo)
+                                sent = await app.send_message(
+                                    chat_id=chat_id,
+                                    text=text,
+                                    reply_markup=keyboard,
+                                )
+                else:
+                    try:
+                        sent = await message.edit_text(text, reply_markup=keyboard)
+                    except Exception:
+                        sent = await app.send_message(
+                            chat_id=chat_id,
+                            text=text,
+                            reply_markup=keyboard,
+                        )
+
+                if sent:
                     media.message_id = sent.id
                     _panel_id = sent.id
                 # the panel's buttons cycle colours while this call is live

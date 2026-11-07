@@ -31,8 +31,14 @@ def video_id_of(value: str) -> str | None:
     return None
 
 
+_WORKER_DOWN_UNTIL = 0.0
+
 async def get_worker_media(vid_id: str, media_format: str = "mp3") -> dict | None:
+    global _WORKER_DOWN_UNTIL
     if not WORKER_API_URL or not WORKER_API_KEY:
+        return None
+    import time
+    if time.time() < _WORKER_DOWN_UNTIL:
         return None
     vid = video_id_of(vid_id)
     if not vid:
@@ -46,7 +52,11 @@ async def get_worker_media(vid_id: str, media_format: str = "mp3") -> dict | Non
 
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(WORKER_API_URL, params=params, timeout=aiohttp.ClientTimeout(total=25)) as resp:
+            async with session.get(WORKER_API_URL, params=params, timeout=aiohttp.ClientTimeout(total=3)) as resp:
+                if resp.status in (401, 403):
+                    _WORKER_DOWN_UNTIL = time.time() + 600.0
+                    logger.warning("Worker API returned HTTP %s for %s - disabling for 10m", resp.status, vid)
+                    return None
                 if resp.status != 200:
                     logger.warning("Worker API returned HTTP %s for %s", resp.status, vid)
                     return None
