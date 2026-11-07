@@ -25,11 +25,12 @@ class Inline:
             "channel": EMOJI_IDS["radio"],
             "play": EMOJI_IDS["play"],
             "pause": EMOJI_IDS["pause"],
-            "next": EMOJI_IDS["rnxtcx_more"],
+            "next": EMOJI_IDS["rnxtcx_door"],
             "replay": EMOJI_IDS["rnxtcx_replay"],
             "mic": EMOJI_IDS["rnxtcx_mic"],
             "back": EMOJI_IDS["rnxtcx_backward"],
             "forward": EMOJI_IDS["rnxtcx_forward"],
+            "door": EMOJI_IDS["rnxtcx_door"],
             "more": EMOJI_IDS["rnxtcx_more"],
             "disc": EMOJI_IDS["disc"],
             "music": EMOJI_IDS["music"],
@@ -93,8 +94,9 @@ class Inline:
             )
 
         if not remove:
-            # Row 2 - all 5 player controls in one row, red theme:
-            # Replay | -15s | Pause/Play | +15s | Next
+            # Row 2 - all 5 player controls in one row, exact requested order:
+            # 🔄 ➡️ 🎙🎤 ⬅️ 🚪
+            # Replay | +15s | Pause/Play | -15s | Next
             rows.append(
                 [
                     self.ikb(
@@ -104,10 +106,10 @@ class Inline:
                         icon_custom_emoji_id=self.prem["replay"],
                     ),
                     self.ikb(
-                        text="-15s",
-                        callback_data="controls seekb %s" % chat_id,
+                        text="+15s",
+                        callback_data="controls seekf %s" % chat_id,
                         style=enums.ButtonStyle.DANGER,
-                        icon_custom_emoji_id=self.prem["back"],
+                        icon_custom_emoji_id=self.prem["forward"],
                     ),
                     self.ikb(
                         text=("Play" if paused else "Pause"),
@@ -117,10 +119,10 @@ class Inline:
                         icon_custom_emoji_id=self.prem["mic"],
                     ),
                     self.ikb(
-                        text="+15s",
-                        callback_data="controls seekf %s" % chat_id,
+                        text="-15s",
+                        callback_data="controls seekb %s" % chat_id,
                         style=enums.ButtonStyle.DANGER,
-                        icon_custom_emoji_id=self.prem["forward"],
+                        icon_custom_emoji_id=self.prem["back"],
                     ),
                     self.ikb(
                         text="Next",

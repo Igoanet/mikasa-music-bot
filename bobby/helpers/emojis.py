@@ -67,6 +67,7 @@ EMOJI_IDS = {
     "rnxtcx_forward": "6257902010381635302",  # ➡️ Rnxtcx
     "rnxtcx_mic": "6257757136839774012",      # 🎙 Rnxtcx
     "rnxtcx_backward": "6258115611990167629", # ⬅️ Rnxtcx
+    "rnxtcx_door": "6255624844491100107",     # 🚪 Rnxtcx
     "rnxtcx_more": "6257933226203942567",     # ↗️ Rnxtcx
     "play": "5316567469702264826",        # ▶️ AdaptiveStatus (Animated)
     "pause": "5278619986238122736",       # 🔇 vector_icons (Animated)
