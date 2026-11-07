@@ -39,22 +39,23 @@ def _join_notice(identity: PublicIdentity) -> str:
         peer = 0
     kind = getattr(identity, "kind", "user")
     if kind == "channel":
-        public_id, heading = str(-1000000000000 - abs(peer)), f"{emojis.HEADPHONE} <b>Channel Joined VC</b>"
+        public_id, heading = str(-1000000000000 - abs(peer)), f"{emojis.HEADPHONE}  <b>Channel Joined VC</b>"
     elif kind == "chat":
-        public_id, heading = str(-abs(peer)), f"{emojis.HEADPHONE} <b>Chat Joined VC</b>"
+        public_id, heading = str(-abs(peer)), f"{emojis.HEADPHONE}  <b>Chat Joined VC</b>"
     else:
-        public_id, heading = str(peer), f"{emojis.HEADPHONE} <b>Joined Voice Chat</b>"
+        public_id, heading = str(peer), f"{emojis.HEADPHONE}  <b>Joined Voice Chat</b>"
     now = datetime.now(timezone.utc).astimezone()
     time_str = now.strftime('%I:%M %p').lstrip('0')
-    lines = [
-        heading,
-        f"{emojis.USER} <b>User :</b> {name}",
+    items = [
+        f"{emojis.USER}  <b>User :</b>  {name}",
     ]
     if username:
-        lines.append(f"{emojis.TAG} <b>Username :</b> <code>@{html.escape(str(username)[:64], quote=True)}</code>")
-    lines.append(f"{emojis.ID} <b>ID :</b> <code>{public_id}</code>")
-    lines.append(f"{emojis.CLOCK} <b>Time :</b> <code>{time_str}</code>")
-    return "\n".join(lines)
+        items.append(f"{emojis.TAG}  <b>Username :</b>  <code>@{html.escape(str(username)[:64], quote=True)}</code>")
+    items.append(f"{emojis.ID}  <b>ID :</b>  <code>{public_id}</code>")
+    items.append(f"{emojis.CLOCK}  <b>Time :</b>  <code>{time_str}</code>")
+    
+    body = "\n\n".join(items)
+    return f"{heading}\n\n<blockquote expandable>{body}</blockquote>" 
 
 
 class MikasaVCConsumer:
