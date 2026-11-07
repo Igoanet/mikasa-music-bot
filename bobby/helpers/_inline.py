@@ -27,7 +27,8 @@ class Inline:
             "pause": EMOJI_IDS["pause"],
             "next": EMOJI_IDS["rnxtcx_door"],
             "replay": EMOJI_IDS["rnxtcx_replay"],
-            "mic": EMOJI_IDS["rnxtcx_mic"],
+            "mic": EMOJI_IDS["rnxtcx_mic_muted"],
+            "mic_active": EMOJI_IDS["rnxtcx_mic"],
             "back": EMOJI_IDS["rnxtcx_backward"],
             "forward": EMOJI_IDS["rnxtcx_forward"],
             "door": EMOJI_IDS["rnxtcx_door"],
@@ -116,7 +117,7 @@ class Inline:
                         callback_data="controls %s %s" % (
                             "resume" if paused else "pause", chat_id),
                         style=enums.ButtonStyle.DANGER,
-                        icon_custom_emoji_id=self.prem["mic"],
+                        icon_custom_emoji_id=(self.prem["mic_active"] if paused else self.prem["mic"]),
                     ),
                     self.ikb(
                         text="-15s",

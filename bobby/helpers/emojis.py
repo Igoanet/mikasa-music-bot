@@ -65,7 +65,8 @@ EMOJI_IDS = {
     # Controls & UI (Animated)
     "rnxtcx_replay": "6257944822615641633",   # 🔄 Rnxtcx
     "rnxtcx_forward": "6257902010381635302",  # ➡️ Rnxtcx
-    "rnxtcx_mic": "6257757136839774012",      # 🎙 Rnxtcx
+    "rnxtcx_mic": "6257757136839774012",      # 🎙 Rnxtcx (Active / Resume)
+    "rnxtcx_mic_muted": "6258165115783221077",# 🎙\ Rnxtcx (Muted / Pause)
     "rnxtcx_backward": "6258115611990167629", # ⬅️ Rnxtcx
     "rnxtcx_door": "6255624844491100107",     # 🚪 Rnxtcx
     "rnxtcx_more": "6257933226203942567",     # ↗️ Rnxtcx
