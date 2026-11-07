@@ -224,5 +224,5 @@
     "autoplay_btn_off": "🔁 Autoplay: Off",
     "autoplay_toggle_on": "Autoplay is ON — when the queue ends I'll keep playing similar songs.",
     "autoplay_toggle_off": "Autoplay is OFF — when the queue ends I'll only suggest songs.",
-    "play_3": "<tg-emoji emoji-id=\"5226828843926460895\">⏳</tg-emoji>  <b>Preparing playback…</b>"
+    "play_3": "<tg-emoji emoji-id=\"5397674675796985688\">🔍</tg-emoji>  <b>Preparing playback…</b>"
 }
