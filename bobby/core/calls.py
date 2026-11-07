@@ -470,9 +470,9 @@ class TgCall(PyTgCalls):
                 text = (
                     f"{emojis.HEADPHONE}  <b>˹ᴍɪᴋᴀꜱᴀ 𓆩{emojis.SWORD}𓆪 ᴍᴜꜱɪᴄ♪ {emojis.DOVE}</b>\n\n"
                     f"<blockquote>"
-                    f"{emojis.MUSIC} Track : <a href=\"{media.url}\">{clean_track}</a>\n\n"
-                    f"{emojis.DURATION} Duration : {media.duration}\n\n"
-                    f"{emojis.USER} Requested By : {media.user}"
+                    f"{emojis.SPARKLES} Track : <a href=\"{media.url}\">{clean_track}</a>\n\n"
+                    f"{emojis.CLOCK} Duration : {media.duration}\n\n"
+                    f"{emojis.USERS} Requested By : {media.user}"
                     f"</blockquote>"
                 )
                 from bobby.core.disco import progress_bar as _bar

@@ -39,7 +39,7 @@ EMOJI_IDS = {
     "id": "5902449142575141204",          # 🔗 ProtectStatus (Animated)
 
     # Time & Duration (Animated)
-    "clock": "5902050947567194830",       # ⏰ ProtectStatus (Animated)
+    "clock": "5893102202817352158",       # 🕞 ProtectStatus (Animated Round Clock)
     "duration": "5258113901106580375",    # ⌛ vector_icons (Animated)
 
     # Aesthetic, Status & Vibe (Animated)
