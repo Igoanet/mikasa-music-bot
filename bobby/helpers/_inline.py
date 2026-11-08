@@ -95,37 +95,37 @@ class Inline:
             )
 
         if not remove:
-            # Row 2 - all 5 player controls in one row:
-            # Replay | 15 (seek backward) | Pause/Play | 15 (seek forward) | Next
+            # Row 2 - all 5 player controls in one row (custom emoji icons only):
+            # Replay | Seek Backward | Pause/Play | Seek Forward | Next
             rows.append(
                 [
                     self.ikb(
-                        text="Replay",
+                        text="",
                         callback_data="controls replay %s" % chat_id,
                         style=enums.ButtonStyle.DANGER,
                         icon_custom_emoji_id=self.prem["replay"],
                     ),
                     self.ikb(
-                        text="15",
+                        text="",
                         callback_data="controls seekb %s" % chat_id,
                         style=enums.ButtonStyle.DANGER,
                         icon_custom_emoji_id=self.prem["back"],
                     ),
                     self.ikb(
-                        text=("Play" if paused else "Pause"),
+                        text="",
                         callback_data="controls %s %s" % (
                             "resume" if paused else "pause", chat_id),
                         style=enums.ButtonStyle.DANGER,
                         icon_custom_emoji_id=(self.prem["mic_active"] if paused else self.prem["mic"]),
                     ),
                     self.ikb(
-                        text="15",
+                        text="",
                         callback_data="controls seekf %s" % chat_id,
                         style=enums.ButtonStyle.DANGER,
                         icon_custom_emoji_id=self.prem["forward"],
                     ),
                     self.ikb(
-                        text="Next",
+                        text="",
                         callback_data="controls skip %s" % chat_id,
                         style=enums.ButtonStyle.DANGER,
                         icon_custom_emoji_id=self.prem["next"],
