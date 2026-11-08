@@ -371,13 +371,13 @@ class Inline:
             ],
             [
                 self.ikb(
-                    text="Add Me To Group",
+                    text=" Add Me To Group",
                     url=f"https://t.me/{bot_username}?startgroup=true",
                     style=enums.ButtonStyle.PRIMARY,
                     icon_custom_emoji_id=self.prem["add"],
                 ),
                 self.ikb(
-                    text="Help & Commands",
+                    text=" Help & Commands",
                     callback_data="help",
                     style=enums.ButtonStyle.PRIMARY,
                     icon_custom_emoji_id=self.prem["sparkle"],

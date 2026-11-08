@@ -47,18 +47,17 @@ def _join_notice(identity: PublicIdentity) -> str:
     heading = f"{emojis.HEADPHONE}  <b>ᴊᴏɪɴᴇᴅ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ</b>"
     now = datetime.now(timezone.utc).astimezone()
     time_str = now.strftime('%I:%M %p').lstrip('0')
-    if username and str(username).strip() and str(username).strip() != "None":
-        user_line = f"@{html.escape(str(username).strip().lstrip('@')[:64], quote=True)}"
-    else:
-        user_line = "None"
-
     items = [
         f"{emojis.VC_USER}  ᴜsᴇʀ :  {name}",
-        f"{emojis.VC_USERNAME}  ᴜsᴇʀɴᴀᴍᴇ :  {user_line}",
+    ]
+    if username and str(username).strip() and str(username).strip() != "None":
+        user_line = f"@{html.escape(str(username).strip().lstrip('@')[:64], quote=True)}"
+        items.append(f"{emojis.VC_USERNAME}  ᴜsᴇʀɴᴀᴍᴇ :  {user_line}")
+
+    items.extend([
         f"{emojis.VC_ID}  ɪᴅ :  {public_id}",
         f"{emojis.VC_TIME}  ᴛɪᴍᴇ :  {time_str}",
-    ]
-    
+    ])
     body = "\n\n".join(items)
     return f"{heading}\n\n<blockquote expandable>{body}</blockquote>" 
 
