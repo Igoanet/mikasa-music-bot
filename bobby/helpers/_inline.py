@@ -35,6 +35,7 @@ class Inline:
             "more": EMOJI_IDS["rnxtcx_more"],
             "disc": EMOJI_IDS["disc"],
             "music": EMOJI_IDS["music"],
+            "lightning": EMOJI_IDS["lightning"],
         }
 
     def cancel_dl(self, text) -> types.InlineKeyboardMarkup:
