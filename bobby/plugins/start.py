@@ -13,8 +13,18 @@ from bobby.helpers import buttons, is_group_owner, utils
 @app.on_message(filters.command(["help"]) & filters.private & ~app.bl_users)
 @lang.language()
 async def _help(_, m: types.Message):
+    _support_url = config.SUPPORT_CHAT or "https://t.me/toolatetobloom"
+    _owner_url   = config.OWNER_CHAT   or "https://t.me/RohanDevta"
+    _sh = _support_url.rstrip("/").split("/")[-1]
+    _oh = _owner_url.rstrip("/").split("/")[-1]
+    if not _sh.startswith("@"): _sh = f"@{_sh}"
+    if not _oh.startswith("@"): _oh = f"@{_oh}"
+    _footer = (
+        f'\n\n💬 <a href="{_support_url}">ᴛᴜᴘᴘᴏʀᴛ — {_sh}</a> 👥👥'
+        f'\n👑 <a href="{_owner_url}">ᴏᴡɴᴇʀ — {_oh}</a>'
+    )
     await m.reply_text(
-        text=m.lang["help_menu"],
+        text=m.lang["help_menu"] + _footer,
         reply_markup=buttons.help_markup(
             m.lang,
             staff=bool(m.from_user)

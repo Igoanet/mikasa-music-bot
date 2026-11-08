@@ -159,20 +159,6 @@ class Inline:
                              style=enums.ButtonStyle.DANGER,
                              icon_custom_emoji_id=self.prem["cross"]),
                 ],
-                [
-                    self.ikb(
-                        text=f"💬 Support — {support_handle} 👥",
-                        url=support_url,
-                        style=enums.ButtonStyle.PRIMARY,
-                    )
-                ],
-                [
-                    self.ikb(
-                        text=f"👑 Owner — {owner_handle}",
-                        url=owner_url,
-                        style=enums.ButtonStyle.PRIMARY,
-                    )
-                ]
             ]
         else:
             # (label key, callback suffix, colour) — the suffix selects help_<suffix>
@@ -200,32 +186,6 @@ class Inline:
                 if staff or cb not in ("blist", "sudo", "owner")
             ]
             rows = [buttons[i : i + 3] for i in range(0, len(buttons), 3)]
-            support_url = config.SUPPORT_CHAT or "https://t.me/toolatetobloom"
-            support_handle = support_url.rstrip("/").split("/")[-1]
-            if not support_handle.startswith("@"):
-                support_handle = f"@{support_handle}"
-            owner_url      = config.OWNER_CHAT   or "https://t.me/RohanDevta"
-            owner_handle   = owner_url.rstrip("/").split("/")[-1]
-            if not owner_handle.startswith("@"):
-                owner_handle = f"@{owner_handle}"
-            rows.append(
-                [
-                    self.ikb(
-                        text=f"💬 Support — {support_handle} 👥",
-                        url=support_url,
-                        style=enums.ButtonStyle.PRIMARY,
-                    )
-                ]
-            )
-            rows.append(
-                [
-                    self.ikb(
-                        text=f"👑 Owner — {owner_handle}",
-                        url=owner_url,
-                        style=enums.ButtonStyle.PRIMARY,
-                    )
-                ]
-            )
 
         return self.ikm(rows)
 
