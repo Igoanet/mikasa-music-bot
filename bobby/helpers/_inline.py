@@ -95,9 +95,8 @@ class Inline:
             )
 
         if not remove:
-            # Row 2 - all 5 player controls in one row, exact requested order:
-            # 🔄 ➡️ 🎙🎤 ⬅️ 🚪
-            # Replay | +15s | Pause/Play | -15s | Next
+            # Row 2 - all 5 player controls in one row:
+            # Replay | 15 (seek backward) | Pause/Play | 15 (seek forward) | Next
             rows.append(
                 [
                     self.ikb(
@@ -107,10 +106,10 @@ class Inline:
                         icon_custom_emoji_id=self.prem["replay"],
                     ),
                     self.ikb(
-                        text="+15s",
-                        callback_data="controls seekf %s" % chat_id,
+                        text="15",
+                        callback_data="controls seekb %s" % chat_id,
                         style=enums.ButtonStyle.DANGER,
-                        icon_custom_emoji_id=self.prem["forward"],
+                        icon_custom_emoji_id=self.prem["back"],
                     ),
                     self.ikb(
                         text=("Play" if paused else "Pause"),
@@ -120,10 +119,10 @@ class Inline:
                         icon_custom_emoji_id=(self.prem["mic_active"] if paused else self.prem["mic"]),
                     ),
                     self.ikb(
-                        text="-15s",
-                        callback_data="controls seekb %s" % chat_id,
+                        text="15",
+                        callback_data="controls seekf %s" % chat_id,
                         style=enums.ButtonStyle.DANGER,
-                        icon_custom_emoji_id=self.prem["back"],
+                        icon_custom_emoji_id=self.prem["forward"],
                     ),
                     self.ikb(
                         text="Next",
