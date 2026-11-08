@@ -73,7 +73,7 @@
     "play_banned": "<u><b>{0} सहायक ने आपकी चैट पर प्रतिबंध लगा दिया है</b></u>\n\n<b>आईडी:</b> <code>{1}</code>\n<b>नाम:</b> {2}\n<b>उपयोगकर्ता नाम:</b> {3}",
     "play_media": "<u><b>| स्ट्रीमिंग शुरू हो गई</b></u>\n\n<b>शीर्षक:</b> <a href={0}>{1}</a>\n\n<b>अवधि:</b> {2} मिनट\n<b>द्वारा अनुरोधित:</b> {3}",
     "play_log": "<u>{0} प्ले लॉग</u>\n\n<b>चैट:</b> <code>{1}</code> | {2}\n<b>उपयोगकर्ता:</b> <code>{3}</code> | {4}\n<b>संदेश लिंक:</b> {5}\n\n<b>शीर्षक:</b> {6}\n<b>अवधि:</b> {7} मिनट",
-    "play_queued": "<tg-emoji emoji-id=\"5213002459437342368\">💾</tg-emoji>  <b>Added to queue</b>\n\n<b><a href=\"{1}\">{2}</a></b>\n<tg-emoji emoji-id=\"5893102202817352158\">🕞</tg-emoji>  {3} min · requested by {4}\n\n<i>Position #{0} of {5} in the queue</i>",
+    "play_queued": "<tg-emoji emoji-id=\"5213002459437342368\">💾</tg-emoji>  <b>ᴀᴅᴅᴇᴅ ᴛᴏ ǫᴜᴇᴜᴇ</b>\n\n<b><a href=\"{1}\">{2}</a></b>\n<tg-emoji emoji-id=\"5893102202817352158\">🕞</tg-emoji>  {3} ᴍɪɴ · ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ {4}\n\n<i>ᴘᴏsɪᴛɪᴏɴ #{0} ᴏғ {5} ɪɴ ᴛʜᴇ ǫᴜᴇᴜᴇ</i>",
     "play_usage": "<b>उपयोग:</b>\n\n<code>/play attention</code>",
     "play_seeking": "वर्तमान स्ट्रीम में खोजा जा रहा है...",
     "play_again": "वर्तमान मीडिया को फिर से चलाया जा रहा है...",

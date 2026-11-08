@@ -44,7 +44,7 @@ def _join_notice(identity: PublicIdentity) -> str:
         public_id = str(-abs(peer))
     else:
         public_id = str(peer)
-    heading = f"{emojis.HEADPHONE}  <b>Joined Voice Chat</b>"
+    heading = f"{emojis.HEADPHONE}  <b>ᴊᴏɪɴᴇᴅ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ</b>"
     now = datetime.now(timezone.utc).astimezone()
     time_str = now.strftime('%I:%M %p').lstrip('0')
     if username and str(username).strip() and str(username).strip() != "None":
@@ -53,10 +53,10 @@ def _join_notice(identity: PublicIdentity) -> str:
         user_line = "None"
 
     items = [
-        f"{emojis.VC_USER}  User :  {name}",
-        f"{emojis.VC_USERNAME}  Username :  {user_line}",
-        f"{emojis.VC_ID}  ID :  {public_id}",
-        f"{emojis.VC_TIME}  Time :  {time_str}",
+        f"{emojis.VC_USER}  ᴜsᴇʀ :  {name}",
+        f"{emojis.VC_USERNAME}  ᴜsᴇʀɴᴀᴍᴇ :  {user_line}",
+        f"{emojis.VC_ID}  ɪᴅ :  {public_id}",
+        f"{emojis.VC_TIME}  ᴛɪᴍᴇ :  {time_str}",
     ]
     
     body = "\n\n".join(items)
