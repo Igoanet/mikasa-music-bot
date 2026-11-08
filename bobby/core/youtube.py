@@ -535,7 +535,7 @@ class YouTube:
         max_duration: Union[int, None] = None,
     ) -> Union[dict, None]:
         candidates = []
-        if videoid and Recommendations is not None:
+        if videoid and Recommendations is not None and hasattr(Recommendations, "get"):
             try:
                 candidates = await Recommendations.get(videoid, timeout=5) or []
             except Exception as err:
