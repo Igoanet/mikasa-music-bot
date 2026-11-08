@@ -153,7 +153,7 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
         {
             "type": "paragraph",
             "text": [
-                {"type": "custom_emoji", "custom_emoji_id": "5442678635909621223", "alternative_text": "❤️"},
+                {"type": "custom_emoji", "custom_emoji_id": "5431374840332302296", "alternative_text": "🔔"},
                 " ᴠɪsɪᴛ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ & sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ ғᴏʀ ᴍᴏʀᴇ...",
             ],
         },
