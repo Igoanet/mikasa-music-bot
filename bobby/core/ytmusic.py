@@ -47,7 +47,7 @@ def _search_sync(query: str):
     from ytmusicapi import YTMusic
 
     return YTMusic(requests_session=_TimedSession()).search(
-        query, filter="songs", limit=8
+        query, limit=12
     )
 
 
@@ -67,7 +67,7 @@ async def best_video(query: str) -> dict | None:
     best = None
     best_score = None
     for item in results or []:
-        if item.get("resultType") != "song" or not item.get("videoId"):
+        if not item.get("videoId"):
             continue
         try:
             duration_sec = int(item.get("duration_seconds") or 0)
@@ -87,8 +87,8 @@ async def best_video(query: str) -> dict | None:
             score += 2  # album presence ≈ official release, not an upload
         if item.get("category") == "Top result":
             score += 3
-        if is_copy(f"{title} {album}", query):
-            score -= 15  # same rule as JioSaavn: unasked flavours lose
+        # Blocker removed: allow all uploads, channel releases and remixes
+        pass
 
         if best_score is None or score > best_score:
             best_score = score

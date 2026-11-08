@@ -426,10 +426,28 @@ class YouTube:
         if match:
             return await self.track_from_url(query, m_id, video=video)
 
+        # If direct JioSaavn URL passed in query, resolve directly
+        if "jiosaavn.com" in query:
+            try:
+                from bobby import saavn
+                s_track = await saavn.track_from_url(query, m_id)
+                if s_track:
+                    return s_track
+            except Exception as e:
+                logger.warning("JioSaavn url track resolution error: %s", e)
+
         try:
             results = VideosSearch(query, limit=1)
             res = await results.next()
             items = res.get("result", [])
+            if not items:
+                try:
+                    from bobby import saavn
+                    saavn_track = await saavn.search(query, m_id)
+                    if saavn_track:
+                        return saavn_track
+                except Exception:
+                    pass
             if not items:
                 return None
             first = items[0]
@@ -942,6 +960,32 @@ class YouTube:
             if live and live.file_path:
                 track.file_path = live.file_path
                 return live.file_path
+            return None
+
+        # Handle JioSaavn CDN streaming and downloads
+        if track.id.startswith("saavn:"):
+            from bobby import saavn
+            ext = "mp3"
+            clean_id = track.id.replace(":", "_")
+            cached_file = os.path.join("downloads", f"{clean_id}.{ext}")
+            if os.path.exists(cached_file) and os.path.getsize(cached_file) >= MIN_CACHED_MEDIA_BYTES:
+                logger.info("play_source[%s]: local cache hit (%s)", track.id, ext)
+                return cached_file
+            direct_urls = saavn.direct_for(track.id)
+            if not direct_urls:
+                await saavn.resolve_url(track.id)
+                direct_urls = saavn.direct_for(track.id)
+            for cdn_url in direct_urls:
+                try:
+                    res = await download_from_source(cdn_url, cached_file, headers={"User-Agent": "Mozilla/5.0"})
+                    if res and os.path.exists(res):
+                        return res
+                except Exception as ex:
+                    logger.warning("saavn download failed from %s: %s", cdn_url, ex)
+            # Fallback to YouTube search if JioSaavn CDN stream fails
+            yt_track = await self.search(f"{track.title} {track.channel_name or ''}", track.message_id, video=video)
+            if yt_track and yt_track.id != track.id:
+                return await self.play_source(yt_track, video=video, progress_msg=progress_msg, lang=lang)
             return None
 
         # Check local cache first (instant 0ms latency!)

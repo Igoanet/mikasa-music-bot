@@ -236,8 +236,8 @@ class JioSaavn:
             if qwords:
                 hay = set(re.findall(r"[a-z0-9]+", f"{title} {artists}".lower()))
                 score += 10 * sum(1 for w in qwords if w in hay) / len(qwords)
-            if is_copy(f"{title} {album}", query):
-                score -= 15
+            # Blocker removed: allow all music / non-official / channel / remixes
+            pass
             try:
                 plays = int(item.get("play_count") or 0)
             except (TypeError, ValueError):
@@ -273,6 +273,65 @@ class JioSaavn:
                 )
             )
         return out
+
+    async def track_from_url(self, url: str, m_id: int = 0) -> Track | None:
+        """Resolve a direct JioSaavn URL to a playable Track object."""
+        token = url.strip().rstrip("/").split("/")[-1]
+        if not token:
+            return None
+        params = {
+            "__call": "webapi.get",
+            "type": "song",
+            "pids": "",
+            "token": token,
+            "_format": "json",
+            "_marker": "0",
+            "ctx": "wap6dot0",
+        }
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    API,
+                    params=params,
+                    headers={"User-Agent": "Mozilla/5.0"},
+                    timeout=aiohttp.ClientTimeout(total=10),
+                ) as resp:
+                    if resp.status != 200:
+                        return None
+                    data = await resp.json(content_type=None)
+        except Exception as ex:
+            logger.warning("jiosaavn url resolve failed for %s: %s", url, ex)
+            return None
+
+        songs = data.get("songs") or []
+        if not songs:
+            parts = [p for p in url.strip().rstrip("/").split("/") if p]
+            if len(parts) >= 2 and parts[-2] != "song":
+                return await self.search(parts[-2].replace("-", " "), m_id)
+            return None
+        song = songs[0]
+        track_id = f"{_PREFIX}{song.get('id', token)}"
+        perma_url = song.get("perma_url") or url
+        enc_url = song.get("encrypted_media_url") or ""
+        direct = _decrypt_media_url(enc_url) if enc_url else ""
+        self._cache(track_id, perma_url, direct)
+        title = html.unescape(song.get("song") or song.get("title") or "JioSaavn Track")
+        channel = html.unescape(song.get("primary_artists") or song.get("singers") or "")
+        dur_sec = int(song.get("duration") or 0)
+        dur_str = f"{dur_sec // 60}:{dur_sec % 60:02d}" if dur_sec else "—"
+        thumb = song.get("image", "").replace("150x150", "500x500")
+        return Track(
+            id=track_id,
+            channel_name=channel,
+            duration=dur_str,
+            duration_sec=dur_sec,
+            message_id=m_id,
+            title=title[:100],
+            thumbnail=thumb.replace("http://", "https://", 1) or None,
+            url=perma_url,
+            view_count="",
+            video=False,
+        )
 
     async def search(self, query: str, m_id: int) -> Track | None:
         ranked = await self._ranked(query, m_id, 1)

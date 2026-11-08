@@ -141,6 +141,11 @@ class Inline:
         self, _lang: dict, back: bool = False, staff: bool = False,
         owner: bool = False,
     ) -> types.InlineKeyboardMarkup:
+        support_url = config.SUPPORT_CHAT or "https://t.me/RohanDevta"
+        owner_handle = support_url.rstrip("/").split("/")[-1]
+        if not owner_handle.startswith("@"):
+            owner_handle = f"@{owner_handle}"
+
         if back:
             rows = [
                 [
@@ -149,6 +154,13 @@ class Inline:
                     self.ikb(text=_lang["close"], callback_data="help close",
                              style=enums.ButtonStyle.DANGER,
                              icon_custom_emoji_id=self.prem["cross"]),
+                ],
+                [
+                    self.ikb(
+                        text=f"💬 Support — {owner_handle} ↗",
+                        url=support_url,
+                        style=enums.ButtonStyle.PRIMARY,
+                    )
                 ]
             ]
         else:
@@ -177,6 +189,19 @@ class Inline:
                 if staff or cb not in ("blist", "sudo", "owner")
             ]
             rows = [buttons[i : i + 3] for i in range(0, len(buttons), 3)]
+            support_url = config.SUPPORT_CHAT or "https://t.me/RohanDevta"
+            owner_handle = support_url.rstrip("/").split("/")[-1]
+            if not owner_handle.startswith("@"):
+                owner_handle = f"@{owner_handle}"
+            rows.append(
+                [
+                    self.ikb(
+                        text=f"💬 Support — {owner_handle} ↗",
+                        url=support_url,
+                        style=enums.ButtonStyle.PRIMARY,
+                    )
+                ]
+            )
 
         if owner and not back:
             # the owner can open the panel from here too
@@ -314,6 +339,11 @@ class Inline:
         self, lang: dict, private: bool = False, owner: bool = False
     ) -> types.InlineKeyboardMarkup:
         bot_username = getattr(app, 'username', None) or (app.me.username if getattr(app, 'me', None) else 'MikasaMusic_Bot')
+        support_url = config.SUPPORT_CHAT or "https://t.me/RohanDevta"
+        owner_handle = support_url.rstrip("/").split("/")[-1]
+        if not owner_handle.startswith("@"):
+            owner_handle = f"@{owner_handle}"
+
         rows = [
             [
                 self.ikb(
@@ -336,6 +366,13 @@ class Inline:
                     style=enums.ButtonStyle.PRIMARY,
                     icon_custom_emoji_id=self.prem["sparkle"],
                 ),
+            ],
+            [
+                self.ikb(
+                    text=f"💬 Support — {owner_handle} ↗",
+                    url=support_url,
+                    style=enums.ButtonStyle.PRIMARY,
+                )
             ],
         ]
         return self.ikm(rows)

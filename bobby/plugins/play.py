@@ -93,12 +93,14 @@ async def play_hndlr(
             # (searching YouTube for a raw link string returns nothing).
             # A song picked from the suggestion card is never a live feed,
             # so that path skips the multi-second yt-dlp probe.
+            from bobby import saavn
             file = (
                 (
                     None
                     if getattr(m, "skip_live_probe", False)
                     else await yt.get_live(url, sent.id, video)
                 )
+                or (await saavn.track_from_url(url, sent.id) if "jiosaavn.com" in url else None)
                 or await yt.track_from_url(url, sent.id, video)
                 or await yt.search(url, sent.id, video=video)
             )
