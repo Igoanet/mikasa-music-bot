@@ -268,10 +268,8 @@ async def _controls(_, query: types.CallbackQuery):
 async def _start_menu_cb(_, query: types.CallbackQuery):
     private = query.message.chat.type == enums.ChatType.PRIVATE
     bot_user = getattr(app, "username", None) or (app.me.username if getattr(app, "me", None) else "MikasaMusic_Bot")
-    _text = (
-        query.lang["start_pm"].format(bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID)
-        if private
-        else query.lang["start_gp"].format(app.name)
+    _text = query.lang["start_pm"].format(
+        bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID
     )
     key = buttons.start_key(query.lang, private, owner=bool(query.from_user and query.from_user.id == config.OWNER_ID))
     try:

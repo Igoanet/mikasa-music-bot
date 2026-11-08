@@ -36,10 +36,9 @@ async def start(_, message: types.Message):
     private = message.chat.type == enums.ChatType.PRIVATE
     payload = message.command[1] if len(message.command) > 1 else ""
     # [voice stack removed] voice deep-link hand-off dropped
-    _text = (
-        message.lang["start_pm"].format(app.username, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID)
-        if private
-        else message.lang["start_gp"].format(app.name)
+    bot_user = getattr(app, "username", None) or (app.me.username if getattr(app, "me", None) else "MikasaMusic_Bot")
+    _text = message.lang["start_pm"].format(
+        bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID
     )
 
     key = buttons.start_key(
