@@ -157,14 +157,14 @@ class Inline:
                 ],
                 [
                     self.ikb(
-                        text=f"💬 Support — {owner_handle} 👥 ↗",
+                        text=f"💬 Support — {owner_handle} 👥",
                         url=support_url,
                         style=enums.ButtonStyle.PRIMARY,
                     )
                 ],
                 [
                     self.ikb(
-                        text=f"👑 Owner — {owner_handle} ↗",
+                        text=f"👑 Owner — {owner_handle}",
                         url=support_url,
                         style=enums.ButtonStyle.PRIMARY,
                     )
@@ -203,7 +203,7 @@ class Inline:
             rows.append(
                 [
                     self.ikb(
-                        text=f"💬 Support — {owner_handle} 👥 ↗",
+                        text=f"💬 Support — {owner_handle} 👥",
                         url=support_url,
                         style=enums.ButtonStyle.PRIMARY,
                     )
@@ -212,7 +212,7 @@ class Inline:
             rows.append(
                 [
                     self.ikb(
-                        text=f"👑 Owner — {owner_handle} ↗",
+                        text=f"👑 Owner — {owner_handle}",
                         url=support_url,
                         style=enums.ButtonStyle.PRIMARY,
                     )
