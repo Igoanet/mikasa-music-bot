@@ -291,7 +291,7 @@ async def _help(_, query: types.CallbackQuery):
             return
 
     _uid = query.from_user.id if query.from_user else 0
-    if data[1] in ("clone", "blist", "sudo", "owner") and (
+    if data[1] in ("blist", "sudo", "owner") and (
         _uid != config.OWNER_ID and _uid not in app.sudoers
     ):
         return await _safe_answer(query)

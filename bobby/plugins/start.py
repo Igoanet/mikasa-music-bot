@@ -37,7 +37,7 @@ async def start(_, message: types.Message):
     payload = message.command[1] if len(message.command) > 1 else ""
     # [voice stack removed] voice deep-link hand-off dropped
     _text = (
-        message.lang["start_pm"].format(message.from_user.first_name, app.name)
+        message.lang["start_pm"].format(app.username, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID)
         if private
         else message.lang["start_gp"].format(app.name)
     )

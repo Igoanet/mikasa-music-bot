@@ -109,7 +109,7 @@
     "queue_fetching": "कतार प्राप्त हो रही है...",
     "restarting": "पुनरारंभ हो रहा है...",
     "restarted": "पुनरारंभ प्रगति पर है। चिंता न करें, इसमें केवल कुछ सेकंड लगेंगे... शायद।",
-    "start_pm": "नमस्ते {0},\nयह {1} है!\n\nकुछ शानदार और उपयोगी सुविधाओं वाला एक संगीत प्लेयर बॉट।\n\n<b><i>अधिक जानकारी के लिए सहायता बटन पर क्लिक करें।</i></b>",
+    "start_pm": "🎧 <b>˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪ 🕊️</b>\n🎀 <a href=\"https://t.me/{0}\">˹ᴍɪᴋᴀꜱᴀ ✘ ᴍᴜꜱɪᴄ˼</a> 🎀\nᴀᴅᴠᴀɴᴄᴇᴅ ᴍᴜsɪᴄ ᴘʟᴀʏᴇʀ ʙᴏᴛ ғᴏʀ ᴛᴇʟᴇɢʀᴀᴍ ɢʀᴏᴜᴘ ᴠɪᴅᴇᴏᴄʜᴀᴛs. 🎧\n\n<blockquote>> 24×7 ᴜᴘᴛɪᴍᴇ\n> ʟᴀɢ ғʀᴇᴇ\n> ɴᴏ ᴘʀᴏᴍᴏ & ᴀᴅs\n> ᴀᴅᴠᴀɴᴄᴇᴅ & ᴜsᴇғᴜʟ ғᴇᴀᴛᴜʀᴇs</blockquote>\n\n🤍 ᴠɪsɪᴛ <a href=\"{1}\">sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ</a> & <a href=\"{2}\">sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ</a> ғᴏʀ ᴍᴏʀᴇ...\n👤 <b>ᴏᴡɴᴇʀ :</b> <a href=\"tg://user?id={3}\">ᴘᴀɴᴇᴇʀ</a>",
     "start_gp": "नमस्ते,\nयह {0} है\n\n<u><b>कुछ शानदार और उपयोगी सुविधाओं वाला एक संगीत प्लेयर बॉट।</b></u>",
     "start_settings": "<u><b>{0} सेटिंग्स</b></u>\n\nइस चैट की वर्तमान सेटिंग्स बदलने के लिए नीचे दिए गए बटनों पर क्लिक करें।",
     "stats_fetching": "आँकड़े प्राप्त हो रहे हैं...",
@@ -157,8 +157,6 @@
     "help_6": "कतार",
     "help_7": "आँकड़े",
     "help_8": "सूडोर्स",
-    "help_9": "आवाज़",
-    "help_10": "आवाज़ क्लोन",
     "help_11": "मालिक",
     "recs_text": "<b>आपको ये गाने भी पसंद आ सकते हैं</b>\n\nनीचे से कोई गाना चुनें, मैं उसे इसी वॉइस चैट में चला दूँगा।",
     "recs_more": "और गाने ?",
@@ -192,5 +190,13 @@
     "autoplay_btn_off": "🔁 ऑटोप्ले: बंद",
     "autoplay_toggle_on": "ऑटोप्ले चालू — क्यू खत्म होने पर मिलते-जुलते गाने खुद चलते रहेंगे।",
     "autoplay_toggle_off": "ऑटोप्ले बंद — क्यू खत्म होने पर सिर्फ सुझाव मिलेंगे।",
-    "play_3": "<tg-emoji emoji-id=\"5206634672204829887\">🔍</tg-emoji>  <b>Preparing playback…</b>"
+    "play_3": "<tg-emoji emoji-id=\"5206634672204829887\">🔍</tg-emoji>  <b>Preparing playback…</b>",
+    "help_seek_btn": "सीक ⏩",
+    "help_loop_btn": "लूप 🔁",
+    "help_autoplay_btn": "ऑटोप्ले 🔄",
+    "help_speed_btn": "स्पीड ⚡",
+    "help_seek": "<u><b>Seek & Fast-Forward Commands:</b></u>\n<i>Control stream playback position in real time.</i>\n\n/seek [seconds]: Fast-forward stream by seconds.\n<b>Example:</b> <code>/seek 30</code>\n\n/seekback or /seekb [seconds]: Rewind stream by seconds.\n<b>Example:</b> <code>/seekb 15</code>\n\n<i>Tip: You can also tap the <b>15</b> buttons on the player card.</i>",
+    "help_loop": "<u><b>Loop & Repeat Commands:</b></u>\n<i>Repeat the current song or loop the whole queue.</i>\n\n/loop [1-20]: Loop current song specified times.\n<b>Example:</b> <code>/loop 5</code>\n\n/loop all: Repeat the entire queue infinitely.\n/loop off: Disable repeating.",
+    "help_autoplay": "<u><b>Autoplay Commands:</b></u>\n<i>Keep the music going when the queue ends.</i>\n\n/autoplay on: Automatically queue similar songs.\n/autoplay off: Stop playing when queue ends.\n/autoplay: Check status with quick toggle buttons.",
+    "help_speed": "<u><b>Playback Speed Commands:</b></u>\n<i>Adjust voice chat playback tempo.</i>\n\n/speed [0.5 - 2.0]: Set custom speed (e.g. <code>/speed 1.2</code>).\n/playback: Open speed control buttons."
 }

@@ -153,23 +153,25 @@ class Inline:
             # in the locale file; every entry here needs that key in en.json.
             sections = [
                 ("help_5", "play", enums.ButtonStyle.PRIMARY),
-                ("help_9", "voice", enums.ButtonStyle.SUCCESS),
-                ("help_10", "clone", enums.ButtonStyle.SUCCESS),
                 ("help_6", "queue", enums.ButtonStyle.PRIMARY),
                 ("help_0", "admins", enums.ButtonStyle.PRIMARY),
+                ("help_seek_btn", "seek", enums.ButtonStyle.PRIMARY),
+                ("help_loop_btn", "loop", enums.ButtonStyle.PRIMARY),
+                ("help_autoplay_btn", "autoplay", enums.ButtonStyle.PRIMARY),
+                ("help_speed_btn", "speed", enums.ButtonStyle.PRIMARY),
                 ("help_1", "auth", enums.ButtonStyle.PRIMARY),
-                ("help_2", "blist", enums.ButtonStyle.PRIMARY),
                 ("help_3", "lang", enums.ButtonStyle.PRIMARY),
                 ("help_4", "ping", enums.ButtonStyle.PRIMARY),
                 ("help_7", "stats", enums.ButtonStyle.PRIMARY),
+                ("help_2", "blist", enums.ButtonStyle.PRIMARY),
                 ("help_8", "sudo", enums.ButtonStyle.PRIMARY),
                 ("help_11", "owner", enums.ButtonStyle.PRIMARY),
             ]
-            # clone/blist/sudo/owner stay invisible to everyone but the owner and sudo users
+            # blist/sudo/owner stay invisible to everyone but the owner and sudo users
             buttons = [
-                self.ikb(text=_lang[label], callback_data=f"help {cb}", style=style)
+                self.ikb(text=_lang.get(label, label), callback_data=f"help {cb}", style=style)
                 for label, cb, style in sections
-                if staff or cb not in ("clone", "blist", "sudo", "owner")
+                if staff or cb not in ("blist", "sudo", "owner")
             ]
             rows = [buttons[i : i + 3] for i in range(0, len(buttons), 3)]
 
@@ -311,33 +313,21 @@ class Inline:
         rows = [
             [
                 self.ikb(
-                    text=lang["add_me"],
+                    text="➕ Add Me To Your Group",
                     url=f"https://t.me/{app.username}?startgroup=true",
                     style=enums.ButtonStyle.SUCCESS,
                     icon_custom_emoji_id=self.prem["rocket"],
                 )
             ],
-            [self.ikb(text=lang["help"], callback_data="help",
-                      style=enums.ButtonStyle.PRIMARY,
-                      icon_custom_emoji_id=self.prem["star"])],
             [
-                self.ikb(text=lang["support"], url=config.SUPPORT_CHAT,
-                         style=enums.ButtonStyle.PRIMARY,
-                         icon_custom_emoji_id=self.prem["phone"]),
-                self.ikb(text=lang["channel"], url=config.SUPPORT_CHANNEL,
-                         style=enums.ButtonStyle.PRIMARY,
-                         icon_custom_emoji_id=self.prem["channel"]),
+                self.ikb(
+                    text="✨ Help & Commands",
+                    callback_data="help",
+                    style=enums.ButtonStyle.PRIMARY,
+                    icon_custom_emoji_id=self.prem["star"],
+                )
             ],
         ]
-        if private and owner:
-            # owner panel entry point — shown only to the owner
-            rows += [
-                [self.ikb(text="👑 Owner Panel", callback_data="own_panel",
-                          style=enums.ButtonStyle.PRIMARY)]
-            ]
-        if not private:
-            rows += [[self.ikb(text=lang["language"], callback_data="language",
-                               style=enums.ButtonStyle.PRIMARY)]]
         return self.ikm(rows)
 
     def recs_markup(
