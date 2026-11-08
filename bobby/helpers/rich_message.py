@@ -81,8 +81,13 @@ async def edit_rich_message(
 def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_chat: str, photo_file_id: str | None = None) -> list[dict]:
     if not support_channel.startswith("http"):
         support_channel = f"https://t.me/{support_channel.lstrip('@')}"
-    if not support_chat.startswith("http"):
-        support_chat = f"https://t.me/{support_chat.lstrip('@')}"
+
+    owner_url = config.OWNER_CHAT or "https://t.me/RohanDevta"
+    if not owner_url.startswith("http"):
+        owner_url = f"https://t.me/{owner_url.lstrip('@')}"
+    owner_handle = owner_url.rstrip("/").split("/")[-1]
+    if not owner_handle.startswith("@"):
+        owner_handle = f"@{owner_handle}"
 
     photo_id = photo_file_id or START_IMG_FILE_ID
 
@@ -109,32 +114,37 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
                 {
                     "type": "url",
                     "url": f"https://t.me/{bot_user}",
-                    "text": {"type": "bold", "text": "˹ᴍɪᴋᴀꜱᴀ ✘ ᴍᴜꜱɪᴄ˼"},
+                    "text": "˹ᴍɪᴋᴀꜱᴀ ✘ ᴍᴜꜱɪᴄ˼",
                 },
                 " ",
                 {"type": "custom_emoji", "custom_emoji_id": "5893321843149902412", "alternative_text": "✨"},
                 " ",
-                {"type": "bold", "text": "ᴀᴅᴠᴀɴᴄᴇᴅ ᴍᴜsɪᴄ ᴘʟᴀʏᴇʀ ʙᴏᴛ ғᴏʀ ᴛᴇʟᴇɢʀᴀᴍ ɢʀᴏᴜᴘ ᴠɪᴅᴇᴏᴄʜᴀᴛs."},
+                {"type": "bold", "text": "ᴀᴅᴠᴀɴᴄᴇᴅ ᴍᴜsɪᴄ ᴘʟᴀʏᴇʀ ʙᴏᴛ ғᴏʀ ᴛᴇʟᴇɢʀᴀᴍ ɢʀᴏᴜᴘ ᴠɪᴅᴇᴏᴄʜᴀᴛs.\n"},
             ],
         },
         {
-            "type": "expandable_blockquote",
-            "text": [
-                {"type": "custom_emoji", "custom_emoji_id": "5893321843149902412", "alternative_text": "✨"},
-                " ",
-                {"type": "bold", "text": "ᴀᴅᴠᴀɴᴄᴇᴅ & ᴜsᴇғᴜʟ ғᴇᴀᴛᴜʀᴇs"},
-                "\n",
-                {"type": "custom_emoji", "custom_emoji_id": "5893048571560726748", "alternative_text": "⚡️"},
-                " ",
-                {"type": "bold", "text": "ʟᴀɢ ғʀᴇᴇ"},
-                "\n",
-                {"type": "custom_emoji", "custom_emoji_id": "5902016123972358349", "alternative_text": "🛡"},
-                " ",
-                {"type": "bold", "text": "ɴᴏ ᴘʀᴏᴍᴏ & ᴀᴅs"},
-                "\n",
-                {"type": "custom_emoji", "custom_emoji_id": "5893102202817352158", "alternative_text": "🕞"},
-                " ",
-                {"type": "bold", "text": "24×7 ᴜᴘᴛɪᴍᴇ"},
+            "type": "blockquote",
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "text": [
+                        {"type": "custom_emoji", "custom_emoji_id": "5893321843149902412", "alternative_text": "✨"},
+                        " ",
+                        {"type": "bold", "text": "ᴀᴅᴠᴀɴᴄᴇᴅ & ᴜsᴇғᴜʟ ғᴇᴀᴛᴜʀᴇs"},
+                        "\n",
+                        {"type": "custom_emoji", "custom_emoji_id": "5893048571560726748", "alternative_text": "⚡️"},
+                        " ",
+                        {"type": "bold", "text": "ʟᴀɢ ғʀᴇᴇ"},
+                        "\n",
+                        {"type": "custom_emoji", "custom_emoji_id": "5902016123972358349", "alternative_text": "🛡"},
+                        " ",
+                        {"type": "bold", "text": "ɴᴏ ᴘʀᴏᴍᴏ & ᴀᴅs"},
+                        "\n",
+                        {"type": "custom_emoji", "custom_emoji_id": "5893102202817352158", "alternative_text": "🕞"},
+                        " ",
+                        {"type": "bold", "text": "24×7 ᴜᴘᴛɪᴍᴇ"},
+                    ],
+                }
             ],
         },
         {
@@ -161,14 +171,14 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
                 },
                 {
                     "style": "primary",
-                    "url": support_chat,
+                    "url": owner_url,
                     "text": [
                         {
                             "type": "custom_emoji",
                             "custom_emoji_id": "5474385437403395055",
                             "alternative_text": "🤓",
                         },
-                        " Support Chat",
+                        f" Support Chat — {owner_handle}",
                     ],
                 },
             ],
