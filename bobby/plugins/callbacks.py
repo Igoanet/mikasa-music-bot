@@ -263,6 +263,23 @@ async def _controls(_, query: types.CallbackQuery):
         pass
 
 
+@app.on_callback_query(filters.regex(r"^start_menu$") & ~app.bl_users)
+@lang.language()
+async def _start_menu_cb(_, query: types.CallbackQuery):
+    private = query.message.chat.type == enums.ChatType.PRIVATE
+    bot_user = getattr(app, "username", None) or (app.me.username if getattr(app, "me", None) else "MikasaMusic_Bot")
+    _text = (
+        query.lang["start_pm"].format(bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID)
+        if private
+        else query.lang["start_gp"].format(app.name)
+    )
+    key = buttons.start_key(query.lang, private, owner=bool(query.from_user and query.from_user.id == config.OWNER_ID))
+    try:
+        await query.edit_message_text(text=_text, reply_markup=key)
+    except Exception:
+        await _safe_answer(query)
+
+
 @app.on_callback_query(filters.regex(r"^help(?: |$)") & ~app.bl_users)
 @lang.language()
 async def _help(_, query: types.CallbackQuery):

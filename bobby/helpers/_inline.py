@@ -310,22 +310,29 @@ class Inline:
     def start_key(
         self, lang: dict, private: bool = False, owner: bool = False
     ) -> types.InlineKeyboardMarkup:
+        bot_username = getattr(app, 'username', None) or (app.me.username if getattr(app, 'me', None) else 'MikasaMusic_Bot')
         rows = [
             [
                 self.ikb(
-                    text="➕ Add Me To Your Group",
-                    url=f"https://t.me/{getattr(app, 'username', None) or (app.me.username if getattr(app, 'me', None) else 'MikasaMusic_Bot')}?startgroup=true",
+                    text="⚡ Start",
+                    callback_data="start_menu",
                     style=enums.ButtonStyle.SUCCESS,
-                    icon_custom_emoji_id=self.prem["rocket"],
+                    icon_custom_emoji_id=self.prem["lightning"],
                 )
             ],
             [
+                self.ikb(
+                    text="➕ Add Me To Group",
+                    url=f"https://t.me/{bot_username}?startgroup=true",
+                    style=enums.ButtonStyle.PRIMARY,
+                    icon_custom_emoji_id=self.prem["rocket"],
+                ),
                 self.ikb(
                     text="✨ Help & Commands",
                     callback_data="help",
                     style=enums.ButtonStyle.PRIMARY,
                     icon_custom_emoji_id=self.prem["star"],
-                )
+                ),
             ],
         ]
         return self.ikm(rows)
