@@ -314,7 +314,7 @@ class Inline:
             [
                 self.ikb(
                     text="➕ Add Me To Your Group",
-                    url=f"https://t.me/{app.username}?startgroup=true",
+                    url=f"https://t.me/{getattr(app, 'username', None) or (app.me.username if getattr(app, 'me', None) else 'MikasaMusic_Bot')}?startgroup=true",
                     style=enums.ButtonStyle.SUCCESS,
                     icon_custom_emoji_id=self.prem["rocket"],
                 )
