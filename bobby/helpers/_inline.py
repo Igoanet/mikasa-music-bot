@@ -319,7 +319,7 @@ class Inline:
                 self.ikb(
                     text="Start",
                     callback_data="start_menu",
-                    style=enums.ButtonStyle.SUCCESS,
+                    style=enums.ButtonStyle.DANGER,
                     icon_custom_emoji_id=self.prem["lightning"],
                 )
             ],
