@@ -24,11 +24,11 @@ def tg_emoji(emoji_id: Union[str, int], fallback: str) -> str:
 # Verified Telegram Premium animated custom emoji IDs from paneer's packs
 EMOJI_IDS = {
     # Audio & Music (Animated)
-    "headphone": "6246810588052199536",   # 🎧 Statausproxtara (Animated)
+    "headphone": "6269555901628159084",   # 🎧 emj_2c260_by_TgEmodziBot (Animated)
     "music": "5334665104677941170",       # 🎵 vector_icons (Animated)
     "disc": "5258234027046883085",        # 📀 vector_icons (Animated)
     "notes": "5892966078123872045",       # 🎶 ProtectStatus (Animated)
-    "radio": "6246810588052199536",       # 🎧 Statausproxtara (Animated)
+    "radio": "6269555901628159084",       # 🎧 emj_2c260_by_TgEmodziBot (Animated)
     "mic": "6246851227032753502",         # 🎙 Statausproxtara (Animated)
     "wave": "5895444149699612825",        # 📊 ProtectStatus (Animated)
 
