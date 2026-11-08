@@ -27,7 +27,8 @@ EMOJI_IDS = {
     "headphone": "6269555901628159084",   # 🎧 emj_2c260_by_TgEmodziBot (Animated)
     "music": "5334665104677941170",       # 🎵 vector_icons (Animated)
     "disc": "5258234027046883085",        # 📀 vector_icons (Animated)
-    "queue": "5215684705168401226",       # 💾 AnimatedActions
+    "queue": "5213002459437342368",       # 💾 AnimatedActions
+    "start_flame": "5190600446892326598", # 🔥 Easy_Theme
     "notes": "5892966078123872045",       # 🎶 ProtectStatus (Animated)
     "radio": "6269555901628159084",       # 🎧 emj_2c260_by_TgEmodziBot (Animated)
     "mic": "6246851227032753502",         # 🎙 Statausproxtara (Animated)

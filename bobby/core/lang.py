@@ -39,7 +39,7 @@ PREMIUM_EMOJI_MAP = {
     "⌛": "5258113901106580375",  # Animated Hourglass (vector_icons)
     "⏱": "5902050947567194830",  # Animated Clock (ProtectStatus)
     "⏰": "5902050947567194830",  # Animated Clock (ProtectStatus)
-    "💾": "5215684705168401226",  # AnimatedActions
+    "💾": "5213002459437342368",  # AnimatedActions
     "🎵": "5334665104677941170",  # Animated Music (vector_icons)
     "🎶": "5892966078123872045",  # Animated Notes (ProtectStatus)
     "🎧": "6269555901628159084",  # Animated Headphone (emj_2c260_by_TgEmodziBot)
