@@ -81,7 +81,7 @@
     "play_paused": "<b>Yayın {0} tarafından duraklatıldı</b>",
     "play_resumed": "<b>Yayın {0} tarafından sürdürüldü</b>",
     "play_replayed": "<b>Yayın {0} tarafından yeniden başlatıldı</b>",
-    "play_skipped": "<b>Yayın {0} tarafından atlandı</b>",
+    "play_skipped": "<tg-emoji emoji-id=\"5341350410252723241\">😇</tg-emoji>  <b>Skipped</b> by {0}",
     "play_stopped": "<b>Yayın {0} tarafından sonlandırıldı</b>",
     "play_seeked": "<b>Yayın {2} tarafından {0} atlandı ve {1}. saniyeden başlatıldı</b>",
     "play_expired": "Bu düğmenin süresi doldu.",

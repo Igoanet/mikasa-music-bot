@@ -81,7 +81,7 @@
     "play_paused": "<b>流已被</b> {0} <b>暂停</b>",
     "play_resumed": "<b>流已被</b> {0} <b>恢复</b>",
     "play_replayed": "<b>流已被</b> {0} <b>重播</b>",
-    "play_skipped": "<b>流已被</b> {0} <b>跳过</b>",
+    "play_skipped": "<tg-emoji emoji-id=\"5341350410252723241\">😇</tg-emoji>  <b>Skipped</b> by {0}",
     "play_stopped": "<b>流已被</b> {0} <b>结束</b>",
     "play_seeked": "<b>流已被</b> {2} <b>跳过 {0} 并从 {1} 秒开始</b>",
     "play_expired": "此按钮已过期。",

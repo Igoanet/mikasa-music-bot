@@ -52,6 +52,7 @@ EMOJI_IDS = {
     "star": "5893494861612455015",        # ⭐ ProtectStatus (Animated)
     "sparkles": "5893321843149902412",    # ✨ ProtectStatus (Animated)
     "lightning": "5893048571560726748",   # ⚡ ProtectStatus (Animated Double Bolt)
+    "angel": "5341350410252723241",       # 😇 OutlineEmoji (Animated Angel / Skipped)
     "bot": "5355051922862653659",         # 🤖 OutlineEmoji (Animated)
     "alert": "5904692292324692386",       # ⚠️ ProtectStatus (Animated)
     "warning": "5893072412924187198",     # ❗️ ProtectStatus (Animated)

@@ -81,7 +81,7 @@
     "play_paused": "<b>{0}によってストリームが一時停止されました</b>",
     "play_resumed": "<b>{0}によってストリームが再開されました</b>",
     "play_replayed": "<b>{0}によってストリームがリプレイされました</b>",
-    "play_skipped": "<b>{0}によってストリームがスキップされました</b>",
+    "play_skipped": "<tg-emoji emoji-id=\"5341350410252723241\">😇</tg-emoji>  <b>Skipped</b> by {0}",
     "play_stopped": "<b>{0}によってストリームが終了しました</b>",
     "play_seeked": "<b>{0}によってストリームが{1}秒からスキップされて開始されました</b>",
     "play_expired": "このボタンの有効期限が切れました。",

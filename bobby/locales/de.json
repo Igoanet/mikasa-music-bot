@@ -81,7 +81,7 @@
     "play_paused": "<b>Stream von</b> {0} <b>pausiert</b>",
     "play_resumed": "<b>Stream von</b> {0} <b>fortgesetzt</b>",
     "play_replayed": "<b>Stream von</b> {0} <b>erneut abgespielt</b>",
-    "play_skipped": "<b>Stream von</b> {0} <b>übersprungen</b>",
+    "play_skipped": "<tg-emoji emoji-id=\"5341350410252723241\">😇</tg-emoji>  <b>Skipped</b> by {0}",
     "play_stopped": "<b>Stream von</b> {0} <b>beendet</b>",
     "play_seeked": "<b>Stream von</b> {2} <b>um {0} übersprungen und bei {1} Sekunden gestartet</b>",
     "play_expired": "Diese Schaltfläche ist abgelaufen.",

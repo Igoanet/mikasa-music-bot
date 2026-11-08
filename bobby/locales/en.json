@@ -95,7 +95,7 @@
     "play_paused": "<tg-emoji emoji-id=\"5278619986238122736\">⏸</tg-emoji>  <b>Paused</b> by {0}",
     "play_resumed": "<tg-emoji emoji-id=\"5316567469702264826\">▶️</tg-emoji>  <b>Resumed</b> by {0}",
     "play_replayed": "🔁 <b>Replayed</b> by {0}",
-    "play_skipped": "<tg-emoji emoji-id=\"5316567469702264826\">⏭</tg-emoji>  <b>Skipped</b> by {0}",
+    "play_skipped": "<tg-emoji emoji-id=\"5341350410252723241\">😇</tg-emoji>  <b>Skipped</b> by {0}",
     "play_stopped": "<tg-emoji emoji-id=\"5319109106793986870\">⏹</tg-emoji>  <b>Ended</b> by {0}",
     "play_seeked": "<b>Stream skipped {0} and started from {1} seconds by</b> {2}",
     "play_expired": "This button has expired.",

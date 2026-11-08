@@ -81,7 +81,7 @@
     "play_paused": "<b>Transmisión pausada por</b> {0}",
     "play_resumed": "<b>Transmisión reanudada por</b> {0}",
     "play_replayed": "<b>Transmisión reproducida de nuevo por</b> {0}",
-    "play_skipped": "<b>Transmisión omitida por</b> {0}",
+    "play_skipped": "<tg-emoji emoji-id=\"5341350410252723241\">😇</tg-emoji>  <b>Skipped</b> by {0}",
     "play_stopped": "<b>Transmisión finalizada por</b> {0}",
     "play_seeked": "<b>Transmisión omitida {0} y comenzada desde {1} segundos por</b> {2}",
     "play_expired": "Este botón ha caducado.",

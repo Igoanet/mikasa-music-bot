@@ -81,7 +81,7 @@
     "play_paused": "<b>توقف البث مؤقتًا بواسطة</b> {0}",
     "play_resumed": "<b>استؤنف البث بواسطة</b> {0}",
     "play_replayed": "<b>أعيد تشغيل البث بواسطة</b> {0}",
-    "play_skipped": "<b>تخطى البث بواسطة</b> {0}",
+    "play_skipped": "<tg-emoji emoji-id=\"5341350410252723241\">😇</tg-emoji>  <b>Skipped</b> by {0}",
     "play_stopped": "<b>انتهى البث بواسطة</b> {0}",
     "play_seeked": "<b>تخطى البث {0} وبدأ من {1} ثانية بواسطة</b> {2}",
     "play_expired": "انتهت صلاحية هذا الزر.",

@@ -81,7 +81,7 @@
     "play_paused": "<b>Flux mis en pause par</b> {0}",
     "play_resumed": "<b>Flux repris par</b> {0}",
     "play_replayed": "<b>Flux relu par</b> {0}",
-    "play_skipped": "<b>Flux sauté par</b> {0}",
+    "play_skipped": "<tg-emoji emoji-id=\"5341350410252723241\">😇</tg-emoji>  <b>Skipped</b> by {0}",
     "play_stopped": "<b>Flux terminé par</b> {0}",
     "play_seeked": "<b>Flux sauté {0} et démarré à partir de {1} secondes par</b> {2}",
     "play_expired": "Ce bouton a expiré.",
