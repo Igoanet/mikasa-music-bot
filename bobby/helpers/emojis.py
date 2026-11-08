@@ -79,7 +79,7 @@ EMOJI_IDS = {
     "check": "5895514131896733546",       # ✅ ProtectStatus (Animated)
     "trash": "5904542823167824187",       # 🗑 ProtectStatus (Animated)
     "shield": "5902016123972358349",      # 🛡 ProtectStatus (Animated)
-    "search": "6255612376201039503",      # 🔍 Rnxtcx
+    "search": "5397674675796985688",      # 🔍 MorkovkaAdaptive (Animated White/Grey Glass)
     "lock": "6258239736545021832",        # 🔒 Rnxtcx
     "key": "6257963359694491109",         # 🔑 Rnxtcx
 

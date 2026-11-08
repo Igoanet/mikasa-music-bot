@@ -220,7 +220,7 @@
     "autoplay_btn_off": "🔁 Autoplay: Off",
     "autoplay_toggle_on": "Autoplay is ON — when the queue ends I'll keep playing similar songs.",
     "autoplay_toggle_off": "Autoplay is OFF — when the queue ends I'll only suggest songs.",
-    "play_3": "<tg-emoji emoji-id=\"5206634672204829887\">🔍</tg-emoji>  <b>Preparing playback…</b>",
+    "play_3": "<tg-emoji emoji-id=\"5397674675796985688\">🔍</tg-emoji>  <b>Preparing playback…</b>",
     "help_seek_btn": "Seek ⏩",
     "help_loop_btn": "Loop 🔁",
     "help_autoplay_btn": "Autoplay 🔄",
