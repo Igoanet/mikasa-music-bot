@@ -472,7 +472,7 @@ class TgCall(PyTgCalls):
                     f"<blockquote>"
                     f"{emojis.SPARKLES} Track : <a href=\"{media.url}\">{clean_track}</a>\n\n"
                     f"{emojis.CLOCK} Duration : {media.duration}\n\n"
-                    f"{emojis.USERS} Requested By : {media.user}"
+                    f"{emojis.USER} Requested By : {media.user}"
                     f"</blockquote>"
                 )
                 from bobby.core.disco import progress_bar as _bar
