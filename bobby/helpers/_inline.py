@@ -363,10 +363,10 @@ class Inline:
         rows = [
             [
                 self.ikb(
-                    text="🔥 Start 🔥",
+                    text="Start",
                     callback_data="start_menu",
                     style=enums.ButtonStyle.DANGER,
-                    icon_custom_emoji_id="5190600446892326598",
+                    icon_custom_emoji_id="5253944419870062295",
                 )
             ],
             [
@@ -382,20 +382,6 @@ class Inline:
                     style=enums.ButtonStyle.PRIMARY,
                     icon_custom_emoji_id=self.prem["sparkle"],
                 ),
-            ],
-            [
-                self.ikb(
-                    text=f"💬 Support — {owner_handle} 👥 ↗",
-                    url=support_url,
-                    style=enums.ButtonStyle.PRIMARY,
-                )
-            ],
-            [
-                self.ikb(
-                    text=f"👑 Owner — {owner_handle} ↗",
-                    url=support_url,
-                    style=enums.ButtonStyle.PRIMARY,
-                )
             ],
         ]
         return self.ikm(rows)
