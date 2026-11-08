@@ -107,11 +107,7 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
                 {
                     "type": "url",
                     "url": f"https://t.me/{bot_user}",
-                    "text": [
-                        "˹ᴍɪᴋᴀꜱᴀ 𓆩",
-                        {"type": "custom_emoji", "custom_emoji_id": "5453991094435997597", "alternative_text": "⚔️"},
-                        "𓆪 ᴍᴜꜱɪᴄ♪",
-                    ],
+                    "text": "˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪",
                 },
                 "  ",
                 {"type": "custom_emoji", "custom_emoji_id": "5316740183222140641", "alternative_text": "🕊️"},
