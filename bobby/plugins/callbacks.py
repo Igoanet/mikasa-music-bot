@@ -268,10 +268,18 @@ async def _controls(_, query: types.CallbackQuery):
 async def _start_menu_cb(_, query: types.CallbackQuery):
     private = query.message.chat.type == enums.ChatType.PRIVATE
     bot_user = getattr(app, "username", None) or (app.me.username if getattr(app, "me", None) else "MikasaMusic_Bot")
+    key = buttons.start_key(query.lang, private, owner=bool(query.from_user and query.from_user.id == config.OWNER_ID))
+
+    if private:
+        from bobby.helpers.rich_message import edit_rich_message, get_start_chat_button_blocks
+        blocks = get_start_chat_button_blocks(bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT)
+        resp = await edit_rich_message(query.message.chat.id, query.message.id, blocks, reply_markup=key)
+        if resp.get("ok"):
+            return
+
     _text = query.lang["start_pm"].format(
         bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID
     )
-    key = buttons.start_key(query.lang, private, owner=bool(query.from_user and query.from_user.id == config.OWNER_ID))
     try:
         await query.edit_message_text(text=_text, reply_markup=key)
     except Exception:

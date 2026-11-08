@@ -18,6 +18,12 @@ def _convert_markup(reply_markup):
                     item["callback_data"] = b.callback_data
                 elif b.copy_text:
                     item["copy_text"] = {"text": b.copy_text.text}
+
+                # Preserve button style and custom emoji
+                if getattr(b, "icon_custom_emoji_id", None):
+                    item["icon_custom_emoji_id"] = str(b.icon_custom_emoji_id)
+                if getattr(b, "style", None):
+                    item["style"] = getattr(b.style, "value", str(b.style).lower())
                 r.append(item)
             kb.append(r)
         return {"inline_keyboard": kb}
@@ -66,13 +72,11 @@ async def edit_rich_message(
             return await resp.json()
 
 
-def get_start_blocks(bot_user: str, support_url: str, owner_url: str) -> list[dict]:
-    sh = support_url.rstrip("/").split("/")[-1]
-    oh = owner_url.rstrip("/").split("/")[-1]
-    if not sh.startswith("@"):
-        sh = f"@{sh}"
-    if not oh.startswith("@"):
-        oh = f"@{oh}"
+def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_chat: str) -> list[dict]:
+    if not support_channel.startswith("http"):
+        support_channel = f"https://t.me/{support_channel.lstrip('@')}"
+    if not support_chat.startswith("http"):
+        support_chat = f"https://t.me/{support_chat.lstrip('@')}"
 
     return [
         {
@@ -81,173 +85,20 @@ def get_start_blocks(bot_user: str, support_url: str, owner_url: str) -> list[di
                 "🎧 ˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪ 🕊️\n"
                 f"✨ ˹ᴍɪᴋᴀꜱᴀ ✘ ᴍᴜꜱɪᴄ˼ ✨\n"
                 "ᴀᴅᴠᴀɴᴄᴇᴅ ᴍᴜsɪᴄ ᴘʟᴀʏᴇʀ ʙᴏᴛ ғᴏʀ ᴛᴇʟᴇɢʀᴀᴍ ɢʀᴏᴜᴘ ᴠɪᴅᴇᴏᴄʜᴀᴛs.\n\n"
-                "⚡️ ʟᴀɢ ғʀᴇᴇ • 🛡 ɴᴏ ᴘʀᴏᴍᴏ & ᴀᴅs • 🕞 24×7 ᴜᴘᴛɪᴍᴇ"
+                "⚡️ ʟᴀɢ ғʀᴇᴇ • 🛡 ɴᴏ ᴘʀᴏᴍᴏ & ᴀᴅs • 🕞 24×7 ᴜᴘᴛɪᴍᴇ\n\n"
+                "❤️ ᴠɪsɪᴛ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ & sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ ғᴏʀ ᴍᴏʀᴇ..."
             ),
         },
         {
-            "type": "table",
-            "is_compact": True,
-            "is_bordered": True,
-            "cells": [
-                [
-                    {"text": "COMMAND"},
-                    {"text": "COMMAND DETAILS"},
-                ],
-                [
-                    {"text": "/play"},
-                    {"text": "🎵 PLAY AUDIO / VIDEO"},
-                ],
-                [
-                    {"text": "/pause"},
-                    {"text": "⏸️ PAUSE STREAM"},
-                ],
-                [
-                    {"text": "/skip"},
-                    {"text": "⏭️ SKIP CURRENT SONG"},
-                ],
-                [
-                    {"text": "/queue"},
-                    {"text": "📜 VIEW & MANAGE QUEUE"},
-                ],
-            ],
-        },
-        {
             "type": "buttons",
             "buttons": [
                 {
-                    "text": f"💬 Support — {sh} 👥",
-                    "url": support_url,
+                    "text": "📢 Support Channel",
+                    "url": support_channel,
                 },
                 {
-                    "text": f"👑 Owner — {oh}",
-                    "url": owner_url,
-                },
-            ],
-        },
-    ]
-
-
-def get_help_blocks(category: str, support_url: str, owner_url: str) -> list[dict]:
-    sh = support_url.rstrip("/").split("/")[-1]
-    oh = owner_url.rstrip("/").split("/")[-1]
-    if not sh.startswith("@"):
-        sh = f"@{sh}"
-    if not oh.startswith("@"):
-        oh = f"@{oh}"
-
-    # Default category table entries
-    tables = {
-        "menu": [
-            [{"text": "COMMAND"}, {"text": "COMMAND DETAILS"}],
-            [{"text": "/play"}, {"text": "🎵 PLAY AUDIO / VIDEO"}],
-            [{"text": "/pause"}, {"text": "⏸️ PAUSE STREAM"}],
-            [{"text": "/skip"}, {"text": "⏭️ SKIP CURRENT SONG"}],
-            [{"text": "/queue"}, {"text": "📜 VIEW & MANAGE QUEUE"}],
-            [{"text": "/settings"}, {"text": "⚙️ CONFIGURE PLAY MODE"}],
-        ],
-        "play": [
-            [{"text": "COMMAND"}, {"text": "COMMAND DETAILS"}],
-            [{"text": "/play"}, {"text": "🎵 PLAY AUDIO / SONG"}],
-            [{"text": "/vplay"}, {"text": "🎥 PLAY VIDEO STREAM"}],
-            [{"text": "/playforce"}, {"text": "⚡ FORCE PLAY AUDIO"}],
-            [{"text": "/vplayforce"}, {"text": "⚡ FORCE PLAY VIDEO"}],
-            [{"text": "/cplay"}, {"text": "📡 CHANNEL AUDIO PLAY"}],
-            [{"text": "/cvplay"}, {"text": "📡 CHANNEL VIDEO PLAY"}],
-        ],
-        "admins": [
-            [{"text": "COMMAND"}, {"text": "COMMAND DETAILS"}],
-            [{"text": "/pause"}, {"text": "⏸️ PAUSE STREAM"}],
-            [{"text": "/resume"}, {"text": "▶️ RESUME STREAM"}],
-            [{"text": "/skip"}, {"text": "⏭️ SKIP CURRENT SONG"}],
-            [{"text": "/stop"}, {"text": "⏹️ STOP & CLEAR QUEUE"}],
-            [{"text": "/mute"}, {"text": "🔇 MUTE ASSISTANT"}],
-            [{"text": "/unmute"}, {"text": "🔊 UNMUTE ASSISTANT"}],
-        ],
-        "queue": [
-            [{"text": "COMMAND"}, {"text": "COMMAND DETAILS"}],
-            [{"text": "/queue"}, {"text": "📜 SHOW TRACK QUEUE"}],
-            [{"text": "/shuffle"}, {"text": "🔀 SHUFFLE QUEUE"}],
-            [{"text": "/export"}, {"text": "📤 EXPORT QUEUE"}],
-            [{"text": "/import"}, {"text": "📥 IMPORT QUEUE"}],
-        ],
-        "seek": [
-            [{"text": "COMMAND"}, {"text": "COMMAND DETAILS"}],
-            [{"text": "/seek"}, {"text": "⏩ SEEK FORWARD (SEC)"}],
-            [{"text": "/seekback"}, {"text": "⏪ SEEK BACKWARD (SEC)"}],
-        ],
-        "loop": [
-            [{"text": "COMMAND"}, {"text": "COMMAND DETAILS"}],
-            [{"text": "/loop 1-20"}, {"text": "🔂 REPEAT CURRENT SONG"}],
-            [{"text": "/loop off"}, {"text": "⏹️ DISABLE LOOP"}],
-        ],
-        "autoplay": [
-            [{"text": "COMMAND"}, {"text": "COMMAND DETAILS"}],
-            [{"text": "/autoplay on"}, {"text": "✅ ENABLE AUTOPLAY"}],
-            [{"text": "/autoplay off"}, {"text": "❌ DISABLE AUTOPLAY"}],
-        ],
-        "speed": [
-            [{"text": "COMMAND"}, {"text": "COMMAND DETAILS"}],
-            [{"text": "/speed"}, {"text": "⚡ SET TEMPO (0.5x - 2.0x)"}],
-        ],
-        "auth": [
-            [{"text": "COMMAND"}, {"text": "COMMAND DETAILS"}],
-            [{"text": "/auth"}, {"text": "➕ AUTHORIZE USER"}],
-            [{"text": "/unauth"}, {"text": "➖ UNAUTHORIZE USER"}],
-            [{"text": "/authusers"}, {"text": "👥 LIST AUTH USERS"}],
-        ],
-        "ping": [
-            [{"text": "COMMAND"}, {"text": "COMMAND DETAILS"}],
-            [{"text": "/ping"}, {"text": "📡 CHECK BOT LATENCY"}],
-            [{"text": "/help"}, {"text": "📖 OPEN HELP MENU"}],
-        ],
-        "stats": [
-            [{"text": "COMMAND"}, {"text": "COMMAND DETAILS"}],
-            [{"text": "/stats"}, {"text": "📊 SHOW SYSTEM STATS"}],
-        ],
-        "blist": [
-            [{"text": "COMMAND"}, {"text": "COMMAND DETAILS"}],
-            [{"text": "/blacklist"}, {"text": "🚫 BLACKLIST CHAT/USER"}],
-            [{"text": "/unblacklist"}, {"text": "🔓 UNBLACKLIST CHAT/USER"}],
-            [{"text": "/blacklisted"}, {"text": "📋 LIST BLACKLISTED"}],
-        ],
-        "sudo": [
-            [{"text": "COMMAND"}, {"text": "COMMAND DETAILS"}],
-            [{"text": "/activevc"}, {"text": "🎙️ LIST ACTIVE VCS"}],
-            [{"text": "/ac"}, {"text": "📈 ACTIVE VC COUNT"}],
-            [{"text": "/broadcast"}, {"text": "📢 GLOBAL BROADCAST"}],
-        ],
-        "owner": [
-            [{"text": "COMMAND"}, {"text": "COMMAND DETAILS"}],
-            [{"text": "/owner"}, {"text": "⚙️ OWNER PANEL"}],
-            [{"text": "/accounts"}, {"text": "🤖 MANAGE ASSISTANTS"}],
-            [{"text": "/restart"}, {"text": "🔄 RESTART BOT"}],
-            [{"text": "/clean"}, {"text": "🧹 CLEAN CACHE FILES"}],
-        ],
-    }
-
-    cells = tables.get(category, tables["menu"])
-
-    return [
-        {
-            "type": "paragraph",
-            "text": f"🎧 ˹ᴍɪᴋᴀꜱᴀ ᴍᴜꜱɪᴄ˼ — {category.upper()} COMMANDS",
-        },
-        {
-            "type": "table",
-            "is_compact": True,
-            "is_bordered": True,
-            "cells": cells,
-        },
-        {
-            "type": "buttons",
-            "buttons": [
-                {
-                    "text": f"💬 Support — {sh} 👥",
-                    "url": support_url,
-                },
-                {
-                    "text": f"👑 Owner — {oh}",
-                    "url": owner_url,
+                    "text": "💬 Support Chat",
+                    "url": support_chat,
                 },
             ],
         },
