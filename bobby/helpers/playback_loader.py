@@ -4,10 +4,9 @@ from pyrogram import enums
 
 logger = logging.getLogger("bobby")
 
-# Step 2 emojis: ⚡️ | 🤖 | 👻 | 👾 (shown one at a time in loop)
+# Step 2 emojis: ⚡️ | 👻 | 👾 (shown one at a time in loop)
 STAGE_2_EMOJIS = [
-    '<tg-emoji emoji-id="5893450623449305489">⚡️</tg-emoji>',
-    '<tg-emoji emoji-id="5355051922862653659">🤖</tg-emoji>',
+    '<tg-emoji emoji-id="5893048571560726748">⚡️</tg-emoji>',
     '<tg-emoji emoji-id="5305388752162539722">👻</tg-emoji>',
     '<tg-emoji emoji-id="5337037846475720165">👾</tg-emoji>',
 ]
@@ -18,7 +17,7 @@ class PlaybackLoader:
 
     Step 1: Displays initial message (0: 🍀 Next up or 1: 🔍 Preparing playback) once (~1.0s).
     Step 2: Disappears initial text and displays the stage 2 emojis one at a time:
-            ⚡️ -> 🤖 -> 👻 -> 👾. If preparation takes time, loops strictly within
+            ⚡️ -> 👻 -> 👾. If preparation takes time, loops strictly within
             Step 2 emojis and never returns to the initial message.
     """
 
