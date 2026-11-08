@@ -357,18 +357,6 @@ class Inline:
                     icon_custom_emoji_id=self.prem["sparkle"],
                 ),
             ],
-            [
-                self.ikb(
-                    text=" Support Channel",
-                    url=support_channel,
-                    style=enums.ButtonStyle.PRIMARY,
-                ),
-                self.ikb(
-                    text=" Support Chat",
-                    url=support_chat,
-                    style=enums.ButtonStyle.PRIMARY,
-                ),
-            ],
         ]
         return self.ikm(rows)
 
