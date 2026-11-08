@@ -179,7 +179,7 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
                             "custom_emoji_id": "5474385437403395055",
                             "alternative_text": "🤓",
                         },
-                        f" Support Chat — {owner_handle}",
+                        " Support Chat",
                     ],
                 },
             ],
