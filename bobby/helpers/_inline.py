@@ -327,6 +327,13 @@ class Inline:
         if not owner_handle.startswith("@"):
             owner_handle = f"@{owner_handle}"
 
+        support_channel = config.SUPPORT_CHANNEL or "https://t.me/toolatetobloom"
+        if not support_channel.startswith("http"):
+            support_channel = f"https://t.me/{support_channel.lstrip('@')}"
+        support_chat = config.SUPPORT_CHAT or "https://t.me/toolatetobloom"
+        if not support_chat.startswith("http"):
+            support_chat = f"https://t.me/{support_chat.lstrip('@')}"
+
         rows = [
             [
                 self.ikb(
@@ -348,6 +355,18 @@ class Inline:
                     callback_data="help",
                     style=enums.ButtonStyle.PRIMARY,
                     icon_custom_emoji_id=self.prem["sparkle"],
+                ),
+            ],
+            [
+                self.ikb(
+                    text=" Support Channel",
+                    url=support_channel,
+                    style=enums.ButtonStyle.PRIMARY,
+                ),
+                self.ikb(
+                    text=" Support Chat",
+                    url=support_chat,
+                    style=enums.ButtonStyle.PRIMARY,
                 ),
             ],
         ]
