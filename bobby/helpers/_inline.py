@@ -363,7 +363,7 @@ class Inline:
         rows = [
             [
                 self.ikb(
-                    text="Start",
+                    text=" Start",
                     callback_data="start_menu",
                     style=enums.ButtonStyle.DANGER,
                     icon_custom_emoji_id="5253944419870062295",
