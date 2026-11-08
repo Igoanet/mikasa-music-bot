@@ -47,13 +47,17 @@ def _join_notice(identity: PublicIdentity) -> str:
     heading = f"{emojis.HEADPHONE}  <b>Joined Voice Chat</b>"
     now = datetime.now(timezone.utc).astimezone()
     time_str = now.strftime('%I:%M %p').lstrip('0')
+    if username and str(username).strip() and str(username).strip() != "None":
+        user_line = f"@{html.escape(str(username).strip().lstrip('@')[:64], quote=True)}"
+    else:
+        user_line = "None"
+
     items = [
         f"{emojis.VC_USER}  User :  {name}",
+        f"{emojis.VC_USERNAME}  Username :  {user_line}",
+        f"{emojis.VC_ID}  ID :  {public_id}",
+        f"{emojis.VC_TIME}  Time :  {time_str}",
     ]
-    if username:
-        items.append(f"{emojis.VC_USERNAME}  Username :  @{html.escape(str(username)[:64], quote=True)}")
-    items.append(f"{emojis.VC_ID}  ID :  {public_id}")
-    items.append(f"{emojis.VC_TIME}  Time :  {time_str}")
     
     body = "\n\n".join(items)
     return f"{heading}\n\n<blockquote expandable>{body}</blockquote>" 
@@ -111,11 +115,38 @@ class MikasaVCConsumer:
                 self.store.ack_event(int(row["id"]))
                 continue
 
+            peer_id = int(row["user_id"])
+            user_name = str(row.get("name") or "Telegram user")
+            user_login = str(row.get("username") or "")
+            kind = str(row.get("kind") or "user")
+
+            # Actively resolve username and name if missing
+            if not user_login and peer_id > 0:
+                try:
+                    member = await self.bot.get_chat_member(chat_id, peer_id)
+                    if member and member.user:
+                        un = getattr(member.user, "username", "") or ""
+                        if not un and hasattr(member.user, "usernames") and member.user.usernames:
+                            for u_item in member.user.usernames:
+                                u_val = getattr(u_item, "username", "")
+                                if u_val:
+                                    un = u_val
+                                    break
+                        if un:
+                            user_login = un
+                        fn = member.user.first_name or ""
+                        ln = member.user.last_name or ""
+                        f_name = f"{fn} {ln}".strip()
+                        if f_name:
+                            user_name = f_name
+                except Exception as ex:
+                    logger.debug("Chat member lookup failed for %s: %s", peer_id, ex)
+
             identity = PublicIdentity(
-                peer_id=int(row["user_id"]),
-                name=str(row.get("name") or "Telegram user"),
-                username=str(row.get("username") or ""),
-                kind=str(row.get("kind") or "user"),
+                peer_id=peer_id,
+                name=user_name,
+                username=user_login,
+                kind=kind,
             )
             text = _join_notice(identity)
             try:

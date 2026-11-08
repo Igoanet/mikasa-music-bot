@@ -214,6 +214,12 @@ class VoiceChatMonitor:
                 last = getattr(u, "last_name", "") or ""
                 name = f"{first} {last}".strip() or "Telegram User"
                 username = getattr(u, "username", "") or ""
+                if not username and hasattr(u, "usernames") and u.usernames:
+                    for un in u.usernames:
+                        uname = getattr(un, "username", "")
+                        if uname:
+                            username = uname
+                            break
             elif kind in {"channel", "chat"} and peer_id in chats:
                 c = chats[peer_id]
                 name = getattr(c, "title", "") or "Chat"
@@ -356,6 +362,12 @@ class VoiceChatMonitor:
                                     last = getattr(u, "last_name", "") or ""
                                     name = f"{first} {last}".strip() or "Telegram User"
                                     username = getattr(u, "username", "") or ""
+                                    if not username and hasattr(u, "usernames") and u.usernames:
+                                        for un in u.usernames:
+                                            uname = getattr(un, "username", "")
+                                            if uname:
+                                                username = uname
+                                                break
                                 else:
                                     try:
                                         entity = await client.get_users(pid)
