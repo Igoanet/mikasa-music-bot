@@ -93,12 +93,28 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
             "type": "buttons",
             "buttons": [
                 {
-                    "text": "📢 Support Channel",
+                    "style": "primary",
                     "url": support_channel,
+                    "text": [
+                        {
+                            "type": "custom_emoji",
+                            "custom_emoji_id": "5893321843149902412",
+                            "alternative_text": "📢",
+                        },
+                        " Support Channel",
+                    ],
                 },
                 {
-                    "text": "💬 Support Chat",
+                    "style": "primary",
                     "url": support_chat,
+                    "text": [
+                        {
+                            "type": "custom_emoji",
+                            "custom_emoji_id": "5474385437403395055",
+                            "alternative_text": "💬",
+                        },
+                        " Support Chat",
+                    ],
                 },
             ],
         },
