@@ -55,14 +55,28 @@ async def start(_, message: types.Message):
         message.lang, private, owner=message.from_user.id == config.OWNER_ID
     )
 
-    try:
-        await message.reply_photo(
-            photo=config.START_IMG,
-            caption=_text,
-            reply_markup=key,
-        )
-    except Exception:
-        await message.reply_text(text=_text, reply_markup=key)
+    if private:
+        from bobby.helpers.rich_message import send_rich_message, get_start_chat_button_blocks
+        blocks = get_start_chat_button_blocks(bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT)
+        resp = await send_rich_message(message.chat.id, blocks, reply_markup=key)
+        if not resp.get("ok"):
+            try:
+                await message.reply_photo(
+                    photo=config.START_IMG,
+                    caption=_text,
+                    reply_markup=key,
+                )
+            except Exception:
+                await message.reply_text(text=_text, reply_markup=key)
+    else:
+        try:
+            await message.reply_photo(
+                photo=config.START_IMG,
+                caption=_text,
+                reply_markup=key,
+            )
+        except Exception:
+            await message.reply_text(text=_text, reply_markup=key)
 
     if private:
         if await db.is_user(message.from_user.id):

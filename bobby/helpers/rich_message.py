@@ -1,12 +1,18 @@
+# Copyright (c) 2025 Bobby Maharaj
+# Licensed under the MIT License.
+# This file is part of BobbyXMusic
+
 import aiohttp
 from pyrogram import types
 from bobby import config
 
+START_IMG_FILE_ID = "AgACAgQAAxkDAAKDN2rvzVCUXyFSHBcJ2efrwKTy-I-BAAKrujEbBxutU7YHW969pSFTAQADAgADdwADPQQ"
+
 
 def _convert_markup(reply_markup):
-    if reply_markup is None:
+    if not reply_markup:
         return None
-    if isinstance(reply_markup, types.InlineKeyboardMarkup):
+    if hasattr(reply_markup, "inline_keyboard"):
         kb = []
         for row in reply_markup.inline_keyboard:
             r = []
@@ -72,22 +78,65 @@ async def edit_rich_message(
             return await resp.json()
 
 
-def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_chat: str) -> list[dict]:
+def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_chat: str, photo_file_id: str | None = None) -> list[dict]:
     if not support_channel.startswith("http"):
         support_channel = f"https://t.me/{support_channel.lstrip('@')}"
     if not support_chat.startswith("http"):
         support_chat = f"https://t.me/{support_chat.lstrip('@')}"
 
+    photo_id = photo_file_id or START_IMG_FILE_ID
+
     return [
         {
+            "type": "photo",
+            "photo": {
+                "type": "photo",
+                "media": photo_id,
+            },
+        },
+        {
             "type": "paragraph",
-            "text": (
-                "🎧 ˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪ 🕊️\n"
-                f"✨ ˹ᴍɪᴋᴀꜱᴀ ✘ ᴍᴜꜱɪᴄ˼ ✨\n"
-                "ᴀᴅᴠᴀɴᴄᴇᴅ ᴍᴜsɪᴄ ᴘʟᴀʏᴇʀ ʙᴏᴛ ғᴏʀ ᴛᴇʟᴇɢʀᴀᴍ ɢʀᴏᴜᴘ ᴠɪᴅᴇᴏᴄʜᴀᴛs.\n\n"
-                "⚡️ ʟᴀɢ ғʀᴇᴇ • 🛡 ɴᴏ ᴘʀᴏᴍᴏ & ᴀᴅs • 🕞 24×7 ᴜᴘᴛɪᴍᴇ\n\n"
-                "❤️ ᴠɪsɪᴛ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ & sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ ғᴏʀ ᴍᴏʀᴇ..."
-            ),
+            "text": [
+                {"type": "custom_emoji", "custom_emoji_id": "6269555901628159084", "alternative_text": "🎧"},
+                "  ",
+                {"type": "bold", "text": "˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪ "},
+                {"type": "custom_emoji", "custom_emoji_id": "5316740183222140641", "alternative_text": "🕊️"},
+                "\n",
+                {"type": "custom_emoji", "custom_emoji_id": "5893321843149902412", "alternative_text": "✨"},
+                " ",
+                {"type": "bold", "text": "˹ᴍɪᴋᴀꜱᴀ ✘ ᴍᴜꜱɪᴄ˼"},
+                " ",
+                {"type": "custom_emoji", "custom_emoji_id": "5893321843149902412", "alternative_text": "✨"},
+                "\n",
+                {"type": "bold", "text": "ᴀᴅᴠᴀɴᴄᴇᴅ ᴍᴜsɪᴄ ᴘʟᴀʏᴇʀ ʙᴏᴛ ғᴏʀ ᴛᴇʟᴇɢʀᴀᴍ ɢʀᴏᴜᴘ ᴠɪᴅᴇᴏᴄʜᴀᴛs."},
+            ],
+        },
+        {
+            "type": "expandable_blockquote",
+            "text": [
+                {"type": "custom_emoji", "custom_emoji_id": "5893321843149902412", "alternative_text": "✨"},
+                " ",
+                {"type": "bold", "text": "ᴀᴅᴠᴀɴᴄᴇᴅ & ᴜsᴇғᴜʟ ғᴇᴀᴛᴜʀᴇs"},
+                "\n",
+                {"type": "custom_emoji", "custom_emoji_id": "5893048571560726748", "alternative_text": "⚡️"},
+                " ",
+                {"type": "bold", "text": "ʟᴀɢ ғʀᴇᴇ"},
+                "\n",
+                {"type": "custom_emoji", "custom_emoji_id": "5902016123972358349", "alternative_text": "🛡"},
+                " ",
+                {"type": "bold", "text": "ɴᴏ ᴘʀᴏᴍᴏ & ᴀᴅs"},
+                "\n",
+                {"type": "custom_emoji", "custom_emoji_id": "5893102202817352158", "alternative_text": "🕞"},
+                " ",
+                {"type": "bold", "text": "24×7 ᴜᴘᴛɪᴍᴇ"},
+            ],
+        },
+        {
+            "type": "paragraph",
+            "text": [
+                {"type": "custom_emoji", "custom_emoji_id": "5442678635909621223", "alternative_text": "❤️"},
+                " ᴠɪsɪᴛ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ & sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ ғᴏʀ ᴍᴏʀᴇ...",
+            ],
         },
         {
             "type": "buttons",
@@ -99,7 +148,7 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
                         {
                             "type": "custom_emoji",
                             "custom_emoji_id": "5893321843149902412",
-                            "alternative_text": "📢",
+                            "alternative_text": "✨",
                         },
                         " Support Channel",
                     ],
@@ -111,7 +160,7 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
                         {
                             "type": "custom_emoji",
                             "custom_emoji_id": "5474385437403395055",
-                            "alternative_text": "💬",
+                            "alternative_text": "🤓",
                         },
                         " Support Chat",
                     ],
