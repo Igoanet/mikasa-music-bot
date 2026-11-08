@@ -36,6 +36,8 @@ class Inline:
             "disc": EMOJI_IDS["disc"],
             "music": EMOJI_IDS["music"],
             "lightning": EMOJI_IDS["lightning"],
+            "add": EMOJI_IDS["add"],
+            "sparkle": EMOJI_IDS["sparkle"],
         }
 
     def cancel_dl(self, text) -> types.InlineKeyboardMarkup:
@@ -315,7 +317,7 @@ class Inline:
         rows = [
             [
                 self.ikb(
-                    text="⚡ Start",
+                    text="Start",
                     callback_data="start_menu",
                     style=enums.ButtonStyle.SUCCESS,
                     icon_custom_emoji_id=self.prem["lightning"],
@@ -323,16 +325,16 @@ class Inline:
             ],
             [
                 self.ikb(
-                    text="➕ Add Me To Group",
+                    text="Add Me To Group",
                     url=f"https://t.me/{bot_username}?startgroup=true",
                     style=enums.ButtonStyle.PRIMARY,
-                    icon_custom_emoji_id=self.prem["rocket"],
+                    icon_custom_emoji_id=self.prem["add"],
                 ),
                 self.ikb(
-                    text="✨ Help & Commands",
+                    text="Help & Commands",
                     callback_data="help",
                     style=enums.ButtonStyle.PRIMARY,
-                    icon_custom_emoji_id=self.prem["star"],
+                    icon_custom_emoji_id=self.prem["sparkle"],
                 ),
             ],
         ]
