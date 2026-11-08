@@ -115,8 +115,11 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
                 {"type": "custom_emoji", "custom_emoji_id": "5893321843149902412", "alternative_text": "✨"},
                 "  ᴀᴅᴠᴀɴᴄᴇᴅ ᴍᴜsɪᴄ ᴘʟᴀʏᴇʀ ʙᴏᴛ ғᴏʀ ᴛᴇʟᴇɢʀᴀᴍ ɢʀᴏᴜᴘ ᴠɪᴅᴇᴏᴄʜᴀᴛs. ",
                 {"type": "custom_emoji", "custom_emoji_id": "5893321843149902412", "alternative_text": "✨"},
-                "\n\u2800",
             ],
+        },
+        {
+            "type": "paragraph",
+            "text": ["\u2800"],
         },
         {
             "type": "blockquote",
@@ -145,8 +148,11 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
         },
         {
             "type": "paragraph",
+            "text": ["\u2800"],
+        },
+        {
+            "type": "paragraph",
             "text": [
-                "\u2800\n",
                 {"type": "custom_emoji", "custom_emoji_id": "5442678635909621223", "alternative_text": "❤️"},
                 " ᴠɪsɪᴛ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ & sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ ғᴏʀ ᴍᴏʀᴇ...",
             ],
