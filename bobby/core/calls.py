@@ -821,16 +821,25 @@ class TgCall(PyTgCalls):
             if finished is not None and finished is not media:
                 queue.purge_item(finished)
         if not media:
-            # The music stops here: offer suggestions only after there is no music left
-            # in queue and the assistant has left the VC. Background autoplay is disabled —
-            # a suggestion only plays if a user explicitly taps the button on the card.
             seed = getattr(finished, "seed", None)
+            # Check if autoplay is enabled for this chat
+            try:
+                if await db.get_autoplay(chat_id):
+                    if seed and not queue.get_queue(chat_id):
+                        from bobby.helpers import _recs as recs
+                        _lang = await lang.get_lang(chat_id)
+                        recs.autoplay(chat_id, seed, _lang)
+                        return
+            except Exception as ex:
+                logger.warning("autoplay invocation failed for %s: %s", chat_id, ex)
+
+            # Autoplay is off or seed unavailable: stop call and offer suggestions
             stopped = await self.stop(chat_id, generation)
             if not stopped:
                 return
             if seed and not queue.get_queue(chat_id):
                 try:
-                    from bobby.helpers import _recs as recs  # lazy: needs bobby.app
+                    from bobby.helpers import _recs as recs
                     _lang = await lang.get_lang(chat_id)
                     recs.suggest(chat_id, seed, _lang)
                 except Exception as ex:

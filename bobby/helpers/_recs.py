@@ -93,8 +93,12 @@ def suggest(chat_id: int, seed: str, _lang: dict) -> None:
 
 
 def autoplay(chat_id: int, seed: str, _lang: dict) -> None:
-    """Disabled: suggestions must never play automatically without user click."""
-    return
+    """When the queue runs dry, keep the voice chat going with a related song."""
+    token = _gen.get(chat_id, 0) + 1
+    _gen[chat_id] = token
+    task = asyncio.create_task(_autoplay(chat_id, seed, _lang, token))
+    _tasks.add(task)
+    task.add_done_callback(_tasks.discard)
 
 
 def cancel(chat_id: int) -> None:

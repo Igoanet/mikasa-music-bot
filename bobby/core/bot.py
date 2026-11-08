@@ -232,6 +232,7 @@ class Bot(pyrogram.Client):
                 pyrogram.types.BotCommand("resume", "Resume the stream"),
                 pyrogram.types.BotCommand("seek", "Seek forward (seconds)"),
                 pyrogram.types.BotCommand("seekback", "Seek back (seconds)"),
+                pyrogram.types.BotCommand("autoplay", "Autoplay similar songs when queue ends"),
                 pyrogram.types.BotCommand("loop", "Loop the song or the whole queue"),
                 pyrogram.types.BotCommand("shuffle", "Shuffle the queue"),
                 pyrogram.types.BotCommand("song", "Download a song as audio"),

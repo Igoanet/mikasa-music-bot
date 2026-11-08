@@ -164,6 +164,9 @@ def can_manage_vc(func):
         if user_id in admins:
             return await func(_, update, *args, **kwargs)
 
+        if await is_live_group_admin(chat_id, update):
+            return await func(_, update, *args, **kwargs)
+
         if isinstance(update, types.Message):
             return await update.reply_text(update.lang["user_no_perms"])
         else:
