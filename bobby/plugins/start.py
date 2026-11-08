@@ -7,7 +7,7 @@ from pyrogram import enums, filters, types
 
 from bobby import app, config, db, lang
 from bobby.helpers import buttons, is_group_owner, utils
-from bobby.helpers.rich_message import send_rich_message, get_start_blocks, get_help_blocks
+
 
 
 @app.on_message(filters.command(["help"]) & filters.private & ~app.bl_users)
@@ -15,24 +15,23 @@ from bobby.helpers.rich_message import send_rich_message, get_start_blocks, get_
 async def _help(_, m: types.Message):
     _support_url = config.SUPPORT_CHAT or "https://t.me/toolatetobloom"
     _owner_url   = config.OWNER_CHAT   or "https://t.me/RohanDevta"
-    key = buttons.help_markup(
-        m.lang,
-        staff=bool(m.from_user)
-        and (m.from_user.id == config.OWNER_ID or m.from_user.id in app.sudoers),
-        owner=bool(m.from_user and m.from_user.id == config.OWNER_ID),
+    _sh = _support_url.rstrip("/").split("/")[-1]
+    _oh = _owner_url.rstrip("/").split("/")[-1]
+    if not _sh.startswith("@"): _sh = f"@{_sh}"
+    if not _oh.startswith("@"): _oh = f"@{_oh}"
+    _footer = (
+        f'\n\n💬 <a href="{_support_url}">ᴛᴜᴘᴘᴏʀᴛ — {_sh}</a> 👥👥'
+        f'\n👑 <a href="{_owner_url}">ᴏᴡɴᴇʀ — {_oh}</a>'
     )
-    blocks = get_help_blocks("menu", _support_url, _owner_url)
-    resp = await send_rich_message(m.chat.id, blocks, reply_markup=key)
-    if not resp.get("ok"):
-        _sh = _support_url.rstrip("/").split("/")[-1]
-        _oh = _owner_url.rstrip("/").split("/")[-1]
-        if not _sh.startswith("@"): _sh = f"@{_sh}"
-        if not _oh.startswith("@"): _oh = f"@{_oh}"
-        _footer = (
-            f'\n\n💬 <a href="{_support_url}">ꜱᴜᴘᴘᴏʀᴛ — {_sh}</a> 👥👥'
-            f'\n👑 <a href="{_owner_url}">ᴏᴡɴᴇʀ — {_oh}</a>'
-        )
-        await m.reply_text(text=m.lang["help_menu"] + _footer, reply_markup=key)
+    await m.reply_text(
+        text=m.lang["help_menu"] + _footer,
+        reply_markup=buttons.help_markup(
+            m.lang,
+            staff=bool(m.from_user)
+            and (m.from_user.id == config.OWNER_ID or m.from_user.id in app.sudoers),
+            owner=bool(m.from_user and m.from_user.id == config.OWNER_ID),
+        ),
+    )
 
 
 @app.on_message(filters.command(["start"]))
@@ -46,41 +45,24 @@ async def start(_, message: types.Message):
 
     private = message.chat.type == enums.ChatType.PRIVATE
     payload = message.command[1] if len(message.command) > 1 else ""
+    # [voice stack removed] voice deep-link hand-off dropped
     bot_user = getattr(app, "username", None) or (app.me.username if getattr(app, "me", None) else "MikasaMusic_Bot")
+    _text = message.lang["start_pm"].format(
+        bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID
+    )
 
     key = buttons.start_key(
         message.lang, private, owner=message.from_user.id == config.OWNER_ID
     )
-
-    if private:
-        _support_url = config.SUPPORT_CHAT or "https://t.me/toolatetobloom"
-        _owner_url   = config.OWNER_CHAT   or "https://t.me/RohanDevta"
-        blocks = get_start_blocks(bot_user, _support_url, _owner_url)
-        resp = await send_rich_message(message.chat.id, blocks, reply_markup=key)
-        if not resp.get("ok"):
-            _text = message.lang["start_pm"].format(
-                bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID
-            )
-            try:
-                await message.reply_photo(
-                    photo=config.START_IMG,
-                    caption=_text,
-                    reply_markup=key,
-                )
-            except Exception:
-                await message.reply_text(text=_text, reply_markup=key)
-    else:
-        _text = message.lang["start_pm"].format(
-            bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID
+    try:
+        await message.reply_photo(
+            photo=config.START_IMG,
+            caption=_text,
+            reply_markup=key,
         )
-        try:
-            await message.reply_photo(
-                photo=config.START_IMG,
-                caption=_text,
-                reply_markup=key,
-            )
-        except Exception:
-            await message.reply_text(text=_text, reply_markup=key)
+    except Exception:
+        # bad START_IMG or a bad button URL must never silence /start
+        await message.reply_text(text=_text, reply_markup=key)
 
     if private:
         if await db.is_user(message.from_user.id):
@@ -102,6 +84,8 @@ async def settings(_, message: types.Message):
         desired = message.command[1].lower()
         if command != "playmode" or desired not in {"admins", "everyone"}:
             return await message.reply_text(message.lang["play_mode_usage"])
+        # The policy is scoped to this command's destination group.  Do not
+        # infer a target from forwarded/source metadata or trust bot staff.
         if not await is_group_owner(message.chat.id, message):
             return await message.reply_text(message.lang["play_mode_owner_only"])
         await db.set_play_mode(message.chat.id, desired == "admins")
