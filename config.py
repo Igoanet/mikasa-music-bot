@@ -25,8 +25,8 @@ class Config:
         self.SESSION2 = getenv("SESSION2", None)
         self.SESSION3 = getenv("SESSION3", None)
 
-        self.SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/rohanDevta")
-        self.SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/RohanDevta")
+        self.SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/toolatetobloom")
+        self.SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/toolatetobloom")
 
         # Yuki Music API (owner 2026-10-04): YouTube audio through the
         # gateway instead of yt-dlp hitting YouTube's bot-wall.
