@@ -297,14 +297,8 @@ async def _help(_, query: types.CallbackQuery):
         return await _safe_answer(query, url=f"https://t.me/{app.username}?start=help")
 
     if data[1] == "back":
-        _su = config.SUPPORT_CHAT or "https://t.me/toolatetobloom"
-        _ou = config.OWNER_CHAT   or "https://t.me/RohanDevta"
-        _sh = _su.rstrip("/").split("/")[-1]; _sh = f"@{_sh}" if not _sh.startswith("@") else _sh
-        _oh = _ou.rstrip("/").split("/")[-1]; _oh = f"@{_oh}" if not _oh.startswith("@") else _oh
-        _footer = (f'\n\n💬 <a href="{_su}">ᴛᴜᴘᴘᴏʀᴛ — {_sh}</a> 👥👥'
-                   f'\n👑 <a href="{_ou}">ᴏᴡɴᴇʀ — {_oh}</a>')
         return await query.edit_message_text(
-            text=query.lang["help_menu"] + _footer,
+            text=query.lang["help_menu"],
             reply_markup=buttons.help_markup(
                 query.lang,
                 staff=bool(query.from_user)
