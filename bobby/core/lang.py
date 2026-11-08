@@ -39,9 +39,10 @@ PREMIUM_EMOJI_MAP = {
     "⌛": "5258113901106580375",  # Animated Hourglass (vector_icons)
     "⏱": "5902050947567194830",  # Animated Clock (ProtectStatus)
     "⏰": "5902050947567194830",  # Animated Clock (ProtectStatus)
+    "💾": "5215684705168401226",  # AnimatedActions
     "🎵": "5334665104677941170",  # Animated Music (vector_icons)
     "🎶": "5892966078123872045",  # Animated Notes (ProtectStatus)
-    "🎧": "5193193400253297255",  # Animated Headphone (emj_2c260_by_TgEmodziBot)
+    "🎧": "6269555901628159084",  # Animated Headphone (emj_2c260_by_TgEmodziBot)
     "⏸": "5278619986238122736",  # Animated Pause (vector_icons)
     "⏭": "5316567469702264826",  # Animated Next (AdaptiveStatus)
     "🔁": "5292226786229236118",  # Animated Replay (vector_icons)

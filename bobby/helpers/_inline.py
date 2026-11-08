@@ -320,7 +320,7 @@ class Inline:
                     text="Start",
                     callback_data="start_menu",
                     style=enums.ButtonStyle.DANGER,
-                    icon_custom_emoji_id=self.prem["lightning"],
+                    icon_custom_emoji_id="5192750657844556614",
                 )
             ],
             [
