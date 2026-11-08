@@ -88,6 +88,7 @@ from bobby.core.telegram import Telegram
 from bobby.core.youtube import YouTube
 tg = Telegram()
 yt = YouTube()
+from bobby.core.jiosaavn import saavn
 
 from bobby.helpers import Queue, Thumbnail
 queue = Queue()

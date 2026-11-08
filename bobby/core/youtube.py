@@ -429,7 +429,7 @@ class YouTube:
         # If direct JioSaavn URL passed in query, resolve directly
         if "jiosaavn.com" in query:
             try:
-                from bobby import saavn
+                from bobby.core.jiosaavn import saavn
                 s_track = await saavn.track_from_url(query, m_id)
                 if s_track:
                     return s_track
@@ -442,7 +442,7 @@ class YouTube:
             items = res.get("result", [])
             if not items:
                 try:
-                    from bobby import saavn
+                    from bobby.core.jiosaavn import saavn
                     saavn_track = await saavn.search(query, m_id)
                     if saavn_track:
                         return saavn_track
@@ -964,7 +964,7 @@ class YouTube:
 
         # Handle JioSaavn CDN streaming and downloads
         if track.id.startswith("saavn:"):
-            from bobby import saavn
+            from bobby.core.jiosaavn import saavn
             ext = "mp3"
             clean_id = track.id.replace(":", "_")
             cached_file = os.path.join("downloads", f"{clean_id}.{ext}")

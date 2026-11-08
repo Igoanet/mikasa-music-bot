@@ -93,7 +93,7 @@ async def play_hndlr(
             # (searching YouTube for a raw link string returns nothing).
             # A song picked from the suggestion card is never a live feed,
             # so that path skips the multi-second yt-dlp probe.
-            from bobby import saavn
+            from bobby.core.jiosaavn import saavn
             file = (
                 (
                     None
