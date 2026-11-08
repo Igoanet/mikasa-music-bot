@@ -86,7 +86,7 @@
     "play_seeking": "<tg-emoji emoji-id=\"5316567469702264826\">⏩</tg-emoji>  <b>Seeking…</b>",
     "play_again": "🔄 <b>Replaying current track…</b>",
     "play_now": "Play Now",
-    "play_next": "<tg-emoji emoji-id=\"5316567469702264826\">⏭</tg-emoji>  <b>Next up</b> — fetching from the queue…",
+    "play_next": "<tg-emoji emoji-id=\"5893402730268987918\">🍀</tg-emoji>  <b>Next up</b> — fetching from the queue…",
     "play_invite": "Hold on a moment...\n\nInviting {0} assistant to your chat.",
     "play_searching": "<tg-emoji emoji-id=\"5226828843926460895\">⏳</tg-emoji>  <b>Preparing…</b>",
     "play_downloading": "🚀 <b>Downloading…</b>",
@@ -224,5 +224,5 @@
     "autoplay_btn_off": "🔁 Autoplay: Off",
     "autoplay_toggle_on": "Autoplay is ON — when the queue ends I'll keep playing similar songs.",
     "autoplay_toggle_off": "Autoplay is OFF — when the queue ends I'll only suggest songs.",
-    "play_3": "<tg-emoji emoji-id=\"5397674675796985688\">🔍</tg-emoji>  <b>Preparing playback…</b>"
+    "play_3": "<tg-emoji emoji-id=\"5206634672204829887\">🔍</tg-emoji>  <b>Preparing playback…</b>"
 }

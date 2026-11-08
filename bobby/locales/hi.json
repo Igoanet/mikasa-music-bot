@@ -78,7 +78,7 @@
     "play_seeking": "वर्तमान स्ट्रीम में खोजा जा रहा है...",
     "play_again": "वर्तमान मीडिया को फिर से चलाया जा रहा है...",
     "play_now": "अभी चलाएं",
-    "play_next": "एक पल रुकें...\n\nकतार से अगला मीडिया डाउनलोड हो रहा है।",
+    "play_next": "<tg-emoji emoji-id=\"5893402730268987918\">🍀</tg-emoji>  <b>Next up</b> — fetching from the queue…",
     "play_invite": "एक पल रुकें...\n\n{0} सहायक को अपनी चैट में आमंत्रित कर रहा हूँ।",
     "play_searching": "खोज जारी है...",
     "play_downloading": "स्ट्रीम हो रहा है...",
@@ -191,5 +191,6 @@
     "autoplay_btn_on": "🔁 ऑटोप्ले: चालू",
     "autoplay_btn_off": "🔁 ऑटोप्ले: बंद",
     "autoplay_toggle_on": "ऑटोप्ले चालू — क्यू खत्म होने पर मिलते-जुलते गाने खुद चलते रहेंगे।",
-    "autoplay_toggle_off": "ऑटोप्ले बंद — क्यू खत्म होने पर सिर्फ सुझाव मिलेंगे।"
+    "autoplay_toggle_off": "ऑटोप्ले बंद — क्यू खत्म होने पर सिर्फ सुझाव मिलेंगे।",
+    "play_3": "<tg-emoji emoji-id=\"5206634672204829887\">🔍</tg-emoji>  <b>Preparing playback…</b>"
 }

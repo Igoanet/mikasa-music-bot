@@ -183,6 +183,8 @@ async def _controls(_, query: types.CallbackQuery):
             pass
 
         msg = await app.send_message(chat_id=chat_id, text=query.lang["play_next"])
+        from bobby.helpers.playback_loader import PlaybackLoader
+        loader = PlaybackLoader(msg).start()
         if not media.file_path:
             media.file_path = await yt.download(media.id, video=media.video)
         media.message_id = msg.id
