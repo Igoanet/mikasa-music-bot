@@ -965,6 +965,7 @@ class YouTube:
         # Handle JioSaavn CDN streaming and downloads
         if track.id.startswith("saavn:"):
             from bobby.core.jiosaavn import saavn
+            import urllib.request
             ext = "mp3"
             clean_id = track.id.replace(":", "_")
             cached_file = os.path.join("downloads", f"{clean_id}.{ext}")
@@ -975,13 +976,39 @@ class YouTube:
             if not direct_urls:
                 await saavn.resolve_url(track.id)
                 direct_urls = saavn.direct_for(track.id)
+
+            loop = asyncio.get_event_loop()
+            def _fetch_cdn(url, dest):
+                temp = dest + ".tmp"
+                try:
+                    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                    with urllib.request.urlopen(req, timeout=20) as resp, open(temp, "wb") as f:
+                        while True:
+                            chunk = resp.read(65536)
+                            if not chunk:
+                                break
+                            f.write(chunk)
+                    if os.path.exists(temp) and os.path.getsize(temp) >= MIN_CACHED_MEDIA_BYTES:
+                        os.replace(temp, dest)
+                        return dest
+                except Exception as e:
+                    if os.path.exists(temp):
+                        try:
+                            os.remove(temp)
+                        except Exception:
+                            pass
+                    return None
+                return None
+
             for cdn_url in direct_urls:
                 try:
-                    res = await download_from_source(cdn_url, cached_file, headers={"User-Agent": "Mozilla/5.0"})
+                    res = await loop.run_in_executor(None, _fetch_cdn, cdn_url, cached_file)
                     if res and os.path.exists(res):
+                        logger.info("play_source[%s]: JioSaavn direct CDN download success", track.id)
                         return res
                 except Exception as ex:
                     logger.warning("saavn download failed from %s: %s", cdn_url, ex)
+
             # Fallback to YouTube search if JioSaavn CDN stream fails
             yt_track = await self.search(f"{track.title} {track.channel_name or ''}", track.message_id, video=video)
             if yt_track and yt_track.id != track.id:
