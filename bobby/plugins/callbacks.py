@@ -8,6 +8,7 @@ from pyrogram import enums, errors, filters, types
 
 from bobby import anon, app, config, db, lang, queue, tg, yt
 from bobby.helpers import buttons, can_manage_vc, is_group_owner, is_live_group_admin
+from bobby.helpers.rich_message import edit_rich_message, get_start_blocks, get_help_blocks
 
 
 def _panel_row1(chat_id: int) -> str:
@@ -268,14 +269,19 @@ async def _controls(_, query: types.CallbackQuery):
 async def _start_menu_cb(_, query: types.CallbackQuery):
     private = query.message.chat.type == enums.ChatType.PRIVATE
     bot_user = getattr(app, "username", None) or (app.me.username if getattr(app, "me", None) else "MikasaMusic_Bot")
-    _text = query.lang["start_pm"].format(
-        bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID
-    )
     key = buttons.start_key(query.lang, private, owner=bool(query.from_user and query.from_user.id == config.OWNER_ID))
-    try:
-        await query.edit_message_text(text=_text, reply_markup=key)
-    except Exception:
-        await _safe_answer(query)
+    _su = config.SUPPORT_CHAT or "https://t.me/toolatetobloom"
+    _ou = config.OWNER_CHAT   or "https://t.me/RohanDevta"
+    blocks = get_start_blocks(bot_user, _su, _ou)
+    resp = await edit_rich_message(query.message.chat.id, query.message.id, blocks, reply_markup=key)
+    if not resp.get("ok"):
+        _text = query.lang["start_pm"].format(
+            bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID
+        )
+        try:
+            await query.edit_message_text(text=_text, reply_markup=key)
+        except Exception:
+            await _safe_answer(query)
 
 
 @app.on_callback_query(filters.regex(r"^help(?: |$)") & ~app.bl_users)
@@ -285,24 +291,30 @@ async def _help(_, query: types.CallbackQuery):
     if len(data) == 1:
         return await _safe_answer(query, url=f"https://t.me/{app.username}?start=help")
 
+    _su = config.SUPPORT_CHAT or "https://t.me/toolatetobloom"
+    _ou = config.OWNER_CHAT   or "https://t.me/RohanDevta"
+
     if data[1] == "back":
-        _su = config.SUPPORT_CHAT or "https://t.me/toolatetobloom"
-        _ou = config.OWNER_CHAT   or "https://t.me/RohanDevta"
-        _sh = _su.rstrip("/").split("/")[-1]; _sh = f"@{_sh}" if not _sh.startswith("@") else _sh
-        _oh = _ou.rstrip("/").split("/")[-1]; _oh = f"@{_oh}" if not _oh.startswith("@") else _oh
-        _footer = (f'\n\n💬 <a href="{_su}">ᴛᴜᴘᴘᴏʀᴛ — {_sh}</a> 👥👥'
-                   f'\n👑 <a href="{_ou}">ᴏᴡɴᴇʀ — {_oh}</a>')
-        return await query.edit_message_text(
-            text=query.lang["help_menu"] + _footer,
-            reply_markup=buttons.help_markup(
-                query.lang,
-                staff=bool(query.from_user)
-                and (
-                    query.from_user.id == config.OWNER_ID
-                    or query.from_user.id in app.sudoers
-                ),
+        key = buttons.help_markup(
+            query.lang,
+            staff=bool(query.from_user)
+            and (
+                query.from_user.id == config.OWNER_ID
+                or query.from_user.id in app.sudoers
             ),
         )
+        blocks = get_help_blocks("menu", _su, _ou)
+        resp = await edit_rich_message(query.message.chat.id, query.message.id, blocks, reply_markup=key)
+        if not resp.get("ok"):
+            _sh = _su.rstrip("/").split("/")[-1]; _sh = f"@{_sh}" if not _sh.startswith("@") else _sh
+            _oh = _ou.rstrip("/").split("/")[-1]; _oh = f"@{_oh}" if not _oh.startswith("@") else _oh
+            _footer = (f'\n\n💬 <a href="{_su}">ꜱᴜᴘᴘᴏʀᴛ — {_sh}</a> 👥👥'
+                       f'\n👑 <a href="{_ou}">ᴏᴡɴᴇʀ — {_oh}</a>')
+            return await query.edit_message_text(
+                text=query.lang["help_menu"] + _footer,
+                reply_markup=key,
+            )
+        return
     elif data[1] == "close":
         try:
             await query.message.delete()
@@ -317,10 +329,14 @@ async def _help(_, query: types.CallbackQuery):
     ):
         return await _safe_answer(query)
 
-    await query.edit_message_text(
-        text=query.lang[f"help_{data[1]}"],
-        reply_markup=buttons.help_markup(query.lang, True),
-    )
+    key = buttons.help_markup(query.lang, True)
+    blocks = get_help_blocks(data[1], _su, _ou)
+    resp = await edit_rich_message(query.message.chat.id, query.message.id, blocks, reply_markup=key)
+    if not resp.get("ok"):
+        await query.edit_message_text(
+            text=query.lang[f"help_{data[1]}"],
+            reply_markup=key,
+        )
 
 
 @app.on_callback_query(filters.regex(r"^settings(?: |$)") & ~app.bl_users)
