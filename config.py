@@ -25,8 +25,11 @@ class Config:
         self.SESSION2 = getenv("SESSION2", None)
         self.SESSION3 = getenv("SESSION3", None)
 
-        self.SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/toolatetobloom")
-        self.SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/toolatetobloom")
+        from bobby.core.bot_settings_store import get as _bsget
+        self.SUPPORT_CHANNEL = _bsget("SUPPORT_CHANNEL") or getenv("SUPPORT_CHANNEL", "https://t.me/toolatetobloom")
+        self.SUPPORT_CHAT    = _bsget("SUPPORT_CHAT")    or getenv("SUPPORT_CHAT",    "https://t.me/toolatetobloom")
+        # Owner contact — separate from support, changeable via /setowner
+        self.OWNER_CHAT      = _bsget("OWNER_CHAT")      or getenv("OWNER_CHAT",      "https://t.me/RohanDevta")
 
         # Yuki Music API (owner 2026-10-04): YouTube audio through the
         # gateway instead of yt-dlp hitting YouTube's bot-wall.
