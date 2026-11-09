@@ -31,7 +31,7 @@ EMOJI_IDS = {
     "start_flame": "5190600446892326598", # 🔥 Easy_Theme
     "halloween_leaf": "5253944419870062295", # 🍃 HalloweenTeamEmoji
     "protecting_back": "5881992582711480058", # ⬅️ Protecting (Animated)
-    "pixel_invader": "5393415455513779239",   # 👾 PixelEmoji (Animated)
+    "pixel_invader": "4911506913583170754",   # 👾 AnimatedReactionsAdaptive
     "notes": "5892966078123872045",       # 🎶 ProtectStatus (Animated)
     "radio": "6269555901628159084",       # 🎧 emj_2c260_by_TgEmodziBot (Animated)
     "mic": "6246851227032753502",         # 🎙 Statausproxtara (Animated)
