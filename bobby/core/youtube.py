@@ -61,7 +61,7 @@ def bool_env(name: str, default: bool = True) -> bool:
     return value.strip().lower() not in {"0", "false", "off", "no"}
 
 
-STREAM_HTTP_PROBE_TIMEOUT = max(2, int_env("YOUTUBE_STREAM_HTTP_PROBE_TIMEOUT", 15))
+STREAM_HTTP_PROBE_TIMEOUT = max(2, int_env("YOUTUBE_STREAM_HTTP_PROBE_TIMEOUT", 5))
 STREAM_PREFLIGHT_TIMEOUT = max(3, int_env("YOUTUBE_STREAM_PREFLIGHT_TIMEOUT", 15))
 STREAM_PREFLIGHT_ENABLED = bool_env("YOUTUBE_STREAM_PREFLIGHT", True)
 DOWNLOAD_CACHE_MAX_BYTES = max(0, int_env("DOWNLOAD_CACHE_MAX_MB", 2048)) * 1024 * 1024
@@ -436,6 +436,16 @@ class YouTube:
             except Exception as e:
                 logger.warning("JioSaavn url track resolution error: %s", e)
 
+        # For audio tracks, prioritize JioSaavn first for instant 320kbps CDN playback without YouTube bot blocks
+        if not video:
+            try:
+                from bobby.core.jiosaavn import saavn
+                saavn_track = await saavn.search(query, m_id)
+                if saavn_track:
+                    return saavn_track
+            except Exception as e:
+                logger.warning("JioSaavn search failed for query %r: %s", query, e)
+
         try:
             results = VideosSearch(query, limit=1)
             res = await results.next()
@@ -661,7 +671,7 @@ class YouTube:
 
         def create_session():
             session = requests.Session()
-            retries = Retry(total=3, backoff_factor=0.1)
+            retries = Retry(total=1, backoff_factor=0.1, status_forcelist=[502, 503, 504])
             session.mount("http://", HTTPAdapter(max_retries=retries))
             session.mount("https://", HTTPAdapter(max_retries=retries))
             return session
@@ -822,11 +832,11 @@ class YouTube:
                     "format": media_format,
                 }
                 response = None
-                for attempt in range(WORKER_FALLBACK_API_ATTEMPTS):
-                    response = session.get(api_url, params=payload, timeout=25)
+                for attempt in range(1):
+                    response = session.get(api_url, params=payload, timeout=12)
                     if response.status_code not in {429, 500, 502, 503, 504}:
                         break
-                    time.sleep((WORKER_FALLBACK_API_RETRY_DELAY_MS * (attempt + 1)) / 1000)
+                    time.sleep(1.0)
                 response.raise_for_status()
                 data = response.json()
                 if not data.get("success"):
@@ -1022,13 +1032,13 @@ class YouTube:
             logger.info("play_source[%s]: local cache hit (%s)", track.id, ext)
             return cached_file
 
-        # Download via Worker API backend
+        # Download via Worker API backend (enable instant stream while caching in background)
         result = await self.download(
             track.id,
             mystic=progress_msg,
             video=video,
             videoid=True,
-            stream=False,
+            stream=True,
             progress_msg=progress_msg,
             lang=lang,
         )
