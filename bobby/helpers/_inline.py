@@ -335,15 +335,20 @@ class Inline:
         if not support_chat.startswith("http"):
             support_chat = f"https://t.me/{support_chat.lstrip('@')}"
 
-        rows = [
-            [
-                self.ikb(
-                    text=" Start",
-                    callback_data="start_menu",
-                    style=enums.ButtonStyle.DANGER,
-                    icon_custom_emoji_id="5253944419870062295",
-                )
-            ],
+        rows = []
+        if not private:
+            rows.append(
+                [
+                    self.ikb(
+                        text=" Start",
+                        callback_data="start_menu",
+                        style=enums.ButtonStyle.DANGER,
+                        icon_custom_emoji_id="5253944419870062295",
+                    )
+                ]
+            )
+
+        rows.append(
             [
                 self.ikb(
                     text=" Add Me To Group",
@@ -357,8 +362,8 @@ class Inline:
                     style=enums.ButtonStyle.PRIMARY,
                     icon_custom_emoji_id=self.prem["gear"],
                 ),
-            ],
-        ]
+            ]
+        )
         return self.ikm(rows)
 
     def recs_markup(

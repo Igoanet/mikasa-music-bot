@@ -276,8 +276,19 @@ async def _start_menu_cb(_, query: types.CallbackQuery):
         resp = await edit_rich_message(query.message.chat.id, query.message.id, blocks, reply_markup=key)
         if resp.get("ok"):
             return
+    else:
+        await _safe_answer(
+            query,
+            "˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪ is active & ready!\n\n"
+            "⚡️ Lag Free — Ultra-Fast HQ Streaming\n"
+            "🛡 100% Clean & Spam-Free\n"
+            "🕞 24x7 Non-Stop Stable Playback\n"
+            "💫 Unmatched Crystal Clear Audio\n\n"
+            "Type /play followed by a song name or link to start streaming!",
+            show_alert=True,
+        )
 
-    _text = query.lang["start_pm"].format(
+    _text = query.lang["start_gp" if not private else "start_pm"].format(
         bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID
     )
     try:

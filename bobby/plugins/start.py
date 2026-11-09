@@ -131,13 +131,32 @@ async def settings(_, message: types.Message):
 @app.on_message(filters.new_chat_members, group=7)
 @lang.language()
 async def _new_member(_, message: types.Message):
-    if message.chat.type != enums.ChatType.SUPERGROUP:
+    if message.chat.type not in [enums.ChatType.SUPERGROUP, enums.ChatType.GROUP]:
         return await message.chat.leave()
 
-    await asyncio.sleep(3)
     for member in message.new_chat_members:
         if member.id == app.id:
-            if await db.is_chat(message.chat.id):
-                return
-            await utils.send_log(message, True)
-            await db.add_chat(message.chat.id)
+            if not await db.is_chat(message.chat.id):
+                await utils.send_log(message, True)
+                await db.add_chat(message.chat.id)
+
+            bot_user = getattr(app, "username", None) or (app.me.username if getattr(app, "me", None) else "MikasaMusic_Bot")
+            _text = message.lang["start_gp"].format(
+                bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID
+            )
+            key = buttons.start_key(message.lang, private=False)
+
+            from bobby.helpers.rich_message import send_rich_message, get_start_chat_button_blocks
+            blocks = get_start_chat_button_blocks(bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT)
+            resp = await send_rich_message(message.chat.id, blocks, reply_markup=key)
+            if not resp.get("ok"):
+                import os
+                photo_path = "assets/start-preview.jpg" if os.path.exists("assets/start-preview.jpg") else config.START_IMG
+                try:
+                    await message.reply_photo(
+                        photo=photo_path,
+                        caption=_text,
+                        reply_markup=key,
+                    )
+                except Exception:
+                    await message.reply_text(text=_text, reply_markup=key)
