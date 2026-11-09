@@ -141,9 +141,9 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
                         "  ",
                         {"type": "bold", "text": "24×7 ᴜᴘᴛɪᴍᴇ — ɴᴏɴ-sᴛᴏᴘ sᴛᴀʙʟᴇ ᴘʟᴀʏʙᴀᴄᴋ"},
                         "\n",
-                        {"type": "custom_emoji", "custom_emoji_id": "5892966078123872045", "alternative_text": "🎶"},
+                        {"type": "custom_emoji", "custom_emoji_id": "5895770017458294953", "alternative_text": "💫"},
                         "  ",
-                        {"type": "bold", "text": "ʜᴅ ᴀᴜᴅɪᴏ — 320ᴋʙᴘs ᴄʀʏsᴛᴀʟ ᴄʟᴇᴀʀ sᴏᴜɴᴅ"},
+                        {"type": "bold", "text": "ᴜɴᴍᴀᴛᴄʜᴇᴅ sᴏᴜɴᴅ — ᴄʀʏsᴛᴀʟ ᴄʟᴇᴀʀ sᴏᴜɴᴅ ᴀᴜᴅɪᴏ"},
                     ],
                 }
             ],
