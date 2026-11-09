@@ -208,123 +208,117 @@ def get_start_chat_button_blocks(
 
 def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) -> list[dict]:
     cells = [
+        # Main Table Header
         [
-            {"text": [{"type": "bold", "text": "⚫️ SECTION"}], "align": "left"},
-            {"text": [{"type": "bold", "text": "⚪️ COMMAND"}], "align": "left"},
-            {"text": [{"type": "bold", "text": "⚫️ DETAILS"}], "align": "left"},
+            {"text": [{"type": "bold", "text": "COMMAND"}], "is_header": True, "align": "left"},
+            {"text": [{"type": "bold", "text": "COMMAND DETAILS"}], "is_header": True, "align": "left"},
         ],
-        # PLAY PART (Black section)
+        # 1. PLAY PART (Full row)
         [
-            {"text": [{"type": "bold", "text": "⚫️ PLAY"}], "align": "left"},
+            {"text": [{"type": "bold", "text": "🎵 PLAY COMMANDS"}], "is_header": True, "colspan": 2, "align": "center"},
+        ],
+        [
             {"text": [{"type": "code", "text": "/play"}], "align": "left"},
-            {"text": "🎵 Stream music track", "align": "left"},
+            {"text": "🎵 Stream Audio In VC", "align": "left"},
         ],
         [
-            {"text": [{"type": "bold", "text": "⚫️ PLAY"}], "align": "left"},
             {"text": [{"type": "code", "text": "/vplay"}], "align": "left"},
-            {"text": "🎬 Stream video in VC", "align": "left"},
+            {"text": "🎬 Stream Video In VC", "align": "left"},
         ],
         [
-            {"text": [{"type": "bold", "text": "⚫️ PLAY"}], "align": "left"},
             {"text": [{"type": "code", "text": "/pause"}], "align": "left"},
-            {"text": "⏸ Pause active stream", "align": "left"},
+            {"text": "⏸ Pause Current Stream", "align": "left"},
         ],
         [
-            {"text": [{"type": "bold", "text": "⚫️ PLAY"}], "align": "left"},
             {"text": [{"type": "code", "text": "/resume"}], "align": "left"},
-            {"text": "▶️ Resume music stream", "align": "left"},
+            {"text": "▶️ Resume Music Playback", "align": "left"},
         ],
         [
-            {"text": [{"type": "bold", "text": "⚫️ PLAY"}], "align": "left"},
             {"text": [{"type": "code", "text": "/skip"}], "align": "left"},
-            {"text": "⏭ Skip to next song", "align": "left"},
+            {"text": "⏭ Skip To Next Song", "align": "left"},
         ],
         [
-            {"text": [{"type": "bold", "text": "⚫️ PLAY"}], "align": "left"},
             {"text": [{"type": "code", "text": "/stop"}], "align": "left"},
-            {"text": "⏹ Stop & clear stream", "align": "left"},
+            {"text": "⏹ Stop & Clear Stream", "align": "left"},
         ],
-        # AUTOPLAY PART (White section)
+        # 2. AUTOPLAY PART (Full row)
         [
-            {"text": [{"type": "bold", "text": "⚪️ AUTO"}], "align": "left"},
+            {"text": [{"type": "bold", "text": "🔄 AUTOPLAY ENGINE"}], "is_header": True, "colspan": 2, "align": "center"},
+        ],
+        [
             {"text": [{"type": "code", "text": "/autoplay"}], "align": "left"},
-            {"text": "🔄 Smart stream autoplay", "align": "left"},
+            {"text": "🔄 Toggle Smart Autoplay", "align": "left"},
         ],
         [
-            {"text": [{"type": "bold", "text": "⚪️ AUTO"}], "align": "left"},
             {"text": [{"type": "code", "text": "/playforce"}], "align": "left"},
-            {"text": "⚡️ Force play track", "align": "left"},
+            {"text": "⚡️ Force Immediate Play", "align": "left"},
         ],
         [
-            {"text": [{"type": "bold", "text": "⚪️ AUTO"}], "align": "left"},
             {"text": [{"type": "code", "text": "/cplay"}], "align": "left"},
-            {"text": "📢 Channel music play", "align": "left"},
+            {"text": "📢 Channel Stream Play", "align": "left"},
         ],
-        # LOOP PART (Black section)
+        # 3. LOOP PART (Full row)
         [
-            {"text": [{"type": "bold", "text": "⚫️ LOOP"}], "align": "left"},
+            {"text": [{"type": "bold", "text": "🔁 LOOP & QUEUE"}], "is_header": True, "colspan": 2, "align": "center"},
+        ],
+        [
             {"text": [{"type": "code", "text": "/loop"}], "align": "left"},
-            {"text": "🔁 Loop track 1-10x", "align": "left"},
+            {"text": "🔁 Loop Track 1-10x", "align": "left"},
         ],
         [
-            {"text": [{"type": "bold", "text": "⚫️ LOOP"}], "align": "left"},
             {"text": [{"type": "code", "text": "/queue"}], "align": "left"},
-            {"text": "📜 View track queue", "align": "left"},
+            {"text": "📜 View Queued Playlist", "align": "left"},
         ],
         [
-            {"text": [{"type": "bold", "text": "⚫️ LOOP"}], "align": "left"},
             {"text": [{"type": "code", "text": "/shuffle"}], "align": "left"},
-            {"text": "🔀 Randomize track order", "align": "left"},
+            {"text": "🔀 Randomize Queue Order", "align": "left"},
         ],
-        # SETTINGS PART (White section)
+        # 4. SETTINGS & TOOLS (Full row)
         [
-            {"text": [{"type": "bold", "text": "⚪️ TOOLS"}], "align": "left"},
+            {"text": [{"type": "bold", "text": "⚙️ SETTINGS & TOOLS"}], "is_header": True, "colspan": 2, "align": "center"},
+        ],
+        [
             {"text": [{"type": "code", "text": "/seek"}], "align": "left"},
-            {"text": "⏩ Seek stream duration", "align": "left"},
+            {"text": "⏩ Seek Duration Back/Fwd", "align": "left"},
         ],
         [
-            {"text": [{"type": "bold", "text": "⚪️ TOOLS"}], "align": "left"},
             {"text": [{"type": "code", "text": "/speed"}], "align": "left"},
-            {"text": "🎚 Play speed (0.5-2x)", "align": "left"},
+            {"text": "🎚 Play Speed (0.5x-2x)", "align": "left"},
         ],
         [
-            {"text": [{"type": "bold", "text": "⚪️ TOOLS"}], "align": "left"},
             {"text": [{"type": "code", "text": "/auth"}], "align": "left"},
-            {"text": "🛡 Authorize controllers", "align": "left"},
+            {"text": "🛡 Authorize Controllers", "align": "left"},
         ],
         [
-            {"text": [{"type": "bold", "text": "⚪️ TOOLS"}], "align": "left"},
             {"text": [{"type": "code", "text": "/lang"}], "align": "left"},
-            {"text": "🌐 Switch bot language", "align": "left"},
+            {"text": "🌐 Switch Bot Language", "align": "left"},
         ],
         [
-            {"text": [{"type": "bold", "text": "⚪️ TOOLS"}], "align": "left"},
             {"text": [{"type": "code", "text": "/ping"}], "align": "left"},
-            {"text": "📶 Check latency & health", "align": "left"},
+            {"text": "📶 Check Latency & Health", "align": "left"},
         ],
         [
-            {"text": [{"type": "bold", "text": "⚪️ TOOLS"}], "align": "left"},
             {"text": [{"type": "code", "text": "/stats"}], "align": "left"},
-            {"text": "📊 Overall bot stats", "align": "left"},
+            {"text": "📊 Overall Bot Stats", "align": "left"},
         ],
     ]
 
     if staff:
         cells.extend([
             [
-                {"text": [{"type": "bold", "text": "⚫️ STAFF"}], "align": "left"},
+                {"text": [{"type": "bold", "text": "🛡 STAFF COMMANDS"}], "is_header": True, "colspan": 2, "align": "center"},
+            ],
+            [
                 {"text": [{"type": "code", "text": "/activevc"}], "align": "left"},
-                {"text": "🎙 Active voice chats", "align": "left"},
+                {"text": "🎙 Active Voice Chats", "align": "left"},
             ],
             [
-                {"text": [{"type": "bold", "text": "⚫️ STAFF"}], "align": "left"},
                 {"text": [{"type": "code", "text": "/broadcast"}], "align": "left"},
-                {"text": "📢 Global broadcast", "align": "left"},
+                {"text": "📢 Global Broadcast", "align": "left"},
             ],
             [
-                {"text": [{"type": "bold", "text": "⚫️ STAFF"}], "align": "left"},
                 {"text": [{"type": "code", "text": "/restart"}], "align": "left"},
-                {"text": "🔄 Restart bot engine", "align": "left"},
+                {"text": "🔄 Restart Bot Engine", "align": "left"},
             ],
         ])
 
@@ -368,6 +362,8 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
         },
         {
             "type": "table",
+            "is_bordered": True,
+            "is_striped": True,
             "cells": cells,
         },
     ]
