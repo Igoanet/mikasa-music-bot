@@ -78,10 +78,10 @@ EMOJI_IDS = {
     "rnxtcx_backward": "6257833351034441574", # ↩️ Rnxtcx (-15s Curved Backward Arrow)
     "rnxtcx_door": "6255624844491100107",     # 🚪 Rnxtcx (Next / Skip)
     "rnxtcx_more": "6257933226203942567",     # ↗️ Rnxtcx
-    "play": "5316567469702264826",        # ▶️ AdaptiveStatus (Animated)
+    "play": "5892966078123872045",        # 🎶 ProtectStatus (Animated Notes)
     "pause": "5278619986238122736",       # 🔇 vector_icons (Animated)
     "stop": "5319109106793986870",        # ⏹ AdaptiveStatus (Animated)
-    "next": "5316567469702264826",        # ▶️ AdaptiveStatus (Animated)
+    "next": "6255624844491100107",        # 🚪 Rnxtcx (Next / Skip)
     "replay": "5292226786229236118",      # 🔄 vector_icons (Animated)
     "cross": "5893163582194978381",       # ❌ ProtectStatus (Animated)
     "check": "5895514131896733546",       # ✅ ProtectStatus (Animated)

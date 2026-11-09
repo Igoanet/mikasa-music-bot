@@ -233,7 +233,7 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
     cells = [
         # 1. PLAY COMMANDS (Full row)
         [
-            _cat_header("5334665104677941170", "🎵", "PLAY COMMANDS"),
+            _cat_header("6269555901628159084", "🎧", "PLAY COMMANDS"),
         ],
         [
             {"text": [{"type": "code", "text": "/play"}], "align": "left"},
@@ -249,11 +249,11 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
         ],
         [
             {"text": [{"type": "code", "text": "/resume"}], "align": "left"},
-            _cmd_item("5316567469702264826", "▶️", "Resume Music Playback"),
+            _cmd_item("5892966078123872045", "🎶", "Resume Music Playback"),
         ],
         [
             {"text": [{"type": "code", "text": "/skip"}], "align": "left"},
-            _cmd_item("5316567469702264826", "⏭️", "Skip To Next Song"),
+            _cmd_item("6255624844491100107", "🚪", "Skip To Next Song"),
         ],
         [
             {"text": [{"type": "code", "text": "/stop"}], "align": "left"},
@@ -261,7 +261,7 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
         ],
         # 2. AUTOPLAY ENGINE (Full row)
         [
-            _cat_header("5292226786229236118", "🔄", "AUTOPLAY ENGINE"),
+            _cat_header("5893048571560726748", "⚡️", "AUTOPLAY ENGINE"),
         ],
         [
             {"text": [{"type": "code", "text": "/autoplay"}], "align": "left"},
@@ -269,7 +269,7 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
         ],
         [
             {"text": [{"type": "code", "text": "/playforce"}], "align": "left"},
-            _cmd_item("5893048571560726748", "⚡️", "Force Immediate Play"),
+            _cmd_item("5893185207355315979", "🔥", "Force Immediate Play"),
         ],
         [
             {"text": [{"type": "code", "text": "/cplay"}], "align": "left"},
@@ -277,11 +277,11 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
         ],
         # 3. LOOP & QUEUE (Full row)
         [
-            _cat_header("5292226786229236118", "🔁", "LOOP & QUEUE"),
+            _cat_header("5895770017458294953", "💫", "LOOP & QUEUE"),
         ],
         [
             {"text": [{"type": "code", "text": "/loop"}], "align": "left"},
-            _cmd_item("5292226786229236118", "🔁", "Loop Track 1-10x"),
+            _cmd_item("6257833351034441574", "↩️", "Loop Track 1-10x"),
         ],
         [
             {"text": [{"type": "code", "text": "/queue"}], "align": "left"},
@@ -289,7 +289,7 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
         ],
         [
             {"text": [{"type": "code", "text": "/shuffle"}], "align": "left"},
-            _cmd_item("5292226786229236118", "🔀", "Randomize Queue Order"),
+            _cmd_item("6257944822615641633", "🔀", "Randomize Queue Order"),
         ],
         # 4. SETTINGS & TOOLS (Full row)
         [
@@ -297,15 +297,15 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
         ],
         [
             {"text": [{"type": "code", "text": "/seek"}], "align": "left"},
-            _cmd_item("5316567469702264826", "⏩", "Seek Duration Back/Fwd"),
+            _cmd_item("5355075407743826720", "⏩", "Seek Duration Back/Fwd"),
         ],
         [
             {"text": [{"type": "code", "text": "/speed"}], "align": "left"},
-            _cmd_item("5895444149699612825", "🎚", "Play Speed (0.5x-2x)"),
+            _cmd_item("5258113901106580375", "🎚", "Play Speed (0.5x-2x)"),
         ],
         [
             {"text": [{"type": "code", "text": "/auth"}], "align": "left"},
-            _cmd_item("5902016123972358349", "🛡", "Authorize Controllers"),
+            _cmd_item("5893376775781617954", "👑", "Authorize Controllers"),
         ],
         [
             {"text": [{"type": "code", "text": "/lang"}], "align": "left"},
@@ -332,11 +332,11 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
             ],
             [
                 {"text": [{"type": "code", "text": "/broadcast"}], "align": "left"},
-                _cmd_item("5431374840332302296", "📢", "Global Broadcast"),
+                _cmd_item("5372917041193828849", "🚀", "Global Broadcast"),
             ],
             [
                 {"text": [{"type": "code", "text": "/restart"}], "align": "left"},
-                _cmd_item("5292226786229236118", "🔄", "Restart Bot Engine"),
+                _cmd_item("5355051922862653659", "🤖", "Restart Bot Engine"),
             ],
         ])
 
@@ -353,7 +353,7 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
         {
             "type": "paragraph",
             "text": [
-                {"type": "custom_emoji", "custom_emoji_id": "5893161718179173515", "alternative_text": "⚙️"},
+                {"type": "custom_emoji", "custom_emoji_id": "5893494861612455015", "alternative_text": "⭐"},
                 "  ",
                 {"type": "bold", "text": "ʜᴇʟᴘ & ᴄᴏᴍᴍᴀɴᴅs"},
             ],
@@ -369,7 +369,7 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
                 "  ",
                 {"type": "bold", "text": "ᴇxᴘʟᴏʀᴇ ᴀʟʟ ᴘʟᴀʏʙᴀᴄᴋ ᴄᴏɴᴛʀᴏʟs, sᴍᴀʀᴛ ǫᴜᴇᴜᴇs & ɢʀᴏᴜᴘ sᴇᴛᴛɪɴɢs ʙᴇʟᴏᴡ."},
                 "\n\n",
-                {"type": "custom_emoji", "custom_emoji_id": "5895770017458294953", "alternative_text": "💫"},
+                {"type": "custom_emoji", "custom_emoji_id": "5264892613630111886", "alternative_text": "💎"},
                 "  ",
                 {"type": "bold", "text": "ᴇᴠᴇʀʏᴛʜɪɴɢ ʏᴏᴜ ɴᴇᴇᴅ ᴛᴏ ᴘᴏᴡᴇʀ ʏᴏᴜʀ ɢʀᴏᴜᴘ's ʜǫ ᴍᴜsɪᴄ sᴛᴀᴛɪᴏɴ."},
             ],
