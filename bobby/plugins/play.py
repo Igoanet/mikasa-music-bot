@@ -175,37 +175,45 @@ async def play_hndlr(
         # here because nothing awaits between this point and the queue.
         logger.info("autoplay: dropped %s in %s (cancelled)", file.id, m.chat.id)
         return await sent.delete()
-    if force:
-        queue.force_add(m.chat.id, file)
+    call_active = await anon.is_call_active(m.chat.id)
+    current_track = queue.get_current(m.chat.id)
+    is_playing = bool(call_active and current_track)
+
+    if force or not is_playing:
+        if not is_playing:
+            queue.clear(m.chat.id)
+            await db.remove_call(m.chat.id)
+        if force:
+            queue.force_add(m.chat.id, file)
+        else:
+            queue.add(m.chat.id, file)
     else:
         position = queue.add(m.chat.id, file)
-
-        if position != 0 or await db.get_call(m.chat.id):
-            loader.stop()
-            # A YouTube live feed is signed and expires.  Keep the LIVE
-            # identity in the queue but resolve its direct feed when it
-            # reaches the voice call (play_source's live branch).
-            if file.duration == "🔴 LIVE":
-                file.file_path = None
-            await sent.edit_text(
-                m.lang["play_queued"].format(
-                    # +1 counts the track that is already playing as #1, so
-                    # this matches the numbering /queue shows (2026-10-05).
-                    position + 1,
-                    file.url,
-                    file.title,
-                    file.duration,
-                    m.from_user.mention,
-                    len(queue.get_queue(m.chat.id)),
-                ),
+        loader.stop()
+        # A YouTube live feed is signed and expires.  Keep the LIVE
+        # identity in the queue but resolve its direct feed when it
+        # reaches the voice call (play_source's live branch).
+        if file.duration == "🔴 LIVE":
+            file.file_path = None
+        waiting_pos = position
+        total_waiting = max(1, len(queue.get_queue(m.chat.id)) - 1)
+        await sent.edit_text(
+            m.lang["play_queued"].format(
+                waiting_pos,
+                file.url,
+                file.title,
+                file.duration,
+                m.from_user.mention,
+                total_waiting,
+            ),
+        )
+        if tracks:
+            added = playlist_to_queue(m.chat.id, tracks)
+            await app.send_message(
+                chat_id=m.chat.id,
+                text=m.lang["playlist_queued"].format(len(tracks)) + added,
             )
-            if tracks:
-                added = playlist_to_queue(m.chat.id, tracks)
-                await app.send_message(
-                    chat_id=m.chat.id,
-                    text=m.lang["playlist_queued"].format(len(tracks)) + added,
-                )
-            return
+        return
 
     if not file.file_path:
         # the exists() probe only gates the status text — play_source itself

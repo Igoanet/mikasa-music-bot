@@ -5,7 +5,7 @@
 
 from pyrogram import filters, types
 
-from bobby import app, config, db, lang, queue, thumb
+from bobby import anon, app, config, db, lang, queue, thumb
 from bobby.helpers._selfdel import clean_reply
 from bobby.helpers import Track, buttons
 
@@ -13,12 +13,14 @@ from bobby.helpers import Track, buttons
 @app.on_message(filters.command(["queue", "playing"]) & filters.group & ~app.bl_users)
 @lang.language()
 async def _queue_func(_, m: types.Message):
-    if not await db.get_call(m.chat.id):
+    if not await anon.is_call_active(m.chat.id) or not queue.get_current(m.chat.id):
         return await clean_reply(m, m.lang["not_playing"])
 
     _reply = await clean_reply(m, m.lang["queue_fetching"], preserve=True)
     try:
         _queue = queue.get_queue(m.chat.id)
+        if not _queue:
+            return await _reply.edit_text(m.lang["not_playing"])
         _media = _queue[0]
         _thumb = (
             await thumb.generate(_media)
@@ -44,7 +46,7 @@ async def _queue_func(_, m: types.Message):
                 len(_queue), "" if len(_queue) == 1 else "s"
             )
             _text += "\n<blockquote expandable>"
-            for i, media in enumerate(_queue[:_ups], start=2):
+            for i, media in enumerate(_queue[:_ups], start=1):
                 _text += m.lang["queue_item"].format(
                     i, media.title, media.duration
                 )

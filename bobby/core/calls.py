@@ -101,6 +101,25 @@ class TgCall(PyTgCalls):
         except (ConnectionNotFound, exceptions.NotInCallError):
             await self.stop(chat_id)
 
+    async def is_call_active(self, chat_id: int) -> bool:
+        """Check whether there is an active voice call in this chat."""
+        if chat_id in self._joining:
+            return True
+        if not await db.get_call(chat_id):
+            return False
+        try:
+            client = await db.get_assistant(chat_id)
+            binding = getattr(client, "_binding", None)
+            if binding is not None:
+                active = await asyncio.wait_for(binding.calls(), timeout=1.5)
+                if chat_id not in active:
+                    await db.remove_call(chat_id)
+                    return False
+                return True
+        except Exception:
+            pass
+        return bool(await db.get_call(chat_id) and queue.get_current(chat_id))
+
     @staticmethod
     def _log_leave(stage: str, chat_id: int, attempt: int, detail: str) -> None:
         logger.warning(
