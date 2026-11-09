@@ -6,7 +6,7 @@ import aiohttp
 from pyrogram import types
 from bobby import config
 
-START_IMG_FILE_ID = "AgACAgQAAxkDAAKDN2rvzVCUXyFSHBcJ2efrwKTy-I-BAAKrujEbBxutU7YHW969pSFTAQADAgADdwADPQQ"
+START_IMG_FILE_ID = "AgACAgQAAyEGAAMBBc0zVQACBSdq8UvK3kHxnjo5hnqxe7j2iNlHIAACEA5rG3aQiVOG1scuN2Og2AEAAwIAA3kAAz0E"
 
 
 def _convert_markup(reply_markup):
