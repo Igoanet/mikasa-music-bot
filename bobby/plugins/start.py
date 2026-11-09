@@ -45,23 +45,17 @@ async def start(_, message: types.Message):
         message.lang, private, owner=message.from_user.id == config.OWNER_ID
     )
 
-    if private:
-        from bobby.helpers.rich_message import send_rich_message, get_start_chat_button_blocks
-        blocks = get_start_chat_button_blocks(bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT)
-        resp = await send_rich_message(message.chat.id, blocks, reply_markup=key)
-        if not resp.get("ok"):
-            try:
-                await message.reply_photo(
-                    photo=config.START_IMG,
-                    caption=_text,
-                    reply_markup=key,
-                )
-            except Exception:
-                await message.reply_text(text=_text, reply_markup=key)
-    else:
+    from bobby.helpers.rich_message import send_rich_message, get_start_chat_button_blocks
+    blocks = get_start_chat_button_blocks(
+        bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, is_group=not private
+    )
+    resp = await send_rich_message(message.chat.id, blocks, reply_markup=key)
+    if not resp.get("ok"):
+        import os
+        photo_path = "assets/start-preview.jpg" if os.path.exists("assets/start-preview.jpg") else config.START_IMG
         try:
             await message.reply_photo(
-                photo=config.START_IMG,
+                photo=photo_path,
                 caption=_text,
                 reply_markup=key,
             )
@@ -147,7 +141,7 @@ async def _new_member(_, message: types.Message):
             key = buttons.start_key(message.lang, private=False)
 
             from bobby.helpers.rich_message import send_rich_message, get_start_chat_button_blocks
-            blocks = get_start_chat_button_blocks(bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT)
+            blocks = get_start_chat_button_blocks(bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, is_group=True)
             resp = await send_rich_message(message.chat.id, blocks, reply_markup=key)
             if not resp.get("ok"):
                 import os

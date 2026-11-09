@@ -78,7 +78,13 @@ async def edit_rich_message(
             return await resp.json()
 
 
-def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_chat: str, photo_file_id: str | None = None) -> list[dict]:
+def get_start_chat_button_blocks(
+    bot_user: str,
+    support_channel: str,
+    support_chat: str,
+    photo_file_id: str | None = None,
+    is_group: bool = False,
+) -> list[dict]:
     if not support_channel.startswith("http"):
         support_channel = f"https://t.me/{support_channel.lstrip('@')}"
 
@@ -91,7 +97,7 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
 
     photo_id = photo_file_id or START_IMG_FILE_ID
 
-    return [
+    blocks = [
         {
             "type": "photo",
             "photo": {
@@ -183,6 +189,30 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
                 },
             ],
         },
+    ]
+
+    if is_group:
+        blocks.append(
+            {
+                "type": "buttons",
+                "buttons": [
+                    {
+                        "style": "danger",
+                        "callback_data": "start_info",
+                        "text": [
+                            {
+                                "type": "custom_emoji",
+                                "custom_emoji_id": "5253944419870062295",
+                                "alternative_text": "▶️",
+                            },
+                            "  Start",
+                        ],
+                    }
+                ],
+            }
+        )
+
+    blocks.extend([
         {
             "type": "paragraph",
             "text": ["\u2800"],
@@ -195,4 +225,6 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
                 {"type": "bold", "text": "ᴜɴʟᴇᴀsʜ ᴍɪᴋᴀsᴀ ᴍᴜsɪᴄ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ — ᴛᴀᴘ ʙᴇʟᴏᴡ ᴛᴏ ᴀᴅᴅ ᴍᴇ !"},
             ],
         },
-    ]
+    ])
+
+    return blocks

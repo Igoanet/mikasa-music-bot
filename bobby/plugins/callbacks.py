@@ -269,56 +269,73 @@ async def _start_menu_cb(_, query: types.CallbackQuery):
     private = query.message.chat.type == enums.ChatType.PRIVATE
     bot_user = getattr(app, "username", None) or (app.me.username if getattr(app, "me", None) else "MikasaMusic_Bot")
     key = buttons.start_key(query.lang, private, owner=bool(query.from_user and query.from_user.id == config.OWNER_ID))
-
-    if private:
-        from bobby.helpers.rich_message import edit_rich_message, get_start_chat_button_blocks
-        blocks = get_start_chat_button_blocks(bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT)
-        resp = await edit_rich_message(query.message.chat.id, query.message.id, blocks, reply_markup=key)
-        if resp.get("ok"):
-            return
-    else:
-        await _safe_answer(
-            query,
-            "˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪ is active & ready!\n\n"
-            "⚡️ Lag Free — Ultra-Fast HQ Streaming\n"
-            "🛡 100% Clean & Spam-Free\n"
-            "🕞 24x7 Non-Stop Stable Playback\n"
-            "💫 Unmatched Crystal Clear Audio\n\n"
-            "Type /play followed by a song name or link to start streaming!",
-            show_alert=True,
-        )
-
     _text = query.lang["start_gp" if not private else "start_pm"].format(
         bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID
     )
+
+    edited = False
     try:
         if query.message.photo:
             await query.edit_message_caption(caption=_text, reply_markup=key)
+            edited = True
         else:
             await query.edit_message_text(text=_text, reply_markup=key)
+            edited = True
     except Exception:
-        await _safe_answer(query)
+        pass
+
+    if not edited:
+        try:
+            if query.message.reply_to_message:
+                await query.message.delete()
+            else:
+                from bobby.helpers.rich_message import send_rich_message, get_start_chat_button_blocks
+                blocks = get_start_chat_button_blocks(bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, is_group=not private)
+                resp = await send_rich_message(query.message.chat.id, blocks, reply_markup=key)
+                if not resp.get("ok"):
+                    await query.message.reply_text(text=_text, reply_markup=key)
+        except Exception:
+            pass
+
+    await _safe_answer(query)
+
+
+@app.on_callback_query(filters.regex(r"^(start_info|start_details)$") & ~app.bl_users)
+@lang.language()
+async def _start_info_cb(_, query: types.CallbackQuery):
+    await _safe_answer(
+        query,
+        "˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪ is active & ready!\n\n"
+        "⚡️ Lag Free — Ultra-Fast HQ Streaming\n"
+        "🛡 100% Clean & Spam-Free\n"
+        "🕞 24x7 Non-Stop Stable Playback\n"
+        "💫 Unmatched Crystal Clear Audio\n\n"
+        "Type /play followed by a song name or link to start streaming!",
+        show_alert=True,
+    )
 
 
 @app.on_callback_query(filters.regex(r"^help(?: |$)") & ~app.bl_users)
 @lang.language()
 async def _help(_, query: types.CallbackQuery):
     data = query.data.split()
-    if len(data) == 1:
-        return await _safe_answer(query, url=f"https://t.me/{app.username}?start=help")
+    staff = bool(query.from_user) and (
+        query.from_user.id == config.OWNER_ID
+        or query.from_user.id in app.sudoers
+    )
 
-    if data[1] == "back":
-        return await query.edit_message_text(
-            text=query.lang["help_menu"],
-            reply_markup=buttons.help_markup(
-                query.lang,
-                staff=bool(query.from_user)
-                and (
-                    query.from_user.id == config.OWNER_ID
-                    or query.from_user.id in app.sudoers
-                ),
-            ),
-        )
+    if len(data) == 1 or data[1] == "back":
+        text = query.lang["help_menu"]
+        markup = buttons.help_markup(query.lang, back=False, staff=staff)
+        try:
+            if query.message.photo:
+                await query.edit_message_caption(caption=text, reply_markup=markup)
+            else:
+                await query.edit_message_text(text=text, reply_markup=markup)
+        except Exception:
+            await query.message.reply_text(text=text, reply_markup=markup)
+        return await _safe_answer(query)
+
     elif data[1] == "close":
         try:
             await query.message.delete()
@@ -333,10 +350,16 @@ async def _help(_, query: types.CallbackQuery):
     ):
         return await _safe_answer(query)
 
-    await query.edit_message_text(
-        text=query.lang[f"help_{data[1]}"],
-        reply_markup=buttons.help_markup(query.lang, True),
-    )
+    text = query.lang.get(f"help_{data[1]}", query.lang["help_menu"])
+    markup = buttons.help_markup(query.lang, back=True, staff=staff)
+    try:
+        if query.message.photo:
+            await query.edit_message_caption(caption=text, reply_markup=markup)
+        else:
+            await query.edit_message_text(text=text, reply_markup=markup)
+    except Exception:
+        await query.message.reply_text(text=text, reply_markup=markup)
+    await _safe_answer(query)
 
 
 @app.on_callback_query(filters.regex(r"^settings(?: |$)") & ~app.bl_users)

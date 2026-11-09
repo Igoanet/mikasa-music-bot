@@ -154,11 +154,18 @@ class Inline:
         if back:
             rows = [
                 [
-                    self.ikb(text=_lang["back"], callback_data="help back",
-                             style=enums.ButtonStyle.PRIMARY),
-                    self.ikb(text=_lang["close"], callback_data="help close",
-                             style=enums.ButtonStyle.DANGER,
-                             icon_custom_emoji_id=self.prem["cross"]),
+                    self.ikb(
+                        text=_lang.get("back", "« Back"),
+                        callback_data="help back",
+                        style=enums.ButtonStyle.DANGER,
+                        icon_custom_emoji_id="5253944419870062295",
+                    ),
+                    self.ikb(
+                        text=_lang.get("close", "Close"),
+                        callback_data="help close",
+                        style=enums.ButtonStyle.SECONDARY,
+                        icon_custom_emoji_id=self.prem["cross"],
+                    ),
                 ],
             ]
         else:
@@ -187,6 +194,16 @@ class Inline:
                 if staff or cb not in ("blist", "sudo", "owner")
             ]
             rows = [buttons[i : i + 3] for i in range(0, len(buttons), 3)]
+            rows.append(
+                [
+                    self.ikb(
+                        text=_lang.get("back", "« Back"),
+                        callback_data="start_menu",
+                        style=enums.ButtonStyle.DANGER,
+                        icon_custom_emoji_id="5253944419870062295",
+                    )
+                ]
+            )
 
         return self.ikm(rows)
 
@@ -341,7 +358,7 @@ class Inline:
                 [
                     self.ikb(
                         text=" Start",
-                        callback_data="start_menu",
+                        callback_data="start_info",
                         style=enums.ButtonStyle.DANGER,
                         icon_custom_emoji_id="5253944419870062295",
                     )
