@@ -161,9 +161,15 @@ class Inline:
                         icon_custom_emoji_id="5253944419870062295",
                     ),
                     self.ikb(
+                        text=" Start",
+                        callback_data="start_menu",
+                        style=enums.ButtonStyle.DANGER,
+                        icon_custom_emoji_id="5253944419870062295",
+                    ),
+                    self.ikb(
                         text=_lang.get("close", "Close"),
                         callback_data="help close",
-                        style=enums.ButtonStyle.SECONDARY,
+                        style=enums.ButtonStyle.DANGER,
                         icon_custom_emoji_id=self.prem["cross"],
                     ),
                 ],
@@ -172,20 +178,20 @@ class Inline:
             # (label key, callback suffix, colour) — the suffix selects help_<suffix>
             # in the locale file; every entry here needs that key in en.json.
             sections = [
-                ("help_5", "play", enums.ButtonStyle.PRIMARY),
-                ("help_6", "queue", enums.ButtonStyle.PRIMARY),
-                ("help_0", "admins", enums.ButtonStyle.PRIMARY),
-                ("help_seek_btn", "seek", enums.ButtonStyle.PRIMARY),
-                ("help_loop_btn", "loop", enums.ButtonStyle.PRIMARY),
-                ("help_autoplay_btn", "autoplay", enums.ButtonStyle.PRIMARY),
-                ("help_speed_btn", "speed", enums.ButtonStyle.PRIMARY),
-                ("help_1", "auth", enums.ButtonStyle.PRIMARY),
-                ("help_3", "lang", enums.ButtonStyle.PRIMARY),
-                ("help_4", "ping", enums.ButtonStyle.PRIMARY),
-                ("help_7", "stats", enums.ButtonStyle.PRIMARY),
-                ("help_2", "blist", enums.ButtonStyle.PRIMARY),
-                ("help_8", "sudo", enums.ButtonStyle.PRIMARY),
-                ("help_11", "owner", enums.ButtonStyle.PRIMARY),
+                ("help_5", "play", enums.ButtonStyle.DANGER),
+                ("help_6", "queue", enums.ButtonStyle.DANGER),
+                ("help_0", "admins", enums.ButtonStyle.DANGER),
+                ("help_seek_btn", "seek", enums.ButtonStyle.DANGER),
+                ("help_loop_btn", "loop", enums.ButtonStyle.DANGER),
+                ("help_autoplay_btn", "autoplay", enums.ButtonStyle.DANGER),
+                ("help_speed_btn", "speed", enums.ButtonStyle.DANGER),
+                ("help_1", "auth", enums.ButtonStyle.DANGER),
+                ("help_3", "lang", enums.ButtonStyle.DANGER),
+                ("help_4", "ping", enums.ButtonStyle.DANGER),
+                ("help_7", "stats", enums.ButtonStyle.DANGER),
+                ("help_2", "blist", enums.ButtonStyle.DANGER),
+                ("help_8", "sudo", enums.ButtonStyle.DANGER),
+                ("help_11", "owner", enums.ButtonStyle.DANGER),
             ]
             # blist/sudo/owner stay invisible to everyone but the owner and sudo users
             buttons = [
@@ -370,13 +376,13 @@ class Inline:
                 self.ikb(
                     text=" Add Me To Group",
                     url=f"https://t.me/{bot_username}?startgroup=true",
-                    style=enums.ButtonStyle.PRIMARY,
+                    style=enums.ButtonStyle.DANGER,
                     icon_custom_emoji_id=self.prem["add"],
                 ),
                 self.ikb(
                     text=" Help & Commands",
                     callback_data="help",
-                    style=enums.ButtonStyle.PRIMARY,
+                    style=enums.ButtonStyle.DANGER,
                     icon_custom_emoji_id=self.prem["gear"],
                 ),
             ]

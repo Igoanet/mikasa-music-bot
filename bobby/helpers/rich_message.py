@@ -164,7 +164,7 @@ def get_start_chat_button_blocks(
             "type": "buttons",
             "buttons": [
                 {
-                    "style": "primary",
+                    "style": "danger",
                     "url": owner_url,
                     "text": [
                         {
@@ -176,7 +176,7 @@ def get_start_chat_button_blocks(
                     ],
                 },
                 {
-                    "style": "primary",
+                    "style": "danger",
                     "url": support_channel,
                     "text": [
                         {
