@@ -153,13 +153,25 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
         {
             "type": "paragraph",
             "text": [
-                {"type": "custom_emoji", "custom_emoji_id": "5431374840332302296", "alternative_text": "🔔"},
+                {"type": "custom_emoji", "custom_emoji_id": "5212982655343141065", "alternative_text": "🛡"},
                 " ᴠɪsɪᴛ  ғᴏʀ ᴍᴏʀᴇ...",
             ],
         },
         {
             "type": "buttons",
             "buttons": [
+                {
+                    "style": "primary",
+                    "url": owner_url,
+                    "text": [
+                        {
+                            "type": "custom_emoji",
+                            "custom_emoji_id": "5398024200235529935",
+                            "alternative_text": "❄️",
+                        },
+                        " Support Chat",
+                    ],
+                },
                 {
                     "style": "primary",
                     "url": support_channel,
@@ -170,18 +182,6 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
                             "alternative_text": "✨",
                         },
                         " Support Channel",
-                    ],
-                },
-                {
-                    "style": "primary",
-                    "url": owner_url,
-                    "text": [
-                        {
-                            "type": "custom_emoji",
-                            "custom_emoji_id": "5474385437403395055",
-                            "alternative_text": "🤓",
-                        },
-                        " Support Chat",
                     ],
                 },
             ],
