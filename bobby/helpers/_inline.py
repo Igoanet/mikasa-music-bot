@@ -38,6 +38,7 @@ class Inline:
             "lightning": EMOJI_IDS["lightning"],
             "add": EMOJI_IDS["add"],
             "sparkle": EMOJI_IDS["sparkle"],
+            "gear": EMOJI_IDS["gear"],
         }
 
     def cancel_dl(self, text) -> types.InlineKeyboardMarkup:
@@ -354,7 +355,7 @@ class Inline:
                     text=" Help & Commands",
                     callback_data="help",
                     style=enums.ButtonStyle.PRIMARY,
-                    icon_custom_emoji_id=self.prem["sparkle"],
+                    icon_custom_emoji_id=self.prem["gear"],
                 ),
             ],
         ]
