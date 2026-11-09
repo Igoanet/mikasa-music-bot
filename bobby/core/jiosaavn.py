@@ -185,11 +185,13 @@ class JioSaavn:
         winner; mirror matching needs the runner-ups too — the top hit can
         be a different recording of the same title (the duration guard then
         rejects it and the NEXT candidate is the right song)."""
+        from bobby.helpers.audio_ranker import score_audio_candidate
+
         params = {
             "__call": "search.getResults",
             "q": query,
             "p": 1,
-            "n": max(limit, 5),
+            "n": max(limit, 10),
             "_format": "json",
             "_marker": "0",
             "ctx": "wap6dot0",
@@ -210,11 +212,6 @@ class JioSaavn:
             return []
 
         results = data.get("results") or []
-        # rank every candidate instead of trusting JioSaavn's first hit —
-        # its top result is often a lofi/cover/recreation, and users want
-        # the original famous track. Query-word overlap and play count pull
-        # up; re-upload markers push down (unless the user asked for them).
-        qwords = [w for w in re.findall(r"[a-z0-9]+", query.lower()) if len(w) > 2]
         scored = []
         for item in results:
             perma_url = item.get("perma_url")
@@ -231,30 +228,34 @@ class JioSaavn:
                 item.get("primary_artists") or item.get("singers") or ""
             )
             album = html.unescape(item.get("album") or "")
-
-            score = 0.0
-            if qwords:
-                hay = set(re.findall(r"[a-z0-9]+", f"{title} {artists}".lower()))
-                score += 10 * sum(1 for w in qwords if w in hay) / len(qwords)
-            # Blocker removed: allow all music / non-official / channel / remixes
-            pass
+            is_320 = str(item.get("320kbps", "")).lower() == "true" or bool(item.get("encrypted_media_url"))
             try:
                 plays = int(item.get("play_count") or 0)
             except (TypeError, ValueError):
                 plays = 0
-            if plays > 0:
-                score += min(math.log10(plays), 8)
+
+            score = score_audio_candidate(
+                title=title,
+                artist=artists,
+                album=album,
+                channel="",
+                plays_or_views=plays,
+                duration_sec=duration_sec,
+                is_320k=is_320,
+                query=query,
+                is_video_mode=False,
+            )
 
             scored.append((score, item, title, artists, duration_sec, perma_url))
 
-        # stable sort: ties keep the API's original order, exactly like the
-        # old first-best-wins loop
+        # Sort descending by quality score
         scored.sort(key=lambda s: s[0], reverse=True)
         out = []
-        for _score, item, title, artists, duration_sec, perma_url in scored[:limit]:
+        for score, item, title, artists, duration_sec, perma_url in scored:
+            # Require minimum relevance threshold
+            if score < 30.0 and out:
+                continue
             track_id = _PREFIX + str(item.get("id"))
-            # page url only — the direct ladder is filled by resolve_url from
-            # the DECRYPTED full-track hash (preview hashes are dead on the CDN)
             self._cache(track_id, perma_url)
             image = (item.get("image") or "").replace("150x150", "500x500")
             minutes, seconds = divmod(duration_sec, 60)
@@ -272,6 +273,8 @@ class JioSaavn:
                     video=False,
                 )
             )
+            if len(out) >= limit:
+                break
         return out
 
     async def track_from_url(self, url: str, m_id: int = 0) -> Track | None:

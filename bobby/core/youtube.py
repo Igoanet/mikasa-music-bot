@@ -447,10 +447,12 @@ class YouTube:
                 logger.warning("JioSaavn search failed for query %r: %s", query, e)
 
         try:
-            results = VideosSearch(query, limit=1)
+            from bobby.helpers.audio_ranker import score_audio_candidate
+
+            results = VideosSearch(query, limit=10)
             res = await results.next()
             items = res.get("result", [])
-            if not items:
+            if not items and not video:
                 try:
                     from bobby.core.jiosaavn import saavn
                     saavn_track = await saavn.search(query, m_id)
@@ -460,26 +462,49 @@ class YouTube:
                     pass
             if not items:
                 return None
-            first = items[0]
-            vid = first["id"]
-            title = first.get("title") or "YouTube Track"
-            dur_str = first.get("duration") or "—"
-            dur_sec = self._duration_to_seconds(dur_str)
+
+            scored_candidates = []
+            for item in items:
+                cand_title = item.get("title") or ""
+                dur_str = item.get("duration") or "—"
+                dur_sec = self._duration_to_seconds(dur_str)
+                chan_dict = item.get("channel") if isinstance(item.get("channel"), dict) else {}
+                chan_name = chan_dict.get("name") or ""
+                view_text = item.get("viewCount", {}).get("text") or "0" if isinstance(item.get("viewCount"), dict) else "0"
+                views = int(re.sub(r"[^0-9]", "", view_text) or 0)
+
+                score = score_audio_candidate(
+                    title=cand_title,
+                    artist="",
+                    album="",
+                    channel=chan_name,
+                    plays_or_views=views,
+                    duration_sec=dur_sec,
+                    is_320k=False,
+                    query=query,
+                    is_video_mode=video,
+                )
+                scored_candidates.append((score, item, dur_str, dur_sec, chan_name))
+
+            scored_candidates.sort(key=lambda x: x[0], reverse=True)
+            _best_score, best_item, best_dur_str, best_dur_sec, best_chan = scored_candidates[0]
+
+            vid = best_item["id"]
+            title = best_item.get("title") or "YouTube Track"
             thumb = (
-                first["thumbnails"][0]["url"].split("?")[0]
-                if first.get("thumbnails")
+                best_item["thumbnails"][0]["url"].split("?")[0]
+                if best_item.get("thumbnails")
                 else f"https://img.youtube.com/vi/{vid}/hqdefault.jpg"
             )
-            channel = first.get("channel", {}).get("name") if isinstance(first.get("channel"), dict) else None
             return Track(
                 id=vid,
-                channel_name=channel,
-                duration=dur_str,
-                duration_sec=dur_sec,
+                channel_name=best_chan or None,
+                duration=best_dur_str,
+                duration_sec=best_dur_sec,
                 message_id=m_id,
                 title=title[:100],
                 thumbnail=thumb,
-                url=first.get("link") or f"{self.base}{vid}",
+                url=best_item.get("link") or f"{self.base}{vid}",
                 video=video,
             )
         except Exception as e:
