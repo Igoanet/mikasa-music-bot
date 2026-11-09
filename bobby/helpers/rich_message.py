@@ -215,7 +215,7 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
         ],
         # 1. PLAY PART (Full row)
         [
-            {"text": [{"type": "bold", "text": "🎵 PLAY COMMANDS"}], "is_header": True, "colspan": 2, "align": "center"},
+            {"text": [{"type": "bold", "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0🎵 PLAY COMMANDS"}], "is_header": True, "colspan": 2, "align": "left"},
         ],
         [
             {"text": [{"type": "code", "text": "/play"}], "align": "left"},
@@ -243,7 +243,7 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
         ],
         # 2. AUTOPLAY PART (Full row)
         [
-            {"text": [{"type": "bold", "text": "🔄 AUTOPLAY ENGINE"}], "is_header": True, "colspan": 2, "align": "center"},
+            {"text": [{"type": "bold", "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0🔄 AUTOPLAY ENGINE"}], "is_header": True, "colspan": 2, "align": "left"},
         ],
         [
             {"text": [{"type": "code", "text": "/autoplay"}], "align": "left"},
@@ -259,7 +259,7 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
         ],
         # 3. LOOP PART (Full row)
         [
-            {"text": [{"type": "bold", "text": "🔁 LOOP & QUEUE"}], "is_header": True, "colspan": 2, "align": "center"},
+            {"text": [{"type": "bold", "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0🔁 LOOP & QUEUE"}], "is_header": True, "colspan": 2, "align": "left"},
         ],
         [
             {"text": [{"type": "code", "text": "/loop"}], "align": "left"},
@@ -275,7 +275,7 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
         ],
         # 4. SETTINGS & TOOLS (Full row)
         [
-            {"text": [{"type": "bold", "text": "⚙️ SETTINGS & TOOLS"}], "is_header": True, "colspan": 2, "align": "center"},
+            {"text": [{"type": "bold", "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0⚙️ SETTINGS & TOOLS"}], "is_header": True, "colspan": 2, "align": "left"},
         ],
         [
             {"text": [{"type": "code", "text": "/seek"}], "align": "left"},
@@ -306,7 +306,7 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
     if staff:
         cells.extend([
             [
-                {"text": [{"type": "bold", "text": "🛡 STAFF COMMANDS"}], "is_header": True, "colspan": 2, "align": "center"},
+                {"text": [{"type": "bold", "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0🛡 STAFF COMMANDS"}], "is_header": True, "colspan": 2, "align": "left"},
             ],
             [
                 {"text": [{"type": "code", "text": "/activevc"}], "align": "left"},
