@@ -147,7 +147,7 @@ class Inline:
                 self.ikb(
                     text=_lang.get("back", "« Back"),
                     callback_data="start_menu",
-                    style=enums.ButtonStyle.PRIMARY,
+                    style=enums.ButtonStyle.DANGER,
                     icon_custom_emoji_id="5881992582711480058",
                 )
             ]
