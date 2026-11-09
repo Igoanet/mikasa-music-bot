@@ -164,7 +164,7 @@ def get_start_chat_button_blocks(
             "type": "buttons",
             "buttons": [
                 {
-                    "style": "danger",
+                    "style": "primary",
                     "url": owner_url,
                     "text": [
                         {
@@ -176,7 +176,7 @@ def get_start_chat_button_blocks(
                     ],
                 },
                 {
-                    "style": "danger",
+                    "style": "primary",
                     "url": support_channel,
                     "text": [
                         {
@@ -189,30 +189,6 @@ def get_start_chat_button_blocks(
                 },
             ],
         },
-    ]
-
-    if is_group:
-        blocks.append(
-            {
-                "type": "buttons",
-                "buttons": [
-                    {
-                        "style": "danger",
-                        "callback_data": "start_info",
-                        "text": [
-                            {
-                                "type": "custom_emoji",
-                                "custom_emoji_id": "5253944419870062295",
-                                "alternative_text": "▶️",
-                            },
-                            "  Start",
-                        ],
-                    }
-                ],
-            }
-        )
-
-    blocks.extend([
         {
             "type": "paragraph",
             "text": ["\u2800"],
@@ -225,6 +201,6 @@ def get_start_chat_button_blocks(
                 {"type": "bold", "text": "ᴜɴʟᴇᴀsʜ ᴍɪᴋᴀsᴀ ᴍᴜsɪᴄ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ — ᴛᴀᴘ ʙᴇʟᴏᴡ ᴛᴏ ᴀᴅᴅ ᴍᴇ !"},
             ],
         },
-    ])
+    ]
 
     return blocks

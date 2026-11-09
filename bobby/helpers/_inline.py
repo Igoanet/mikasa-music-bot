@@ -370,23 +370,39 @@ class Inline:
                     )
                 ]
             )
-
-        rows.append(
-            [
-                self.ikb(
-                    text=" Add Me To Group",
-                    url=f"https://t.me/{bot_username}?startgroup=true",
-                    style=enums.ButtonStyle.DANGER,
-                    icon_custom_emoji_id=self.prem["add"],
-                ),
-                self.ikb(
-                    text=" Help & Commands",
-                    callback_data="help",
-                    style=enums.ButtonStyle.DANGER,
-                    icon_custom_emoji_id=self.prem["gear"],
-                ),
-            ]
-        )
+            rows.append(
+                [
+                    self.ikb(
+                        text=" Add Me To Group",
+                        url=f"https://t.me/{bot_username}?startgroup=true",
+                        style=enums.ButtonStyle.PRIMARY,
+                        icon_custom_emoji_id=self.prem["add"],
+                    ),
+                    self.ikb(
+                        text=" Help & Commands",
+                        callback_data="help",
+                        style=enums.ButtonStyle.PRIMARY,
+                        icon_custom_emoji_id=self.prem["gear"],
+                    ),
+                ]
+            )
+        else:
+            rows.append(
+                [
+                    self.ikb(
+                        text=" Add Me To Group",
+                        url=f"https://t.me/{bot_username}?startgroup=true",
+                        style=enums.ButtonStyle.DANGER,
+                        icon_custom_emoji_id=self.prem["add"],
+                    ),
+                    self.ikb(
+                        text=" Help & Commands",
+                        callback_data="help",
+                        style=enums.ButtonStyle.DANGER,
+                        icon_custom_emoji_id=self.prem["gear"],
+                    ),
+                ]
+            )
         return self.ikm(rows)
 
     def recs_markup(
