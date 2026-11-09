@@ -208,11 +208,6 @@ def get_start_chat_button_blocks(
 
 def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) -> list[dict]:
     cells = [
-        # Main Table Header
-        [
-            {"text": [{"type": "bold", "text": "COMMAND"}], "is_header": True, "align": "left"},
-            {"text": [{"type": "bold", "text": "COMMAND DETAILS"}], "is_header": True, "align": "left"},
-        ],
         # 1. PLAY PART (Full row)
         [
             {"text": [{"type": "bold", "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0🎵 PLAY COMMANDS"}], "is_header": True, "colspan": 2, "align": "left"},
