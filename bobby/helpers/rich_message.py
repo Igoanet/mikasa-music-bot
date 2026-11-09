@@ -166,8 +166,8 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
                     "text": [
                         {
                             "type": "custom_emoji",
-                            "custom_emoji_id": "5289930954410836372",
-                            "alternative_text": "🌕",
+                            "custom_emoji_id": "5199612362021157840",
+                            "alternative_text": "❄️",
                         },
                         " Support Chat",
                     ],
