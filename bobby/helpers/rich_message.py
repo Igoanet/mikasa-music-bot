@@ -204,3 +204,172 @@ def get_start_chat_button_blocks(
     ]
 
     return blocks
+
+
+def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) -> list[dict]:
+    cells = [
+        [
+            {"text": [{"type": "bold", "text": "⚫️ SECTION"}], "align": "left"},
+            {"text": [{"type": "bold", "text": "⚪️ COMMAND"}], "align": "left"},
+            {"text": [{"type": "bold", "text": "⚫️ DETAILS"}], "align": "left"},
+        ],
+        # PLAY PART (Black section)
+        [
+            {"text": [{"type": "bold", "text": "⚫️ PLAY"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/play"}], "align": "left"},
+            {"text": "🎵 Stream music track", "align": "left"},
+        ],
+        [
+            {"text": [{"type": "bold", "text": "⚫️ PLAY"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/vplay"}], "align": "left"},
+            {"text": "🎬 Stream video in VC", "align": "left"},
+        ],
+        [
+            {"text": [{"type": "bold", "text": "⚫️ PLAY"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/pause"}], "align": "left"},
+            {"text": "⏸ Pause active stream", "align": "left"},
+        ],
+        [
+            {"text": [{"type": "bold", "text": "⚫️ PLAY"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/resume"}], "align": "left"},
+            {"text": "▶️ Resume music stream", "align": "left"},
+        ],
+        [
+            {"text": [{"type": "bold", "text": "⚫️ PLAY"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/skip"}], "align": "left"},
+            {"text": "⏭ Skip to next song", "align": "left"},
+        ],
+        [
+            {"text": [{"type": "bold", "text": "⚫️ PLAY"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/stop"}], "align": "left"},
+            {"text": "⏹ Stop & clear stream", "align": "left"},
+        ],
+        # AUTOPLAY PART (White section)
+        [
+            {"text": [{"type": "bold", "text": "⚪️ AUTO"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/autoplay"}], "align": "left"},
+            {"text": "🔄 Smart stream autoplay", "align": "left"},
+        ],
+        [
+            {"text": [{"type": "bold", "text": "⚪️ AUTO"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/playforce"}], "align": "left"},
+            {"text": "⚡️ Force play track", "align": "left"},
+        ],
+        [
+            {"text": [{"type": "bold", "text": "⚪️ AUTO"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/cplay"}], "align": "left"},
+            {"text": "📢 Channel music play", "align": "left"},
+        ],
+        # LOOP PART (Black section)
+        [
+            {"text": [{"type": "bold", "text": "⚫️ LOOP"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/loop"}], "align": "left"},
+            {"text": "🔁 Loop track 1-10x", "align": "left"},
+        ],
+        [
+            {"text": [{"type": "bold", "text": "⚫️ LOOP"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/queue"}], "align": "left"},
+            {"text": "📜 View track queue", "align": "left"},
+        ],
+        [
+            {"text": [{"type": "bold", "text": "⚫️ LOOP"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/shuffle"}], "align": "left"},
+            {"text": "🔀 Randomize track order", "align": "left"},
+        ],
+        # SETTINGS PART (White section)
+        [
+            {"text": [{"type": "bold", "text": "⚪️ TOOLS"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/seek"}], "align": "left"},
+            {"text": "⏩ Seek stream duration", "align": "left"},
+        ],
+        [
+            {"text": [{"type": "bold", "text": "⚪️ TOOLS"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/speed"}], "align": "left"},
+            {"text": "🎚 Play speed (0.5-2x)", "align": "left"},
+        ],
+        [
+            {"text": [{"type": "bold", "text": "⚪️ TOOLS"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/auth"}], "align": "left"},
+            {"text": "🛡 Authorize controllers", "align": "left"},
+        ],
+        [
+            {"text": [{"type": "bold", "text": "⚪️ TOOLS"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/lang"}], "align": "left"},
+            {"text": "🌐 Switch bot language", "align": "left"},
+        ],
+        [
+            {"text": [{"type": "bold", "text": "⚪️ TOOLS"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/ping"}], "align": "left"},
+            {"text": "📶 Check latency & health", "align": "left"},
+        ],
+        [
+            {"text": [{"type": "bold", "text": "⚪️ TOOLS"}], "align": "left"},
+            {"text": [{"type": "code", "text": "/stats"}], "align": "left"},
+            {"text": "📊 Overall bot stats", "align": "left"},
+        ],
+    ]
+
+    if staff:
+        cells.extend([
+            [
+                {"text": [{"type": "bold", "text": "⚫️ STAFF"}], "align": "left"},
+                {"text": [{"type": "code", "text": "/activevc"}], "align": "left"},
+                {"text": "🎙 Active voice chats", "align": "left"},
+            ],
+            [
+                {"text": [{"type": "bold", "text": "⚫️ STAFF"}], "align": "left"},
+                {"text": [{"type": "code", "text": "/broadcast"}], "align": "left"},
+                {"text": "📢 Global broadcast", "align": "left"},
+            ],
+            [
+                {"text": [{"type": "bold", "text": "⚫️ STAFF"}], "align": "left"},
+                {"text": [{"type": "code", "text": "/restart"}], "align": "left"},
+                {"text": "🔄 Restart bot engine", "align": "left"},
+            ],
+        ])
+
+    photo_id = photo_file_id or START_IMG_FILE_ID
+
+    blocks = [
+        {
+            "type": "photo",
+            "photo": {
+                "type": "photo",
+                "media": photo_id,
+            },
+        },
+        {
+            "type": "paragraph",
+            "text": [
+                {"type": "custom_emoji", "custom_emoji_id": "5893161718179173515", "alternative_text": "⚙️"},
+                "  ",
+                {"type": "bold", "text": "ʜᴇʟᴘ & ᴄᴏᴍᴍᴀɴᴅs"},
+            ],
+        },
+        {
+            "type": "paragraph",
+            "text": ["\u2800"],
+        },
+        {
+            "type": "expandable_blockquote",
+            "text": [
+                {"type": "custom_emoji", "custom_emoji_id": "5893321843149902412", "alternative_text": "✨"},
+                "  ",
+                {"type": "bold", "text": "ᴇxᴘʟᴏʀᴇ ᴀʟʟ ᴘʟᴀʏʙᴀᴄᴋ ᴄᴏɴᴛʀᴏʟs, sᴍᴀʀᴛ ǫᴜᴇᴜᴇs & ɢʀᴏᴜᴘ sᴇᴛᴛɪɴɢs ʙᴇʟᴏᴡ."},
+                "\n\n",
+                {"type": "custom_emoji", "custom_emoji_id": "5895770017458294953", "alternative_text": "💫"},
+                "  ",
+                {"type": "bold", "text": "ᴇᴠᴇʀʏᴛʜɪɴɢ ʏᴏᴜ ɴᴇᴇᴅ ᴛᴏ ᴘᴏᴡᴇʀ ʏᴏᴜʀ ɢʀᴏᴜᴘ's ʜǫ ᴍᴜsɪᴄ sᴛᴀᴛɪᴏɴ."},
+            ],
+        },
+        {
+            "type": "paragraph",
+            "text": ["\u2800"],
+        },
+        {
+            "type": "table",
+            "cells": cells,
+        },
+    ]
+
+    return blocks

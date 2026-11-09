@@ -273,29 +273,31 @@ async def _start_menu_cb(_, query: types.CallbackQuery):
         bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, config.OWNER_ID
     )
 
-    edited = False
-    try:
-        if query.message.photo:
-            await query.edit_message_caption(caption=_text, reply_markup=key)
-            edited = True
-        else:
-            await query.edit_message_text(text=_text, reply_markup=key)
-            edited = True
-    except Exception:
-        pass
-
-    if not edited:
+    from bobby.helpers.rich_message import edit_rich_message, send_rich_message, get_start_chat_button_blocks
+    blocks = get_start_chat_button_blocks(bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, is_group=not private)
+    res = await edit_rich_message(query.message.chat.id, query.message.id, blocks, reply_markup=key)
+    if not res.get("ok"):
+        edited = False
         try:
-            if query.message.reply_to_message:
-                await query.message.delete()
+            if query.message.photo:
+                await query.edit_message_caption(caption=_text, reply_markup=key)
+                edited = True
             else:
-                from bobby.helpers.rich_message import send_rich_message, get_start_chat_button_blocks
-                blocks = get_start_chat_button_blocks(bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, is_group=not private)
-                resp = await send_rich_message(query.message.chat.id, blocks, reply_markup=key)
-                if not resp.get("ok"):
-                    await query.message.reply_text(text=_text, reply_markup=key)
+                await query.edit_message_text(text=_text, reply_markup=key)
+                edited = True
         except Exception:
             pass
+
+        if not edited:
+            try:
+                if query.message.reply_to_message:
+                    await query.message.delete()
+                else:
+                    resp = await send_rich_message(query.message.chat.id, blocks, reply_markup=key)
+                    if not resp.get("ok"):
+                        await query.message.reply_text(text=_text, reply_markup=key)
+            except Exception:
+                pass
 
     await _safe_answer(query)
 
@@ -325,15 +327,19 @@ async def _help(_, query: types.CallbackQuery):
     )
 
     if len(data) == 1 or data[1] == "back":
-        text = query.lang["help_menu"]
+        from bobby.helpers.rich_message import edit_rich_message, send_rich_message, get_help_menu_blocks
+        blocks = get_help_menu_blocks(staff=staff)
         markup = buttons.help_markup(query.lang, back=False, staff=staff)
-        try:
-            if query.message.photo:
-                await query.edit_message_caption(caption=text, reply_markup=markup)
-            else:
-                await query.edit_message_text(text=text, reply_markup=markup)
-        except Exception:
-            await query.message.reply_text(text=text, reply_markup=markup)
+        res = await edit_rich_message(query.message.chat.id, query.message.id, blocks, reply_markup=markup)
+        if not res.get("ok"):
+            text = query.lang["help_menu"]
+            try:
+                if query.message.photo:
+                    await query.edit_message_caption(caption=text, reply_markup=markup)
+                else:
+                    await query.edit_message_text(text=text, reply_markup=markup)
+            except Exception:
+                await send_rich_message(query.message.chat.id, blocks, reply_markup=markup)
         return await _safe_answer(query)
 
     elif data[1] == "close":

@@ -142,76 +142,16 @@ class Inline:
         self, _lang: dict, back: bool = False, staff: bool = False,
         owner: bool = False,
     ) -> types.InlineKeyboardMarkup:
-        support_url = config.SUPPORT_CHAT or "https://t.me/toolatetobloom"
-        support_handle = support_url.rstrip("/").split("/")[-1]
-        if not support_handle.startswith("@"):
-            support_handle = f"@{support_handle}"
-        owner_url      = config.OWNER_CHAT   or "https://t.me/RohanDevta"
-        owner_handle   = owner_url.rstrip("/").split("/")[-1]
-        if not owner_handle.startswith("@"):
-            owner_handle = f"@{owner_handle}"
-
-        if back:
-            rows = [
-                [
-                    self.ikb(
-                        text=_lang.get("back", "« Back"),
-                        callback_data="help back",
-                        style=enums.ButtonStyle.PRIMARY,
-                        icon_custom_emoji_id="5881992582711480058",
-                    ),
-                    self.ikb(
-                        text=" Start",
-                        callback_data="start_menu",
-                        style=enums.ButtonStyle.DANGER,
-                        icon_custom_emoji_id="5253944419870062295",
-                    ),
-                    self.ikb(
-                        text=_lang.get("close", "Close"),
-                        callback_data="help close",
-                        style=enums.ButtonStyle.DANGER,
-                        icon_custom_emoji_id=self.prem["cross"],
-                    ),
-                ],
+        return self.ikm([
+            [
+                self.ikb(
+                    text=_lang.get("back", "« Back"),
+                    callback_data="start_menu",
+                    style=enums.ButtonStyle.PRIMARY,
+                    icon_custom_emoji_id="5881992582711480058",
+                )
             ]
-        else:
-            # (label key, callback suffix, colour) — the suffix selects help_<suffix>
-            # in the locale file; every entry here needs that key in en.json.
-            sections = [
-                ("help_5", "play", enums.ButtonStyle.DANGER),
-                ("help_6", "queue", enums.ButtonStyle.DANGER),
-                ("help_0", "admins", enums.ButtonStyle.DANGER),
-                ("help_seek_btn", "seek", enums.ButtonStyle.DANGER),
-                ("help_loop_btn", "loop", enums.ButtonStyle.DANGER),
-                ("help_autoplay_btn", "autoplay", enums.ButtonStyle.DANGER),
-                ("help_speed_btn", "speed", enums.ButtonStyle.DANGER),
-                ("help_1", "auth", enums.ButtonStyle.DANGER),
-                ("help_3", "lang", enums.ButtonStyle.DANGER),
-                ("help_4", "ping", enums.ButtonStyle.DANGER),
-                ("help_7", "stats", enums.ButtonStyle.DANGER),
-                ("help_2", "blist", enums.ButtonStyle.DANGER),
-                ("help_8", "sudo", enums.ButtonStyle.DANGER),
-                ("help_11", "owner", enums.ButtonStyle.DANGER),
-            ]
-            # blist/sudo/owner stay invisible to everyone but the owner and sudo users
-            buttons = [
-                self.ikb(text=_lang.get(label, label), callback_data=f"help {cb}", style=style)
-                for label, cb, style in sections
-                if staff or cb not in ("blist", "sudo", "owner")
-            ]
-            rows = [buttons[i : i + 3] for i in range(0, len(buttons), 3)]
-            rows.append(
-                [
-                    self.ikb(
-                        text=_lang.get("back", "« Back"),
-                        callback_data="start_menu",
-                        style=enums.ButtonStyle.PRIMARY,
-                        icon_custom_emoji_id="5881992582711480058",
-                    )
-                ]
-            )
-
-        return self.ikm(rows)
+        ])
 
     def lang_markup(self, _lang: str) -> types.InlineKeyboardMarkup:
         langs = lang.get_languages()
