@@ -158,7 +158,7 @@ class Inline:
                         text=_lang.get("back", "« Back"),
                         callback_data="help back",
                         style=enums.ButtonStyle.DANGER,
-                        icon_custom_emoji_id="5253944419870062295",
+                        icon_custom_emoji_id="5881992582711480058",
                     ),
                     self.ikb(
                         text=" Start",
@@ -206,7 +206,7 @@ class Inline:
                         text=_lang.get("back", "« Back"),
                         callback_data="start_menu",
                         style=enums.ButtonStyle.DANGER,
-                        icon_custom_emoji_id="5253944419870062295",
+                        icon_custom_emoji_id="5881992582711480058",
                     )
                 ]
             )
