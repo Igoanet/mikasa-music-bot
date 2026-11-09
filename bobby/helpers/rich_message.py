@@ -206,114 +206,137 @@ def get_start_chat_button_blocks(
     return blocks
 
 
+def _cmd_item(emoji_id: str, fallback: str, desc: str) -> dict:
+    return {
+        "text": [
+            {"type": "custom_emoji", "custom_emoji_id": emoji_id, "alternative_text": fallback},
+            f" {desc}",
+        ],
+        "align": "left",
+    }
+
+
+def _cat_header(emoji_id: str, fallback: str, title: str) -> dict:
+    return {
+        "text": [
+            {"type": "bold", "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0"},
+            {"type": "custom_emoji", "custom_emoji_id": emoji_id, "alternative_text": fallback},
+            {"type": "bold", "text": f" {title}"},
+        ],
+        "is_header": True,
+        "colspan": 2,
+        "align": "left",
+    }
+
+
 def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) -> list[dict]:
     cells = [
-        # 1. PLAY PART (Full row)
+        # 1. PLAY COMMANDS (Full row)
         [
-            {"text": [{"type": "bold", "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0🎵 PLAY COMMANDS"}], "is_header": True, "colspan": 2, "align": "left"},
+            _cat_header("5334665104677941170", "🎵", "PLAY COMMANDS"),
         ],
         [
             {"text": [{"type": "code", "text": "/play"}], "align": "left"},
-            {"text": "🎵 Stream Audio In VC", "align": "left"},
+            _cmd_item("5334665104677941170", "🎵", "Stream Audio In VC"),
         ],
         [
             {"text": [{"type": "code", "text": "/vplay"}], "align": "left"},
-            {"text": "🎬 Stream Video In VC", "align": "left"},
+            _cmd_item("5258234027046883085", "🎬", "Stream Video In VC"),
         ],
         [
             {"text": [{"type": "code", "text": "/pause"}], "align": "left"},
-            {"text": "⏸ Pause Current Stream", "align": "left"},
+            _cmd_item("5278619986238122736", "⏸️", "Pause Current Stream"),
         ],
         [
             {"text": [{"type": "code", "text": "/resume"}], "align": "left"},
-            {"text": "▶️ Resume Music Playback", "align": "left"},
+            _cmd_item("5316567469702264826", "▶️", "Resume Music Playback"),
         ],
         [
             {"text": [{"type": "code", "text": "/skip"}], "align": "left"},
-            {"text": "⏭ Skip To Next Song", "align": "left"},
+            _cmd_item("5316567469702264826", "⏭️", "Skip To Next Song"),
         ],
         [
             {"text": [{"type": "code", "text": "/stop"}], "align": "left"},
-            {"text": "⏹ Stop & Clear Stream", "align": "left"},
+            _cmd_item("5319109106793986870", "⏹️", "Stop & Clear Stream"),
         ],
-        # 2. AUTOPLAY PART (Full row)
+        # 2. AUTOPLAY ENGINE (Full row)
         [
-            {"text": [{"type": "bold", "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0🔄 AUTOPLAY ENGINE"}], "is_header": True, "colspan": 2, "align": "left"},
+            _cat_header("5292226786229236118", "🔄", "AUTOPLAY ENGINE"),
         ],
         [
             {"text": [{"type": "code", "text": "/autoplay"}], "align": "left"},
-            {"text": "🔄 Toggle Smart Autoplay", "align": "left"},
+            _cmd_item("5292226786229236118", "🔄", "Toggle Smart Autoplay"),
         ],
         [
             {"text": [{"type": "code", "text": "/playforce"}], "align": "left"},
-            {"text": "⚡️ Force Immediate Play", "align": "left"},
+            _cmd_item("5893048571560726748", "⚡️", "Force Immediate Play"),
         ],
         [
             {"text": [{"type": "code", "text": "/cplay"}], "align": "left"},
-            {"text": "📢 Channel Stream Play", "align": "left"},
+            _cmd_item("5431374840332302296", "📢", "Channel Stream Play"),
         ],
-        # 3. LOOP PART (Full row)
+        # 3. LOOP & QUEUE (Full row)
         [
-            {"text": [{"type": "bold", "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0🔁 LOOP & QUEUE"}], "is_header": True, "colspan": 2, "align": "left"},
+            _cat_header("5292226786229236118", "🔁", "LOOP & QUEUE"),
         ],
         [
             {"text": [{"type": "code", "text": "/loop"}], "align": "left"},
-            {"text": "🔁 Loop Track 1-10x", "align": "left"},
+            _cmd_item("5292226786229236118", "🔁", "Loop Track 1-10x"),
         ],
         [
             {"text": [{"type": "code", "text": "/queue"}], "align": "left"},
-            {"text": "📜 View Queued Playlist", "align": "left"},
+            _cmd_item("5213002459437342368", "📜", "View Queued Playlist"),
         ],
         [
             {"text": [{"type": "code", "text": "/shuffle"}], "align": "left"},
-            {"text": "🔀 Randomize Queue Order", "align": "left"},
+            _cmd_item("5292226786229236118", "🔀", "Randomize Queue Order"),
         ],
         # 4. SETTINGS & TOOLS (Full row)
         [
-            {"text": [{"type": "bold", "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0⚙️ SETTINGS & TOOLS"}], "is_header": True, "colspan": 2, "align": "left"},
+            _cat_header("5893161718179173515", "⚙️", "SETTINGS & TOOLS"),
         ],
         [
             {"text": [{"type": "code", "text": "/seek"}], "align": "left"},
-            {"text": "⏩ Seek Duration Back/Fwd", "align": "left"},
+            _cmd_item("5316567469702264826", "⏩", "Seek Duration Back/Fwd"),
         ],
         [
             {"text": [{"type": "code", "text": "/speed"}], "align": "left"},
-            {"text": "🎚 Play Speed (0.5x-2x)", "align": "left"},
+            _cmd_item("5895444149699612825", "🎚", "Play Speed (0.5x-2x)"),
         ],
         [
             {"text": [{"type": "code", "text": "/auth"}], "align": "left"},
-            {"text": "🛡 Authorize Controllers", "align": "left"},
+            _cmd_item("5902016123972358349", "🛡", "Authorize Controllers"),
         ],
         [
             {"text": [{"type": "code", "text": "/lang"}], "align": "left"},
-            {"text": "🌐 Switch Bot Language", "align": "left"},
+            _cmd_item("5449875850046481967", "🌐", "Switch Bot Language"),
         ],
         [
             {"text": [{"type": "code", "text": "/ping"}], "align": "left"},
-            {"text": "📶 Check Latency & Health", "align": "left"},
+            _cmd_item("5319164151094849427", "📶", "Check Latency & Health"),
         ],
         [
             {"text": [{"type": "code", "text": "/stats"}], "align": "left"},
-            {"text": "📊 Overall Bot Stats", "align": "left"},
+            _cmd_item("5895444149699612825", "📊", "Overall Bot Stats"),
         ],
     ]
 
     if staff:
         cells.extend([
             [
-                {"text": [{"type": "bold", "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0🛡 STAFF COMMANDS"}], "is_header": True, "colspan": 2, "align": "left"},
+                _cat_header("5902016123972358349", "🛡", "STAFF COMMANDS"),
             ],
             [
                 {"text": [{"type": "code", "text": "/activevc"}], "align": "left"},
-                {"text": "🎙 Active Voice Chats", "align": "left"},
+                _cmd_item("6246851227032753502", "🎙", "Active Voice Chats"),
             ],
             [
                 {"text": [{"type": "code", "text": "/broadcast"}], "align": "left"},
-                {"text": "📢 Global Broadcast", "align": "left"},
+                _cmd_item("5431374840332302296", "📢", "Global Broadcast"),
             ],
             [
                 {"text": [{"type": "code", "text": "/restart"}], "align": "left"},
-                {"text": "🔄 Restart Bot Engine", "align": "left"},
+                _cmd_item("5292226786229236118", "🔄", "Restart Bot Engine"),
             ],
         ])
 
