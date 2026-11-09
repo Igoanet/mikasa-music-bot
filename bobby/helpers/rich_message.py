@@ -169,7 +169,7 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
                             "custom_emoji_id": "5199612362021157840",
                             "alternative_text": "❄️",
                         },
-                        " Support Chat",
+                        "  Support Chat",
                     ],
                 },
                 {
@@ -181,7 +181,7 @@ def get_start_chat_button_blocks(bot_user: str, support_channel: str, support_ch
                             "custom_emoji_id": "5893321843149902412",
                             "alternative_text": "✨",
                         },
-                        " Support Channel",
+                        "  Support Channel",
                     ],
                 },
             ],
