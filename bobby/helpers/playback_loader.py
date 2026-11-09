@@ -4,11 +4,9 @@ from pyrogram import enums
 
 logger = logging.getLogger("bobby")
 
-# Step 2 emojis: ⚡️ | 👻 | 👾 (shown one at a time in loop)
+# Step 2 emoji: 🌕 (ReaperSkullEmoji)
 STAGE_2_EMOJIS = [
-    '<tg-emoji emoji-id="5893048571560726748">⚡️</tg-emoji>',
-    '<tg-emoji emoji-id="5305388752162539722">👻</tg-emoji>',
-    '<tg-emoji emoji-id="5337037846475720165">👾</tg-emoji>',
+    '<tg-emoji emoji-id="5289930954410836372">🌕</tg-emoji>',
 ]
 
 
