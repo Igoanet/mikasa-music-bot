@@ -495,14 +495,14 @@ class TgCall(PyTgCalls):
 
                 text = (
                     f"{emojis.HEADPHONE}  <b>˹ ᴍɪᴋᴀꜱᴀ {emojis.SWORD} ᴍᴜꜱɪᴄ♪ {emojis.DOVE} ˼</b>\n\n"
-                    f"<blockquote expandable>"
+                    f"<blockquote>"
                     f"{emojis.SPARKLES} <b>ᴛʀᴀᴄᴋ :</b> <a href=\"{media.url}\">{clean_track}</a>\n\n"
                     f"{emojis.CLOCK} <b>ᴅᴜʀᴀᴛɪᴏɴ :</b> {media.duration}\n\n"
-                    f"{emojis.USER} <b>ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> {media.user}\n\n"
+                    f"{emojis.USER} <b>ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> {media.user}"
+                    f"</blockquote>\n\n"
                     f"💡 <b>ɪғ ʏᴏᴜ ғᴏᴜɴᴅ ᴀɴʏ ɪssᴜᴇ ʀᴇᴘᴏʀᴛ ɪᴍᴍᴇᴅɪᴀᴛᴇʟʏ :</b>\n"
-                    f"👉 <a href=\"{support_chat}\">sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ</a> | <a href=\"{support_channel}\">sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ</a>\n\n"
+                    f"👉 <a href=\"{support_chat}\"><b>sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ</b></a> | <a href=\"{support_channel}\"><b>sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ</b></a>\n\n"
                     f"🎛 <b>ᴄᴏɴᴛʀᴏʟs :</b> 🔄 ʀᴇᴘʟᴀʏ • ⏪ -15s • ⏯ ᴘᴀᴜsᴇ/ʀᴇsᴜᴍᴇ • ⏩ +15s • ⏭ sᴋɪᴘ"
-                    f"</blockquote>"
                 )
                 from bobby.core.disco import progress_bar as _bar
                 keyboard = buttons.controls(
