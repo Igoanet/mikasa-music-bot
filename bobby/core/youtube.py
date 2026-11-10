@@ -836,11 +836,7 @@ class YouTube:
                     "format": media_format,
                 }
                 response = None
-                for attempt in range(WORKER_FALLBACK_API_ATTEMPTS):
-                    response = session.get(api_url, params=payload, timeout=25)
-                    if response.status_code not in {429, 500, 502, 503, 504}:
-                        break
-                    time.sleep(1.0)
+                response = session.get(api_url, params=payload, timeout=4)
                 response.raise_for_status()
                 data = response.json()
                 if not data.get("success"):
@@ -1029,6 +1025,18 @@ class YouTube:
                 return await self.play_source(yt_track, video=video, progress_msg=progress_msg, lang=lang)
             return None
 
+        # If track is already a JioSaavn track, resolve CDN directly
+        if str(getattr(track, "id", "")).startswith("saavn:"):
+            try:
+                from bobby.core.jiosaavn import saavn
+                await saavn.resolve_url(track.id)
+                directs = saavn.direct_for(track.id)
+                if directs:
+                    logger.info("play_source[%s]: JioSaavn direct CDN stream URL", track.id)
+                    return directs[0]
+            except Exception as ex:
+                logger.warning("play_source[%s]: direct JioSaavn resolution failed: %s", track.id, ex)
+
         # Check local cache first (instant 0ms latency!)
         ext = "mp4" if video else "mp3"
         cached_file = os.path.join("downloads", f"{track.id}.{ext}")
@@ -1060,9 +1068,12 @@ class YouTube:
             try:
                 from bobby.core.jiosaavn import saavn
                 s_track = await saavn.search(track.title, track.message_id)
-                if s_track and s_track.id != track.id:
-                    logger.info("play_source[%s]: YouTube failed, fallback to JioSaavn for %r", track.id, track.title)
-                    return await self.play_source(s_track, video=False, progress_msg=progress_msg, lang=lang)
+                if s_track:
+                    await saavn.resolve_url(s_track.id)
+                    directs = saavn.direct_for(s_track.id)
+                    if directs:
+                        logger.info("play_source[%s]: YouTube failed, fallback to JioSaavn CDN for %r", track.id, track.title)
+                        return directs[0]
             except Exception as ex:
                 logger.warning("JioSaavn emergency fallback error: %s", ex)
 
