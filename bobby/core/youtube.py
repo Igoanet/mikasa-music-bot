@@ -41,6 +41,7 @@ WORKER_FALLBACK_API_URL = os.getenv(
     "https://youtubenewapi.skybotsdeveloper.workers.dev",
 ).strip()
 WORKER_FALLBACK_API_KEY = os.getenv("WORKER_FALLBACK_API_KEY", "itsmesid").strip()
+_WORKER_FALLBACK_DOWN_UNTIL = 0.0
 YTPROXY_URL = os.getenv("YTPROXY_URL", "").strip().rstrip("/")
 YT_API_KEY = os.getenv("YT_API_KEY", "").strip()
 MIN_CACHED_MEDIA_BYTES = 128 * 1024
@@ -824,26 +825,29 @@ class YouTube:
             return await download_with_ytdlp(url, filepath, headers)
 
         def fetch_worker_fallback_links_sync(v_id, media_format):
+            global _WORKER_FALLBACK_DOWN_UNTIL
             if not WORKER_FALLBACK_API_URL or not WORKER_FALLBACK_API_KEY:
+                return None
+            if time.time() < _WORKER_FALLBACK_DOWN_UNTIL:
                 return None
             session = None
             try:
-                session = create_session()
+                session = requests.Session()
                 api_url = f"{WORKER_FALLBACK_API_URL.rstrip('/')}/api"
                 payload = {
                     "key": WORKER_FALLBACK_API_KEY,
                     "url": f"https://youtube.com/watch?v={v_id}",
                     "format": media_format,
                 }
-                response = None
-                response = session.get(api_url, params=payload, timeout=4)
+                response = session.get(api_url, params=payload, timeout=1.5)
                 response.raise_for_status()
                 data = response.json()
                 if not data.get("success"):
                     return None
                 return select_media_links(data, media_format, prefer_stream=bool(stream))
             except Exception as e:
-                logger.error("Worker fallback API failed for %s: %s", v_id, e)
+                _WORKER_FALLBACK_DOWN_UNTIL = time.time() + 300.0
+                logger.warning("Worker fallback API failed for %s: %s (circuit breaker active 5m)", v_id, e)
                 return None
             finally:
                 if session:
@@ -1044,41 +1048,80 @@ class YouTube:
             logger.info("play_source[%s]: local cache hit (%s)", track.id, ext)
             return cached_file
 
-        # Download via Worker API backend (enable instant stream while caching in background)
-        result = await self.download(
-            track.id,
-            mystic=progress_msg,
-            video=video,
-            videoid=True,
-            stream=True,
-            progress_msg=progress_msg,
-            lang=lang,
-        )
-        if isinstance(result, tuple):
-            result = result[0]
-        if result and os.path.exists(result):
-            logger.info("play_source[%s]: worker API backend downloaded successfully", track.id)
-            return result
-        elif result and str(result).startswith("http"):
-            logger.info("play_source[%s]: worker API stream URL", track.id)
-            return result
-
-        # If YouTube resolution fails, fallback to JioSaavn CDN audio so playback never fails
+        # For audio tracks: Race YouTube stream/download with fast JioSaavn 320kbps CDN
         if not video:
-            try:
-                from bobby.core.jiosaavn import saavn
-                s_track = await saavn.search(track.title, track.message_id)
-                if s_track:
-                    await saavn.resolve_url(s_track.id)
-                    directs = saavn.direct_for(s_track.id)
-                    if directs:
-                        logger.info("play_source[%s]: YouTube failed, fallback to JioSaavn CDN for %r", track.id, track.title)
-                        return directs[0]
-            except Exception as ex:
-                logger.warning("JioSaavn emergency fallback error: %s", ex)
+            async def _resolve_saavn():
+                try:
+                    from bobby.core.jiosaavn import saavn
+                    clean_name = re.sub(r'[\(\[].*?[\)\]]', '', track.title).strip()
+                    s_track = await saavn.search(clean_name or track.title, track.message_id)
+                    if s_track:
+                        await saavn.resolve_url(s_track.id)
+                        directs = saavn.direct_for(s_track.id)
+                        if directs:
+                            return directs[0]
+                except Exception as ex:
+                    logger.debug("Fast JioSaavn resolve failed: %s", ex)
+                return None
 
-        logger.error("play_source[%s]: failed to resolve playable source", track.id)
-        return None
+            async def _resolve_yt():
+                try:
+                    res = await self.download(
+                        track.id,
+                        mystic=progress_msg,
+                        video=video,
+                        videoid=True,
+                        stream=True,
+                        progress_msg=progress_msg,
+                        lang=lang,
+                    )
+                    if isinstance(res, tuple):
+                        res = res[0]
+                    if res and (os.path.exists(res) or str(res).startswith("http")):
+                        return res
+                except Exception as ex:
+                    logger.debug("YT resolve failed: %s", ex)
+                return None
+
+            t_saavn = asyncio.create_task(_resolve_saavn())
+            t_yt = asyncio.create_task(_resolve_yt())
+
+            done, pending = await asyncio.wait(
+                [t_saavn, t_yt],
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            for d in done:
+                res = d.result()
+                if res:
+                    logger.info("play_source[%s]: fast stream resolved (%s)", track.id, "JioSaavn CDN" if "saavncdn" in str(res) else "YouTube")
+                    return res
+
+            for p in pending:
+                res = await p
+                if res:
+                    logger.info("play_source[%s]: stream resolved from secondary (%s)", track.id, "JioSaavn CDN" if "saavncdn" in str(res) else "YouTube")
+                    return res
+
+            logger.error("play_source[%s]: failed to resolve playable source", track.id)
+            return None
+        else:
+            # Video download via Worker API / yt-dlp
+            result = await self.download(
+                track.id,
+                mystic=progress_msg,
+                video=video,
+                videoid=True,
+                stream=True,
+                progress_msg=progress_msg,
+                lang=lang,
+            )
+            if isinstance(result, tuple):
+                result = result[0]
+            if result and (os.path.exists(result) or str(result).startswith("http")):
+                logger.info("play_source[%s]: video stream/file resolved", track.id)
+                return result
+            logger.error("play_source[%s]: failed to resolve playable video source", track.id)
+            return None
 
     async def download_with_fallback(
         self, track: Track, video: bool = False, progress_msg=None, lang=None, local_only: bool = False
