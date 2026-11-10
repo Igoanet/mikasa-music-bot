@@ -53,13 +53,11 @@ async def play_hndlr(
         from bobby.helpers import _recs as recs
 
         recs.cancel(m.chat.id)
-    # No "searching" notice: go straight to a playback status, so the
-    # request reads as streaming rather than a lookup (2026-09-30).
+    from bobby.helpers.playback_loader import STAGE_2_EMOJI_FIRST, PlaybackLoader
     try:
-        sent = await m.reply_text(m.lang["play_3"], effect_id=5104841245755180586, parse_mode=enums.ParseMode.HTML)
+        sent = await m.reply_text(STAGE_2_EMOJI_FIRST, effect_id=5104841245755180586, parse_mode=enums.ParseMode.HTML)
     except Exception:
-        sent = await m.reply_text(m.lang["play_3"], parse_mode=enums.ParseMode.HTML)
-    from bobby.helpers.playback_loader import PlaybackLoader
+        sent = await m.reply_text(STAGE_2_EMOJI_FIRST, parse_mode=enums.ParseMode.HTML)
     loader = PlaybackLoader(sent).start()
     file = None
     mention = m.from_user.mention

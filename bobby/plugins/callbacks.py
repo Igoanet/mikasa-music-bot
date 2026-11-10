@@ -182,8 +182,8 @@ async def _controls(_, query: types.CallbackQuery):
         except Exception:
             pass
 
-        msg = await app.send_message(chat_id=chat_id, text=query.lang["play_next"])
-        from bobby.helpers.playback_loader import PlaybackLoader
+        from bobby.helpers.playback_loader import STAGE_2_EMOJI_FIRST, PlaybackLoader
+        msg = await app.send_message(chat_id=chat_id, text=STAGE_2_EMOJI_FIRST, parse_mode=enums.ParseMode.HTML)
         loader = PlaybackLoader(msg).start()
         if not media.file_path:
             media.file_path = await yt.download(media.id, video=media.video)

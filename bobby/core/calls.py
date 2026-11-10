@@ -870,8 +870,8 @@ class TgCall(PyTgCalls):
         _lang = await lang.get_lang(chat_id)
         if not await self._lifecycle.current(chat_id, generation):
             return
-        msg = await app.send_message(chat_id=chat_id, text=_lang["play_next"])
-        from bobby.helpers.playback_loader import PlaybackLoader
+        from bobby.helpers.playback_loader import STAGE_2_EMOJI_FIRST, PlaybackLoader
+        msg = await app.send_message(chat_id=chat_id, text=STAGE_2_EMOJI_FIRST, parse_mode=enums.ParseMode.HTML)
         loader = PlaybackLoader(msg).start()
         if not self._is_live(media) and not media.file_path:
             # saavn tracks stream straight from the CDN; everything else

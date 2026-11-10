@@ -4,20 +4,20 @@ from pyrogram import enums
 
 logger = logging.getLogger("bobby")
 
-# Step 2 emojis from VariousAnimations and ReaperSkullEmoji packs:
-# First flash ❤️‍🔥 (5436266163837351085 from VariousAnimations),
-# then stick on moving around 🌕 (5289930954410836372 from ReaperSkullEmoji)
-STAGE_2_EMOJI_FIRST = '<tg-emoji emoji-id="5436266163837351085">❤️‍🔥</tg-emoji>'
-STAGE_2_EMOJI_STICK = '<tg-emoji emoji-id="5289930954410836372">🌕</tg-emoji>'
+# Premium Animated Emojis from VariousAnimations pack:
+# First: ⚡ (5436357131244680475)
+# Then: 🌙 (5436296696759859723) (carries forward, never goes back to ⚡)
+STAGE_2_EMOJI_FIRST = '<tg-emoji emoji-id="5436357131244680475">⚡️</tg-emoji>'
+STAGE_2_EMOJI_STICK = '<tg-emoji emoji-id="5436296696759859723">🌙</tg-emoji>'
 
 
 class PlaybackLoader:
     """Handles playback preparation animation.
 
-    Step 1: Displays initial message (🔍 Preparing playback...) once (~0.5s).
-    Step 2: Displays the flash thing (❤️‍🔥 from VariousAnimations) (~0.8s).
-    Step 3: Switches to and sticks on the second moving premium emoji (🌕 from ReaperSkullEmoji)
-            which loops/moves around until the track begins and the poster card loads.
+    Step 1: First the ⚡ (premium emoji) shows up.
+    Step 2: Transitions to 🌙 (premium emoji).
+    Step 3: 🌙 carries forward and stays active until playback starts and
+            the player poster + controls are sent simultaneously. It never loops back to ⚡.
     """
 
     def __init__(self, message):
@@ -32,21 +32,12 @@ class PlaybackLoader:
 
     async def _run(self):
         try:
-            # Step 1: Keep initial text visible for ~0.5s
-            try:
-                await asyncio.wait_for(self.stop_event.wait(), timeout=0.5)
-                return
-            except asyncio.TimeoutError:
-                pass
-
-            if self.stop_event.is_set():
-                return
-
-            # Step 2: Flash thing (VariousAnimations ❤️‍🔥)
-            try:
-                await self.message.edit_text(STAGE_2_EMOJI_FIRST, parse_mode=enums.ParseMode.HTML)
-            except Exception:
-                pass
+            # Step 1: Ensure ⚡ is visible first
+            if getattr(self.message, "text", "") != STAGE_2_EMOJI_FIRST:
+                try:
+                    await self.message.edit_text(STAGE_2_EMOJI_FIRST, parse_mode=enums.ParseMode.HTML)
+                except Exception:
+                    pass
 
             try:
                 await asyncio.wait_for(self.stop_event.wait(), timeout=0.8)
@@ -57,12 +48,13 @@ class PlaybackLoader:
             if self.stop_event.is_set():
                 return
 
-            # Step 3: Moving around premium emoji (ReaperSkullEmoji 🌕) (sticks & moves here)
+            # Step 2: Show 🌙 (premium emoji)
             try:
                 await self.message.edit_text(STAGE_2_EMOJI_STICK, parse_mode=enums.ParseMode.HTML)
             except Exception:
                 pass
 
+            # Step 3: 🌙 carries forward — it stays on 🌙 and never goes back to ⚡
             await self.stop_event.wait()
         except asyncio.CancelledError:
             pass
