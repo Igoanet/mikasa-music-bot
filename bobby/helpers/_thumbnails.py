@@ -98,38 +98,16 @@ def clean_song_name(raw_title: str) -> str:
     return t if t else raw_title.strip()
 
 
-def _build_gradient_overlay(W: int = 1024, H: int = 576) -> Image.Image:
-    grad = np.zeros((H, W, 4), dtype=np.uint8)
-    grad_h = 210
-    y_idx = np.arange(H - grad_h, H)
-    alpha_vals = (225 * (((y_idx - (H - grad_h)) / float(grad_h)) ** 1.6)).astype(np.uint8)
-    grad[H - grad_h:H, :, 0] = 8
-    grad[H - grad_h:H, :, 1] = 8
-    grad[H - grad_h:H, :, 2] = 12
-    grad[H - grad_h:H, :, 3] = alpha_vals[:, None]
-
-    top_h = 80
-    y_top = np.arange(0, top_h)
-    alpha_top = (110 * ((1.0 - y_top / float(top_h)) ** 1.5)).astype(np.uint8)
-    grad[:top_h, :, 3] = np.maximum(grad[:top_h, :, 3], alpha_top[:, None])
-    return Image.fromarray(grad, "RGBA")
-
-
-_GRADIENT_OVERLAY = _build_gradient_overlay(1024, 576)
-
-
 class Thumbnail:
     def __init__(self):
         self.session: aiohttp.ClientSession | None = None
         try:
-            self.font_title_single = ImageFont.truetype(_FONT_BOLD, 44)
-            self.font_title_multi = ImageFont.truetype(_FONT_BOLD, 36)
-            self.font_brand = ImageFont.truetype(_FONT_BOLD, 18)
-            self.font_time = ImageFont.truetype(_FONT_BOLD, 18)
+            self.font_bold = ImageFont.truetype(_FONT_BOLD, 38)
+            self.font_sub = ImageFont.truetype(_FONT_BOLD, 30)
+            self.font_time = ImageFont.truetype(_FONT_LIGHT, 17)
         except Exception:
-            self.font_title_single = ImageFont.load_default()
-            self.font_title_multi = ImageFont.load_default()
-            self.font_brand = ImageFont.load_default()
+            self.font_bold = ImageFont.load_default()
+            self.font_sub = ImageFont.load_default()
             self.font_time = ImageFont.load_default()
 
     async def start(self) -> None:
@@ -145,10 +123,94 @@ class Thumbnail:
                 f.write(await resp.read())
         return output_path
 
+    @staticmethod
+    def _draw_controls(draw: ImageDraw.ImageDraw, color=(255, 255, 255, 255)) -> None:
+        cy = 410
+
+        # 1. Play Button (Center = 732, 410)
+        cx = 732
+        glow_r = 28
+        for gr in range(glow_r, 20, -1):
+            alpha = int(30 * (1 - (gr - 20) / (glow_r - 20)))
+            draw.ellipse([cx - gr, cy - gr, cx + gr, cy + gr], fill=(255, 255, 255, alpha))
+
+        r = 20
+        draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(255, 255, 255, 255))
+        tri_pts = [(cx - 5, cy - 9), (cx - 5, cy + 9), (cx + 8, cy)]
+        draw.polygon(tri_pts, fill=(160, 15, 30, 255))
+
+        # 2. Previous Button (Center = 652, 410)
+        px = 652
+        draw.polygon([(px + 7, cy - 10), (px + 7, cy + 10), (px - 6, cy)], fill=color)
+        draw.rectangle([px - 9, cy - 10, px - 7, cy + 10], fill=color)
+
+        # 3. Next Button (Center = 814, 410)
+        nx = 814
+        draw.polygon([(nx - 7, cy - 10), (nx - 7, cy + 10), (nx + 6, cy)], fill=color)
+        draw.rectangle([nx + 7, cy - 10, nx + 9, cy + 10], fill=color)
+
+        # 4. Shuffle Button (Center = 536, 410)
+        sx = 536
+        draw.line([(sx - 12, cy + 7), (sx - 4, cy + 7), (sx + 4, cy - 7), (sx + 12, cy - 7)], fill=color, width=2)
+        draw.polygon([(sx + 10, cy - 11), (sx + 15, cy - 7), (sx + 10, cy - 3)], fill=color)
+        draw.line([(sx - 12, cy - 7), (sx - 4, cy - 7), (sx - 1, cy - 2)], fill=color, width=2)
+        draw.line([(sx + 1, cy + 2), (sx + 4, cy + 7), (sx + 12, cy + 7)], fill=color, width=2)
+        draw.polygon([(sx + 10, cy + 3), (sx + 15, cy + 7), (sx + 10, cy + 11)], fill=color)
+
+        # 5. Repeat Button (Center = 925, 410)
+        rx = 925
+        draw.rounded_rectangle([rx - 12, cy - 9, rx + 12, cy + 9], radius=4, outline=color, width=2)
+        draw.polygon([(rx + 8, cy + 5), (rx + 14, cy + 9), (rx + 8, cy + 13)], fill=color)
+
+    @staticmethod
+    def _create_metallic_candy_red_background(W: int, H: int, seed_id: str) -> Image.Image:
+        y_coords, x_coords = np.mgrid[0:H, 0:W]
+
+        diag = (x_coords * 0.75 + y_coords * 0.45) / (W * 0.75 + H * 0.45)
+
+        h1 = np.exp(-((x_coords - W * 0.65) / (W * 0.45))**2 - ((y_coords - H * 0.25) / (H * 0.45))**2)
+        h2 = np.exp(-((diag - 0.48) / 0.28)**2)
+        h3 = np.exp(-((x_coords - W * 0.15) / (W * 0.35))**2 - ((y_coords - H * 0.85) / (H * 0.35))**2)
+
+        corner_dist = np.sqrt(((x_coords - W * 0.5) / (W * 0.5))**2 + ((y_coords - H * 0.5) / (H * 0.5))**2)
+        vignette = np.clip(1.0 - 0.25 * (corner_dist ** 2), 0.75, 1.0)
+
+        light = (0.50 * h1 + 0.35 * h2 + 0.25 * h3) * vignette
+        light = np.clip(light, 0.0, 1.0)
+
+        r_dark, g_dark, b_dark = 104.0, 12.0, 18.0
+        r_bright, g_bright, b_bright = 222.0, 52.0, 64.0
+
+        arr = np.zeros((H, W, 3), dtype=np.float32)
+        arr[:, :, 0] = r_dark + (r_bright - r_dark) * (light ** 0.95)
+        arr[:, :, 1] = g_dark + (g_bright - g_dark) * (light ** 1.3)
+        arr[:, :, 2] = b_dark + (b_bright - b_dark) * (light ** 1.3)
+
+        seed = abs(hash(seed_id)) % 100000
+        rng = np.random.RandomState(seed)
+
+        brush_1d = rng.normal(0, 1, H).astype(np.float32)
+        brush_2d = np.repeat(brush_1d[:, np.newaxis], W, axis=1)
+        flake_noise = rng.normal(0, 1, (H, W)).astype(np.float32)
+
+        arr[:, :, 0] += brush_2d * 5.0 + flake_noise * 7.0
+        arr[:, :, 1] += brush_2d * 3.0 + flake_noise * 4.0
+        arr[:, :, 2] += brush_2d * 3.0 + flake_noise * 4.0
+
+        speck_mask = rng.random((H, W)) > 0.985
+        speck_val = rng.uniform(10, 28, (H, W)).astype(np.float32) * speck_mask
+        arr[:, :, 0] += speck_val
+        arr[:, :, 1] += speck_val * 0.6
+        arr[:, :, 2] += speck_val * 0.6
+
+        arr = np.clip(arr, 0, 255).astype(np.uint8)
+        base = Image.fromarray(arr, "RGB").filter(ImageFilter.GaussianBlur(0.3))
+        return base.convert("RGBA")
+
     async def generate(self, song: Track, size=(1024, 576)) -> str:
         try:
             temp = f"cache/temp_{song.id}.jpg"
-            output = f"cache/{song.id}_v5.jpg"
+            output = f"cache/{song.id}_v6.png"
             if os.path.exists(output):
                 try:
                     os.utime(output)
@@ -159,107 +221,106 @@ class Thumbnail:
             await self.save_thumb(temp, song.thumbnail)
             W, H = size
 
+            # 1. Brushed Metallic Background
+            bg_path = os.path.join(os.path.dirname(__file__), "background.jpg")
+            if os.path.exists(bg_path):
+                with Image.open(bg_path) as bg_img:
+                    base = bg_img.convert("RGBA").resize((W, H), Image.Resampling.LANCZOS)
+            else:
+                base = self._create_metallic_candy_red_background(W, H, song.id)
             raw_thumb = Image.open(temp).convert("RGB")
-            rw, rh = raw_thumb.size
-            aspect = rw / float(rh) if rh > 0 else 1.777
 
-            # 1. Base Layer: Full horizontal coverage
-            if aspect >= 1.35:
-                # 16:9 widescreen poster - full edge-to-edge bleed
-                base = ImageOps.fit(raw_thumb, (W, H), method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
-            else:
-                # Square or portrait cover: Rich ambient backdrop + sharp centered album card
-                bg = raw_thumb.resize((W, H), Image.Resampling.BILINEAR).filter(ImageFilter.BoxBlur(20))
-                bg = ImageEnhance.Brightness(bg).enhance(0.55)
+            # 2. Rounded Left Frame / Album Card
+            cover_x = 88
+            cover_y = 104
+            cover_size = 368
+            radius = 32
 
-                art_h = int(H * 0.88)
-                art_w = int(art_h * aspect)
-                art = raw_thumb.resize((art_w, art_h), Image.Resampling.LANCZOS)
+            # Drop shadow
+            shadow = Image.new("RGBA", (cover_size + 40, cover_size + 40), (0, 0, 0, 0))
+            s_draw = ImageDraw.Draw(shadow)
+            s_draw.rounded_rectangle([20, 20, cover_size + 20, cover_size + 20], radius=radius, fill=(0, 0, 0, 200))
+            shadow = shadow.filter(ImageFilter.GaussianBlur(14))
+            base.alpha_composite(shadow, (cover_x - 20, cover_y - 20))
 
-                ax = (W - art_w) // 2
-                ay = (H - art_h) // 2
+            # Album Art Fitting (Proper clean poster, no blurry glassic effect)
+            card_art = ImageOps.fit(raw_thumb, (cover_size, cover_size), method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+            card_base = card_art.convert("RGBA")
 
-                shadow = Image.new("RGBA", (art_w + 32, art_h + 32), (0, 0, 0, 0))
-                s_draw = ImageDraw.Draw(shadow)
-                s_draw.rounded_rectangle([16, 16, art_w + 16, art_h + 16], radius=22, fill=(0, 0, 0, 190))
-                shadow = shadow.filter(ImageFilter.BoxBlur(8))
+            # Bottom Black Gradient Overlay (Tray)
+            tray = Image.new("RGBA", (cover_size, cover_size), (0, 0, 0, 0))
+            t_draw = ImageDraw.Draw(tray)
+            for ty in range(280, cover_size):
+                factor = min(1.0, (ty - 280) / 45.0)
+                alpha = int((factor ** 1.6) * 255)
+                t_draw.line([(0, ty), (cover_size, ty)], fill=(0, 0, 0, alpha))
+            card_base.alpha_composite(tray)
 
-                art_rgba = art.convert("RGBA")
-                mask = Image.new("L", (art_w, art_h), 0)
-                ImageDraw.Draw(mask).rounded_rectangle([0, 0, art_w, art_h], radius=20, fill=255)
-                art_rgba.putalpha(mask)
+            # Green Audio Equalizer Bars (Spanning edge-to-edge horizontally across frame)
+            eq_draw = ImageDraw.Draw(card_base)
+            baseline_y = 365
+            bar_color = (138, 178, 132, 255)
+            bar_heights = [
+                3, 4, 5, 5, 6, 6, 5, 4, 3, 2, 2, 3, 4, 5, 5, 5,
+                5, 4, 4, 3, 2, 2, 2, 2, 2, 4, 6, 7, 7, 7, 7, 6,
+                4, 3, 4, 8, 12, 16, 20, 22, 22, 21, 20, 17, 14, 11, 8, 7,
+                6, 6, 7, 6, 6, 5, 2, 2, 3, 6, 7, 8, 8, 8, 8, 8,
+                7, 8, 9, 11, 15, 21, 28, 35, 42, 48, 52, 53, 51, 48, 43, 37,
+                31, 25, 19, 15, 10, 7, 4, 2, 2
+            ]
 
-                base_rgba = bg.convert("RGBA")
-                base_rgba.alpha_composite(shadow, (ax - 16, ay - 16))
-                base_rgba.paste(art_rgba, (ax, ay), art_rgba)
-                base = base_rgba.convert("RGB")
-
-            base_rgba = base.convert("RGBA")
-
-            # 2. Sleek Precomputed Cinematic Dark Gradients
-            if (W, H) == (1024, 576):
-                base_rgba.alpha_composite(_GRADIENT_OVERLAY)
-            else:
-                base_rgba.alpha_composite(_build_gradient_overlay(W, H))
-
-            # 3. Audio Visualizer Spectrum Bars across the full bottom width
-            eq_draw = ImageDraw.Draw(base_rgba)
-            baseline_y = H - 12
-            num_bars = 84
-            bar_w = 7
-            gap = 5
-            total_w = num_bars * (bar_w + gap) - gap
-            start_x = (W - total_w) // 2
-
-            seed = abs(hash(song.id or song.title)) % 10000
-            np.random.seed(seed)
-            x_vals = np.linspace(0, 4.5 * np.pi, num_bars)
-            wave = np.sin(x_vals) * 0.5 + 0.5
-            wave = wave * (np.sin(x_vals * 0.35) * 0.3 + 0.7)
-            noise = np.random.uniform(0.75, 1.25, num_bars)
-            raw_h = 10 + 34 * wave * noise
-            smooth_h = [raw_h[0]]
-            for i in range(1, num_bars - 1):
-                smooth_h.append(int((raw_h[i - 1] + raw_h[i] * 2 + raw_h[i + 1]) / 4))
-            smooth_h.append(raw_h[-1])
-
-            for idx, h in enumerate(smooth_h):
-                bx = start_x + idx * (bar_w + gap)
+            for idx, h in enumerate(bar_heights):
+                bx = 6 + idx * 4
                 top_y = baseline_y - int(h)
-                bar_color = (255, 60, 80, 230)
-                eq_draw.rounded_rectangle([bx, top_y, bx + bar_w, baseline_y], radius=3, fill=bar_color)
+                if h >= 5:
+                    eq_draw.rounded_rectangle([bx, top_y, bx + 2, baseline_y], radius=1, fill=bar_color)
+                else:
+                    eq_draw.rectangle([bx, top_y, bx + 2, baseline_y], fill=bar_color)
 
-            # 4. Top Header: MIKASA MUSIC Brand Pill (Left)
-            eq_draw.rounded_rectangle([32, 24, 192, 56], radius=16, fill=(0, 0, 0, 160), outline=(255, 60, 80, 210), width=2)
-            eq_draw.text((46, 29), "MIKASA MUSIC", font=self.font_brand, fill=(255, 255, 255, 240))
+            # Apply rounded corner mask
+            mask = Image.new("L", (cover_size, cover_size), 0)
+            m_draw = ImageDraw.Draw(mask)
+            m_draw.rounded_rectangle([0, 0, cover_size, cover_size], radius=radius, fill=255)
+            card_base.putalpha(mask)
 
-            # Top Header: Duration Pill (Right)
-            duration_text = str(song.duration or "00:00")
-            dur_w = 90
-            dur_x = W - 32 - dur_w
-            eq_draw.rounded_rectangle([dur_x, 24, W - 32, 56], radius=16, fill=(0, 0, 0, 160), outline=(255, 255, 255, 80), width=1)
-            eq_draw.text((dur_x + 22, 29), duration_text, font=self.font_time, fill=(255, 255, 255, 240))
+            base.paste(card_base, (cover_x, cover_y), card_base)
 
-            # 5. Prominent Track Title
-            clean_title = clean_song_name(song.title)
-            if len(clean_title) <= 28:
-                eq_draw.text((36, H - 76), clean_title, font=self.font_title_single, fill=(0, 0, 0, 230))
-                eq_draw.text((34, H - 78), clean_title, font=self.font_title_single, fill=(255, 255, 255, 255))
+            # 5. Right Side Typography, Progress Bar & Controls
+            info_x = 515
+            draw = ImageDraw.Draw(base)
+
+            pure_name = clean_song_name(song.title)
+
+            # Song Title (Century Gothic Bold, clean single or two lines)
+            if len(pure_name) <= 22:
+                draw.text((info_x, 246), pure_name, font=self.font_bold, fill=(255, 255, 255, 255))
             else:
-                words = clean_title.split()
+                words = pure_name.split()
                 mid = len(words) // 2
                 l1 = " ".join(words[:mid])
                 l2 = " ".join(words[mid:])
-                if len(l1) > 30:
-                    l1 = l1[:28] + "..."
-                if len(l2) > 30:
-                    l2 = l2[:28] + "..."
-                eq_draw.text((36, H - 110), l1, font=self.font_title_multi, fill=(0, 0, 0, 230))
-                eq_draw.text((34, H - 112), l1, font=self.font_title_multi, fill=(255, 255, 255, 255))
-                eq_draw.text((36, H - 68), l2, font=self.font_title_multi, fill=(0, 0, 0, 230))
-                eq_draw.text((34, H - 70), l2, font=self.font_title_multi, fill=(255, 255, 255, 255))
+                if len(l1) > 24:
+                    l1 = l1[:22] + "..."
+                if len(l2) > 24:
+                    l2 = l2[:22] + "..."
+                draw.text((info_x, 215), l1, font=self.font_bold, fill=(255, 255, 255, 255))
+                draw.text((info_x, 260), l2, font=self.font_bold, fill=(255, 255, 255, 255))
 
-            base_rgba.convert("RGB").save(output, "JPEG", quality=92)
+            # Progress Bar
+            bar_y = 320
+            bar_len = 436
+            draw.rounded_rectangle([info_x, bar_y, info_x + bar_len, bar_y + 4], radius=2, fill=(255, 255, 255, 255))
+            knob_x = info_x + int(bar_len * 0.28)
+            draw.ellipse([knob_x - 6, bar_y - 4, knob_x + 6, bar_y + 8], fill=(255, 255, 255, 255))
+
+            draw.text((info_x, bar_y + 14), "0:46", font=self.font_time, fill=(255, 255, 255, 235))
+            duration_text = str(song.duration or "00:00")
+            draw.text((info_x + bar_len - 42, bar_y + 14), duration_text, font=self.font_time, fill=(255, 255, 255, 235))
+
+            # Controls
+            self._draw_controls(draw, color=(255, 255, 255, 255))
+
+            base.save(output, "PNG")
             try:
                 os.remove(temp)
             except Exception:

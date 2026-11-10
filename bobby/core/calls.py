@@ -484,12 +484,14 @@ class TgCall(PyTgCalls):
                 from bobby.helpers import emojis, clean_song_name
                 clean_track = clean_song_name(media.title)
                 media.title = clean_track
+                _pad = "\u2800" * 38
                 text = (
-                    f"{emojis.HEADPHONE}  <b>˹ᴍɪᴋᴀꜱᴀ {emojis.SWORD} ᴍᴜꜱɪᴄ♪ {emojis.DOVE}</b>\n\n"
+                    f"{emojis.HEADPHONE}  <b>˹ ᴍɪᴋᴀꜱᴀ {emojis.SWORD} ᴍᴜꜱɪᴄ♪ {emojis.DOVE} ˼</b>\n\n"
                     f"<blockquote>"
                     f"{emojis.SPARKLES} <b>ᴛʀᴀᴄᴋ :</b> <a href=\"{media.url}\">{clean_track}</a>\n\n"
                     f"{emojis.CLOCK} <b>ᴅᴜʀᴀᴛɪᴏɴ :</b> {media.duration}\n\n"
-                    f"{emojis.USER} <b>ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> {media.user}"
+                    f"{emojis.USER} <b>ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> {media.user}\n"
+                    f"<b>{_pad}</b>"
                     f"</blockquote>"
                 )
                 from bobby.core.disco import progress_bar as _bar
