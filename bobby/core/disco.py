@@ -24,7 +24,7 @@ ENABLED = True                       # always on -- there is no off switch
 # play flow.  5s of visual update is the safe floor; the tick also slows
 # itself down further whenever Telegram complains (see add_penalty).
 EVERY = max(3, int(os.getenv("DISCO_EVERY", "5")))
-_SEGMENTS = 18
+_SEGMENTS = 10
 _PALETTE = (enums.ButtonStyle.PRIMARY, enums.ButtonStyle.SUCCESS,
             enums.ButtonStyle.DANGER)
 

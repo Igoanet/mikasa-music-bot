@@ -102,11 +102,13 @@ class Thumbnail:
     def __init__(self):
         self.session: aiohttp.ClientSession | None = None
         try:
-            self.font_bold = ImageFont.truetype(_FONT_BOLD, 38)
-            self.font_sub = ImageFont.truetype(_FONT_BOLD, 30)
-            self.font_time = ImageFont.truetype(_FONT_LIGHT, 17)
+            self.font_bold = ImageFont.truetype(_FONT_BOLD, 46)
+            self.font_title_med = ImageFont.truetype(_FONT_BOLD, 36)
+            self.font_sub = ImageFont.truetype(_FONT_LIGHT, 22)
+            self.font_time = ImageFont.truetype(_FONT_LIGHT, 20)
         except Exception:
             self.font_bold = ImageFont.load_default()
+            self.font_title_med = ImageFont.load_default()
             self.font_sub = ImageFont.load_default()
             self.font_time = ImageFont.load_default()
 
@@ -125,42 +127,42 @@ class Thumbnail:
 
     @staticmethod
     def _draw_controls(draw: ImageDraw.ImageDraw, color=(255, 255, 255, 255)) -> None:
-        cy = 410
+        cy = 425
 
-        # 1. Play Button (Center = 732, 410)
-        cx = 732
-        glow_r = 28
-        for gr in range(glow_r, 20, -1):
-            alpha = int(30 * (1 - (gr - 20) / (glow_r - 20)))
+        # 1. Play Button (Center = 742, 425)
+        cx = 742
+        glow_r = 30
+        for gr in range(glow_r, 22, -1):
+            alpha = int(35 * (1 - (gr - 22) / (glow_r - 22)))
             draw.ellipse([cx - gr, cy - gr, cx + gr, cy + gr], fill=(255, 255, 255, alpha))
 
-        r = 20
+        r = 22
         draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(255, 255, 255, 255))
-        tri_pts = [(cx - 5, cy - 9), (cx - 5, cy + 9), (cx + 8, cy)]
+        tri_pts = [(cx - 6, cy - 10), (cx - 6, cy + 10), (cx + 9, cy)]
         draw.polygon(tri_pts, fill=(160, 15, 30, 255))
 
-        # 2. Previous Button (Center = 652, 410)
-        px = 652
-        draw.polygon([(px + 7, cy - 10), (px + 7, cy + 10), (px - 6, cy)], fill=color)
-        draw.rectangle([px - 9, cy - 10, px - 7, cy + 10], fill=color)
+        # 2. Previous Button (Center = 660, 425)
+        px = 660
+        draw.polygon([(px + 8, cy - 11), (px + 8, cy + 11), (px - 7, cy)], fill=color)
+        draw.rectangle([px - 10, cy - 11, px - 8, cy + 11], fill=color)
 
-        # 3. Next Button (Center = 814, 410)
-        nx = 814
-        draw.polygon([(nx - 7, cy - 10), (nx - 7, cy + 10), (nx + 6, cy)], fill=color)
-        draw.rectangle([nx + 7, cy - 10, nx + 9, cy + 10], fill=color)
+        # 3. Next Button (Center = 824, 425)
+        nx = 824
+        draw.polygon([(nx - 8, cy - 11), (nx - 8, cy + 11), (nx + 7, cy)], fill=color)
+        draw.rectangle([nx + 8, cy - 11, nx + 10, cy + 11], fill=color)
 
-        # 4. Shuffle Button (Center = 536, 410)
-        sx = 536
-        draw.line([(sx - 12, cy + 7), (sx - 4, cy + 7), (sx + 4, cy - 7), (sx + 12, cy - 7)], fill=color, width=2)
-        draw.polygon([(sx + 10, cy - 11), (sx + 15, cy - 7), (sx + 10, cy - 3)], fill=color)
-        draw.line([(sx - 12, cy - 7), (sx - 4, cy - 7), (sx - 1, cy - 2)], fill=color, width=2)
-        draw.line([(sx + 1, cy + 2), (sx + 4, cy + 7), (sx + 12, cy + 7)], fill=color, width=2)
-        draw.polygon([(sx + 10, cy + 3), (sx + 15, cy + 7), (sx + 10, cy + 11)], fill=color)
+        # 4. Shuffle Button (Center = 542, 425)
+        sx = 542
+        draw.line([(sx - 13, cy + 8), (sx - 4, cy + 8), (sx + 4, cy - 8), (sx + 13, cy - 8)], fill=color, width=2)
+        draw.polygon([(sx + 11, cy - 12), (sx + 16, cy - 8), (sx + 11, cy - 4)], fill=color)
+        draw.line([(sx - 13, cy - 8), (sx - 4, cy - 8), (sx - 1, cy - 2)], fill=color, width=2)
+        draw.line([(sx + 1, cy + 2), (sx + 4, cy + 8), (sx + 13, cy + 8)], fill=color, width=2)
+        draw.polygon([(sx + 11, cy + 4), (sx + 16, cy + 8), (sx + 11, cy + 12)], fill=color)
 
-        # 5. Repeat Button (Center = 925, 410)
-        rx = 925
-        draw.rounded_rectangle([rx - 12, cy - 9, rx + 12, cy + 9], radius=4, outline=color, width=2)
-        draw.polygon([(rx + 8, cy + 5), (rx + 14, cy + 9), (rx + 8, cy + 13)], fill=color)
+        # 5. Repeat Button (Center = 940, 425)
+        rx = 940
+        draw.rounded_rectangle([rx - 13, cy - 10, rx + 13, cy + 10], radius=4, outline=color, width=2)
+        draw.polygon([(rx + 9, cy + 6), (rx + 15, cy + 10), (rx + 9, cy + 14)], fill=color)
 
     @staticmethod
     def _create_metallic_candy_red_background(W: int, H: int, seed_id: str) -> Image.Image:
@@ -210,7 +212,7 @@ class Thumbnail:
     async def generate(self, song: Track, size=(1024, 576)) -> str:
         try:
             temp = f"cache/temp_{song.id}.jpg"
-            output = f"cache/{song.id}_v6.png"
+            output = f"cache/{song.id}_v7.png"
             if os.path.exists(output):
                 try:
                     os.utime(output)
@@ -230,47 +232,51 @@ class Thumbnail:
                 base = self._create_metallic_candy_red_background(W, H, song.id)
             raw_thumb = Image.open(temp).convert("RGB")
 
-            # 2. Rounded Left Frame / Album Card
-            cover_x = 88
-            cover_y = 104
-            cover_size = 368
+            # 2. Rounded Left Frame / Album Card (Enlarged to 416x416 for edge fill)
+            cover_x = 64
+            cover_y = 80
+            cover_size = 416
             radius = 32
 
             # Drop shadow
             shadow = Image.new("RGBA", (cover_size + 40, cover_size + 40), (0, 0, 0, 0))
             s_draw = ImageDraw.Draw(shadow)
-            s_draw.rounded_rectangle([20, 20, cover_size + 20, cover_size + 20], radius=radius, fill=(0, 0, 0, 200))
-            shadow = shadow.filter(ImageFilter.GaussianBlur(14))
+            s_draw.rounded_rectangle([20, 20, cover_size + 20, cover_size + 20], radius=radius, fill=(0, 0, 0, 210))
+            shadow = shadow.filter(ImageFilter.GaussianBlur(16))
             base.alpha_composite(shadow, (cover_x - 20, cover_y - 20))
 
-            # Album Art Fitting (Proper clean poster, no blurry glassic effect)
+            # Album Art Fitting
             card_art = ImageOps.fit(raw_thumb, (cover_size, cover_size), method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
             card_base = card_art.convert("RGBA")
 
             # Bottom Black Gradient Overlay (Tray)
             tray = Image.new("RGBA", (cover_size, cover_size), (0, 0, 0, 0))
             t_draw = ImageDraw.Draw(tray)
-            for ty in range(280, cover_size):
-                factor = min(1.0, (ty - 280) / 45.0)
+            for ty in range(320, cover_size):
+                factor = min(1.0, (ty - 320) / 50.0)
                 alpha = int((factor ** 1.6) * 255)
                 t_draw.line([(0, ty), (cover_size, ty)], fill=(0, 0, 0, alpha))
             card_base.alpha_composite(tray)
 
-            # Green Audio Equalizer Bars (Spanning edge-to-edge horizontally across frame)
+            # Green Audio Equalizer Bars (Spanning edge-to-edge horizontally across 416 frame)
             eq_draw = ImageDraw.Draw(card_base)
-            baseline_y = 365
+            baseline_y = 412
             bar_color = (138, 178, 132, 255)
-            bar_heights = [
+            seed = abs(hash(song.id)) % 1000
+            rng = np.random.RandomState(seed)
+
+            # 100 bars across 400px (4px step)
+            base_pattern = [
                 3, 4, 5, 5, 6, 6, 5, 4, 3, 2, 2, 3, 4, 5, 5, 5,
                 5, 4, 4, 3, 2, 2, 2, 2, 2, 4, 6, 7, 7, 7, 7, 6,
                 4, 3, 4, 8, 12, 16, 20, 22, 22, 21, 20, 17, 14, 11, 8, 7,
                 6, 6, 7, 6, 6, 5, 2, 2, 3, 6, 7, 8, 8, 8, 8, 8,
                 7, 8, 9, 11, 15, 21, 28, 35, 42, 48, 52, 53, 51, 48, 43, 37,
-                31, 25, 19, 15, 10, 7, 4, 2, 2
+                31, 25, 19, 15, 10, 7, 4, 2, 2, 3, 5, 7, 10, 14, 18, 22, 20, 16, 11, 6, 3
             ]
-
-            for idx, h in enumerate(bar_heights):
-                bx = 6 + idx * 4
+            for idx in range(min(100, len(base_pattern))):
+                h = base_pattern[idx]
+                bx = 8 + idx * 4
                 top_y = baseline_y - int(h)
                 if h >= 5:
                     eq_draw.rounded_rectangle([bx, top_y, bx + 2, baseline_y], radius=1, fill=bar_color)
@@ -285,37 +291,48 @@ class Thumbnail:
 
             base.paste(card_base, (cover_x, cover_y), card_base)
 
-            # 5. Right Side Typography, Progress Bar & Controls
-            info_x = 515
+            # 5. Right Side Typography, Subtitle, Progress Bar & Controls
+            info_x = 520
             draw = ImageDraw.Draw(base)
 
             pure_name = clean_song_name(song.title)
 
-            # Song Title (Century Gothic Bold, clean single or two lines)
-            if len(pure_name) <= 22:
-                draw.text((info_x, 246), pure_name, font=self.font_bold, fill=(255, 255, 255, 255))
+            # Song Title (Century Gothic Bold)
+            if len(pure_name) <= 18:
+                draw.text((info_x, 212), pure_name, font=self.font_bold, fill=(255, 255, 255, 255))
+                y_sub = 276
+            elif len(pure_name) <= 26:
+                draw.text((info_x, 216), pure_name, font=self.font_title_med, fill=(255, 255, 255, 255))
+                y_sub = 276
             else:
                 words = pure_name.split()
                 mid = len(words) // 2
                 l1 = " ".join(words[:mid])
                 l2 = " ".join(words[mid:])
-                if len(l1) > 24:
-                    l1 = l1[:22] + "..."
-                if len(l2) > 24:
-                    l2 = l2[:22] + "..."
-                draw.text((info_x, 215), l1, font=self.font_bold, fill=(255, 255, 255, 255))
-                draw.text((info_x, 260), l2, font=self.font_bold, fill=(255, 255, 255, 255))
+                if len(l1) > 22:
+                    l1 = l1[:20] + "..."
+                if len(l2) > 22:
+                    l2 = l2[:20] + "..."
+                draw.text((info_x, 192), l1, font=self.font_title_med, fill=(255, 255, 255, 255))
+                draw.text((info_x, 238), l2, font=self.font_title_med, fill=(255, 255, 255, 255))
+                y_sub = 286
 
-            # Progress Bar
-            bar_y = 320
-            bar_len = 436
+            # Subtitle (Channel name or artist)
+            channel = (getattr(song, "channel_name", "") or "Mikasa Music").strip()
+            if len(channel) > 30:
+                channel = channel[:28] + "..."
+            draw.text((info_x, y_sub), channel, font=self.font_sub, fill=(210, 210, 210, 230))
+
+            # Progress Bar (Wider: 445px spanning edge)
+            bar_y = 336
+            bar_len = 445
             draw.rounded_rectangle([info_x, bar_y, info_x + bar_len, bar_y + 4], radius=2, fill=(255, 255, 255, 255))
             knob_x = info_x + int(bar_len * 0.28)
-            draw.ellipse([knob_x - 6, bar_y - 4, knob_x + 6, bar_y + 8], fill=(255, 255, 255, 255))
+            draw.ellipse([knob_x - 7, bar_y - 5, knob_x + 7, bar_y + 9], fill=(255, 255, 255, 255))
 
-            draw.text((info_x, bar_y + 14), "0:46", font=self.font_time, fill=(255, 255, 255, 235))
+            draw.text((info_x, bar_y + 16), "0:46", font=self.font_time, fill=(255, 255, 255, 235))
             duration_text = str(song.duration or "00:00")
-            draw.text((info_x + bar_len - 42, bar_y + 14), duration_text, font=self.font_time, fill=(255, 255, 255, 235))
+            draw.text((info_x + bar_len - 44, bar_y + 16), duration_text, font=self.font_time, fill=(255, 255, 255, 235))
 
             # Controls
             self._draw_controls(draw, color=(255, 255, 255, 255))
