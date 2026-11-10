@@ -547,7 +547,7 @@ def get_playback_blocks(
             "text": [
                 {"type": "custom_emoji", "custom_emoji_id": "5893402730268987918", "alternative_text": "🍀"},
                 "  ",
-                {"type": "bold", "text": "ᴜsᴇ ᴛʜᴇ ᴄᴏɴᴛʀᴏʟ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴘʟᴀʏʙᴀᴄᴋ !"},
+                {"type": "bold", "text": "ᴜsᴇ ᴛʜᴇ ᴄᴏɴᴛʀᴏʟ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴘʟᴀʏ"},
             ],
         },
     ])

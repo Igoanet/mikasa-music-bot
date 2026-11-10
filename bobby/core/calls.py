@@ -482,10 +482,13 @@ class TgCall(PyTgCalls):
             await db.add_call(chat_id)
             if not seek_time:
                 import os
+                import re
+                from pyrogram.types import Message as PyMessage, Chat as PyChat
                 from bobby.helpers import emojis, clean_song_name
                 from bobby.helpers.rich_message import send_rich_message, get_playback_blocks
                 clean_track = clean_song_name(media.title)
                 media.title = clean_track
+                user_display = re.sub(r"<[^>]+>", "", str(media.user or "User")).strip()
 
                 support_chat = config.SUPPORT_CHAT or "https://t.me/toolatetobloom"
                 if not support_chat.startswith("http"):
@@ -500,11 +503,11 @@ class TgCall(PyTgCalls):
                     f"<blockquote>"
                     f"{emojis.SPARKLES} <b>ᴛʀᴀᴄᴋ :</b> <a href=\"{media.url}\">{clean_track}</a>\n\n"
                     f"{emojis.CLOCK} <b>ᴅᴜʀᴀᴛɪᴏɴ :</b> {media.duration}\n\n"
-                    f"{emojis.USER} <b>ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> {media.user}"
+                    f"{emojis.USER} <b>ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> {user_display}"
                     f"</blockquote>\n\n"
                     f"{emojis.SHIELD} <b>ɪғ ʏᴏᴜ ғᴏᴜɴᴅ ᴀɴʏ ɪssᴜᴇ ʀᴇᴘᴏʀᴛ ɪᴍᴍᴇᴅɪᴀᴛᴇʟʏ :</b>\n"
                     f"<a href=\"{support_chat}\"><b>sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ</b></a> | <a href=\"{support_channel}\"><b>sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ</b></a>\n\n"
-                    f"{emojis.LEAF} <b>ᴜsᴇ ᴛʜᴇ ᴄᴏɴᴛʀᴏʟ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴘʟᴀʏʙᴀᴄᴋ !</b>"
+                    f"{emojis.LEAF} <b>ᴜsᴇ ᴛʜᴇ ᴄᴏɴᴛʀᴏʟ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴘʟᴀʏ</b>"
                 )
                 from bobby.core.disco import progress_bar as _bar
                 keyboard = buttons.controls(
@@ -535,7 +538,7 @@ class TgCall(PyTgCalls):
                         clean_track=clean_track,
                         track_url=media.url,
                         duration=media.duration,
-                        user_name=media.user,
+                        user_name=user_display,
                         support_chat=support_chat,
                         support_channel=support_channel,
                         has_photo=has_photo,
@@ -548,7 +551,16 @@ class TgCall(PyTgCalls):
                     )
                     if rm_resp.get("ok"):
                         sent_id = rm_resp["result"]["message_id"]
-                        sent = types.Message(id=sent_id, chat=types.Chat(id=chat_id, type=enums.ChatType.SUPERGROUP))
+                        try:
+                            sent = await app.get_messages(chat_id, sent_id)
+                        except Exception:
+                            sent = None
+                        if not sent or not getattr(sent, "id", None):
+                            sent = PyMessage(
+                                id=sent_id,
+                                chat=PyChat(id=chat_id, type=enums.ChatType.SUPERGROUP, client=app),
+                                client=app,
+                            )
                     else:
                         logger.warning("Rich message failed: %s; falling back", rm_resp)
                 except Exception as ex_rm:
