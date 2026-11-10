@@ -364,7 +364,7 @@ class Inline:
                 self.ikb(
                     text=f"♪ {self._recs_label(item)}",
                     callback_data=f"recs play {seed} {item['id']}",
-                    style=enums.ButtonStyle.SUCCESS,
+                    style=enums.ButtonStyle.DANGER,
                 )
             ]
             for item in items
