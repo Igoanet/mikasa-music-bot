@@ -474,6 +474,10 @@ def get_playback_blocks(
             ],
         },
         {
+            "type": "paragraph",
+            "text": ["\u2800"],
+        },
+        {
             "type": "expandable_blockquote",
             "text": [
                 {"type": "custom_emoji", "custom_emoji_id": "5893321843149902412", "alternative_text": "✨"},

@@ -3,6 +3,37 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def _read_bot_setting(key: str, default: str = "") -> str:
+    try:
+        import json
+        from pathlib import Path
+        p = Path(__file__).resolve().parent / "data" / "bot_settings.json"
+        if p.exists():
+            with open(p, "r", encoding="utf-8") as f:
+                return json.load(f).get(key, default)
+    except Exception:
+        pass
+    return default
+
+
+def _write_bot_setting(key: str, val: str) -> None:
+    try:
+        import json
+        from pathlib import Path
+        p = Path(__file__).resolve().parent / "data" / "bot_settings.json"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        data = {}
+        if p.exists():
+            with open(p, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        data[key] = val
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+    except Exception:
+        pass
+
+
 class Config:
     def __init__(self):
         self.API_ID = int(getenv("API_ID", 0))
@@ -25,12 +56,6 @@ class Config:
         self.SESSION2 = getenv("SESSION2", None)
         self.SESSION3 = getenv("SESSION3", None)
 
-        from bobby.core.bot_settings_store import get as _bsget
-        self.SUPPORT_CHANNEL = _bsget("SUPPORT_CHANNEL") or getenv("SUPPORT_CHANNEL", "https://t.me/toolatetobloom")
-        self.SUPPORT_CHAT    = _bsget("SUPPORT_CHAT")    or getenv("SUPPORT_CHAT",    "https://t.me/toolatetobloom")
-        # Owner contact — separate from support, changeable via /setowner
-        self.OWNER_CHAT      = _bsget("OWNER_CHAT")      or getenv("OWNER_CHAT",      "https://t.me/RohanDevta")
-
         # Yuki Music API (owner 2026-10-04): YouTube audio through the
         # gateway instead of yt-dlp hitting YouTube's bot-wall.
         self.YUKI_API_URL = getenv("YUKI_API_URL", "https://music.yukiapi.site")
@@ -52,6 +77,36 @@ class Config:
         self.DEFAULT_THUMB = getenv("DEFAULT_THUMB", "https://te.legra.ph/file/3e40a408286d4eda24191.jpg")
         self.PING_IMG = getenv("PING_IMG", "https://files.catbox.moe/haagg2.png")
         self.START_IMG = getenv("START_IMG", "https://files.catbox.moe/zvziwk.jpg")
+
+    @property
+    def SUPPORT_CHANNEL(self) -> str:
+        return _read_bot_setting("SUPPORT_CHANNEL") or getenv("SUPPORT_CHANNEL", "https://t.me/toolatetobloom")
+
+    @SUPPORT_CHANNEL.setter
+    def SUPPORT_CHANNEL(self, val: str):
+        _write_bot_setting("SUPPORT_CHANNEL", val)
+
+    @property
+    def OWNER_CHAT(self) -> str:
+        return _read_bot_setting("OWNER_CHAT") or getenv("OWNER_CHAT", "https://t.me/RohanDevta")
+
+    @OWNER_CHAT.setter
+    def OWNER_CHAT(self, val: str):
+        _write_bot_setting("OWNER_CHAT", val)
+
+    @property
+    def SUPPORT_CHAT(self) -> str:
+        val = _read_bot_setting("SUPPORT_CHAT")
+        if val:
+            return val
+        env_val = getenv("SUPPORT_CHAT")
+        if env_val and env_val != self.SUPPORT_CHANNEL:
+            return env_val
+        return self.OWNER_CHAT
+
+    @SUPPORT_CHAT.setter
+    def SUPPORT_CHAT(self, val: str):
+        _write_bot_setting("SUPPORT_CHAT", val)
 
     def check(self):
         missing = [

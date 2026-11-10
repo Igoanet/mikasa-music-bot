@@ -490,7 +490,7 @@ class TgCall(PyTgCalls):
                 media.title = clean_track
                 user_display = re.sub(r"<[^>]+>", "", str(media.user or "User")).strip()
 
-                support_chat = config.SUPPORT_CHAT or "https://t.me/toolatetobloom"
+                support_chat = config.SUPPORT_CHAT or config.OWNER_CHAT or "https://t.me/RohanDevta"
                 if not support_chat.startswith("http"):
                     support_chat = f"https://t.me/{support_chat.lstrip('@')}"
 
@@ -500,6 +500,7 @@ class TgCall(PyTgCalls):
 
                 text = (
                     f"{emojis.HEADPHONE}  <b>˹ ᴍɪᴋᴀꜱᴀ {emojis.SWORD} ᴍᴜꜱɪᴄ♪ {emojis.DOVE} ˼</b>\n\n"
+                    f"\u2800\n"
                     f"<blockquote expandable>"
                     f"{emojis.SPARKLES} <b>ᴛʀᴀᴄᴋ :</b> <a href=\"{media.url}\">{clean_track}</a>\n\n"
                     f"{emojis.CLOCK} <b>ᴅᴜʀᴀᴛɪᴏɴ :</b> {media.duration}\n\n"
