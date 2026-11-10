@@ -500,7 +500,7 @@ class TgCall(PyTgCalls):
 
                 text = (
                     f"{emojis.HEADPHONE}  <b>˹ ᴍɪᴋᴀꜱᴀ {emojis.SWORD} ᴍᴜꜱɪᴄ♪ {emojis.DOVE} ˼</b>\n\n"
-                    f"<blockquote>"
+                    f"<blockquote expandable>"
                     f"{emojis.SPARKLES} <b>ᴛʀᴀᴄᴋ :</b> <a href=\"{media.url}\">{clean_track}</a>\n\n"
                     f"{emojis.CLOCK} <b>ᴅᴜʀᴀᴛɪᴏɴ :</b> {media.duration}\n\n"
                     f"{emojis.USER} <b>ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> {user_display}"

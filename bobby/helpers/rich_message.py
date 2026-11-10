@@ -474,27 +474,22 @@ def get_playback_blocks(
             ],
         },
         {
-            "type": "blockquote",
-            "blocks": [
-                {
-                    "type": "paragraph",
-                    "text": [
-                        {"type": "custom_emoji", "custom_emoji_id": "5893321843149902412", "alternative_text": "✨"},
-                        "  ",
-                        {"type": "bold", "text": "ᴛʀᴀᴄᴋ : "},
-                        {"type": "url", "url": track_url, "text": clean_track},
-                        "\n\n",
-                        {"type": "custom_emoji", "custom_emoji_id": "5316575093269214796", "alternative_text": "🕞"},
-                        "  ",
-                        {"type": "bold", "text": "ᴅᴜʀᴀᴛɪᴏɴ : "},
-                        duration,
-                        "\n\n",
-                        {"type": "custom_emoji", "custom_emoji_id": "5902335789798265487", "alternative_text": "👤"},
-                        "  ",
-                        {"type": "bold", "text": "ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ : "},
-                        user_name,
-                    ],
-                }
+            "type": "expandable_blockquote",
+            "text": [
+                {"type": "custom_emoji", "custom_emoji_id": "5893321843149902412", "alternative_text": "✨"},
+                "  ",
+                {"type": "bold", "text": "ᴛʀᴀᴄᴋ : "},
+                {"type": "url", "url": track_url, "text": clean_track},
+                "\n\n",
+                {"type": "custom_emoji", "custom_emoji_id": "5316575093269214796", "alternative_text": "🕞"},
+                "  ",
+                {"type": "bold", "text": "ᴅᴜʀᴀᴛɪᴏɴ : "},
+                duration,
+                "\n\n",
+                {"type": "custom_emoji", "custom_emoji_id": "5902335789798265487", "alternative_text": "👤"},
+                "  ",
+                {"type": "bold", "text": "ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ : "},
+                user_name,
             ],
         },
         {
