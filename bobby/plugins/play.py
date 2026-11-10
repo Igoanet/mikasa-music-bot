@@ -8,8 +8,8 @@ from pathlib import Path
 
 from pyrogram import enums, filters, types
 
-from bobby import anon, app, config, db, lang, logger, queue, tg, yt
-from bobby.helpers import buttons, utils
+from bobby import anon, app, config, db, lang, logger, queue, tg, thumb, yt
+from bobby.helpers import Track, buttons, utils
 from bobby.helpers._play import checkUB
 
 _YT_ID = re.compile(r"[0-9A-Za-z_-]{11}")
