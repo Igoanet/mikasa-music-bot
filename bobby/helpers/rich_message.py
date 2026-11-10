@@ -219,7 +219,6 @@ def _cmd_item(emoji_id: str, fallback: str, desc: str) -> dict:
 def _cat_header(emoji_id: str, fallback: str, title: str) -> dict:
     return {
         "text": [
-            {"type": "bold", "text": "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0"},
             {"type": "custom_emoji", "custom_emoji_id": emoji_id, "alternative_text": fallback},
             {"type": "bold", "text": f" {title}"},
         ],
@@ -273,87 +272,87 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
         ],
         [
             {"text": [{"type": "code", "text": "/play"}], "align": "left"},
-            _cmd_item("5334665104677941170", "🎵", "Stream Audio In VC"),
+            _cmd_item("6258277974638858828", "🎵", "Stream Audio In VC"),
         ],
         [
             {"text": [{"type": "code", "text": "/vplay"}], "align": "left"},
-            _cmd_item("5258234027046883085", "🎬", "Stream Video In VC"),
+            _cmd_item("6257814208365203474", "🎬", "Stream Video In VC"),
         ],
         [
             {"text": [{"type": "code", "text": "/pause"}], "align": "left"},
-            _cmd_item("5278619986238122736", "⏸️", "Pause Current Stream"),
+            _cmd_item("5265214392579925557", "⏸️", "Pause Current Stream"),
         ],
         [
             {"text": [{"type": "code", "text": "/resume"}], "align": "left"},
-            _cmd_item("5892966078123872045", "🎶", "Resume Music Playback"),
+            _cmd_item("5264955367397270190", "▶️", "Resume Music Playback"),
         ],
         [
             {"text": [{"type": "code", "text": "/skip"}], "align": "left"},
             _cmd_item("6255624844491100107", "🚪", "Skip To Next Song"),
         ],
         [
-            {"text": [{"type": "code", "text": "/stop"}], "align": "left"},
-            _cmd_item("5319109106793986870", "⏹️", "Stop & Clear Stream"),
-        ],
-        # 2. AUTOPLAY ENGINE (Full row)
-        [
-            _cat_header("5893048571560726748", "⚡️", "AUTOPLAY ENGINE"),
-        ],
-        [
-            {"text": [{"type": "code", "text": "/autoplay"}], "align": "left"},
-            _cmd_item("5292226786229236118", "🔄", "Toggle Smart Autoplay"),
-        ],
-        [
             {"text": [{"type": "code", "text": "/playforce"}], "align": "left"},
-            _cmd_item("5893185207355315979", "🔥", "Force Immediate Play"),
+            _cmd_item("6257850436414345286", "📲", "Force Immediate Play"),
         ],
         [
             {"text": [{"type": "code", "text": "/cplay"}], "align": "left"},
-            _cmd_item("5431374840332302296", "📢", "Channel Stream Play"),
+            _cmd_item("6257876274937598023", "🖼", "Channel Stream Play"),
+        ],
+        [
+            {"text": [{"type": "code", "text": "/seekback"}], "align": "left"},
+            _cmd_item("6257833351034441574", "⬅️", "Seek Duration Back"),
+        ],
+        [
+            {"text": [{"type": "code", "text": "/seekforth"}], "align": "left"},
+            _cmd_item("6258229583242333883", "➡️", "Seek Duration forth"),
+        ],
+        # 2. AUTOPLAY ENGINE (Full row)
+        [
+            _cat_header("5319090522470495400", "⭕️", "AUTOPLAY ENGINE"),
+        ],
+        [
+            {"text": [{"type": "code", "text": "/autoplay on"}], "align": "left"},
+            _cmd_item("6255981326776667522", "📍", "Turn autoplay on"),
+        ],
+        [
+            {"text": [{"type": "code", "text": "/autoplay off"}], "align": "left"},
+            _cmd_item("6258005244215562150", "📍", "Turn autoplay off"),
         ],
         # 3. LOOP & QUEUE (Full row)
         [
-            _cat_header("5895770017458294953", "💫", "LOOP & QUEUE"),
+            _cat_header("5316883317302246413", "💫", "LOOP & QUEUE"),
         ],
         [
             {"text": [{"type": "code", "text": "/loop"}], "align": "left"},
-            _cmd_item("6257833351034441574", "↩️", "Loop Track 1-10x"),
+            _cmd_item("6257818730965766046", "🔃", "Loop Track 1-10x"),
         ],
         [
             {"text": [{"type": "code", "text": "/queue"}], "align": "left"},
-            _cmd_item("5213002459437342368", "📜", "View Queued Playlist"),
-        ],
-        [
-            {"text": [{"type": "code", "text": "/shuffle"}], "align": "left"},
-            _cmd_item("6257944822615641633", "🔀", "Randomize Queue Order"),
+            _cmd_item("6255560325492379134", "🗒", "View Queued Playlist"),
         ],
         # 4. SETTINGS & TOOLS (Full row)
         [
             _cat_header("5893161718179173515", "⚙️", "SETTINGS & TOOLS"),
         ],
         [
-            {"text": [{"type": "code", "text": "/seek"}], "align": "left"},
-            _cmd_item("5355075407743826720", "⏩", "Seek Duration Back/Fwd"),
-        ],
-        [
             {"text": [{"type": "code", "text": "/speed"}], "align": "left"},
-            _cmd_item("5258113901106580375", "🎚", "Play Speed (0.5x-2x)"),
+            _cmd_item("6258066331535412617", "⏲", "Play Speed (0.5x-2x)"),
         ],
         [
             {"text": [{"type": "code", "text": "/auth"}], "align": "left"},
-            _cmd_item("5893376775781617954", "👑", "Authorize Controllers"),
+            _cmd_item("6258110135906865510", "👥", "Authorize Controllers"),
         ],
         [
             {"text": [{"type": "code", "text": "/lang"}], "align": "left"},
-            _cmd_item("5449875850046481967", "🌐", "Switch Bot Language"),
+            _cmd_item("6257916192363646612", "🤖", "Switch Bot Language"),
         ],
         [
             {"text": [{"type": "code", "text": "/ping"}], "align": "left"},
-            _cmd_item("5319164151094849427", "📶", "Check Latency & Health"),
+            _cmd_item("6255608862917791716", "📶", "Check Latency & Health"),
         ],
         [
             {"text": [{"type": "code", "text": "/stats"}], "align": "left"},
-            _cmd_item("5895444149699612825", "📊", "Overall Bot Stats"),
+            _cmd_item("6258205153468353758", "📊", "Overall Bot Stats"),
         ],
     ]
 
@@ -364,15 +363,15 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
             ],
             [
                 {"text": [{"type": "code", "text": "/activevc"}], "align": "left"},
-                _cmd_item("6246851227032753502", "🎙", "Active Voice Chats"),
+                _cmd_item("6258243546181013251", "🎙", "Active Voice Chats"),
             ],
             [
                 {"text": [{"type": "code", "text": "/broadcast"}], "align": "left"},
-                _cmd_item("5372917041193828849", "🚀", "Global Broadcast"),
+                _cmd_item("6257760143316881369", "👥", "Global Broadcast"),
             ],
             [
                 {"text": [{"type": "code", "text": "/restart"}], "align": "left"},
-                _cmd_item("5355051922862653659", "🤖", "Restart Bot Engine"),
+                _cmd_item("6258260768999870546", "🔄", "Restart Bot Engine"),
             ],
         ])
 
@@ -391,7 +390,7 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
             "text": [
                 {"type": "custom_emoji", "custom_emoji_id": "5893494861612455015", "alternative_text": "⭐"},
                 "  ",
-                {"type": "bold", "text": "ʜᴇʟᴘ & ᴄᴏᴍᴍᴀɴᴅs"},
+                {"type": "bold", "text": "HELP & COMMANDS"},
             ],
         },
         {
@@ -403,11 +402,7 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
             "text": [
                 {"type": "custom_emoji", "custom_emoji_id": "5893321843149902412", "alternative_text": "✨"},
                 "  ",
-                {"type": "bold", "text": "ᴇxᴘʟᴏʀᴇ ᴀʟʟ ᴘʟᴀʏʙᴀᴄᴋ ᴄᴏɴᴛʀᴏʟs, sᴍᴀʀᴛ ǫᴜᴇᴜᴇs & ɢʀᴏᴜᴘ sᴇᴛᴛɪɴɢs ʙᴇʟᴏᴡ."},
-                "\n\n",
-                {"type": "custom_emoji", "custom_emoji_id": "5264892613630111886", "alternative_text": "💎"},
-                "  ",
-                {"type": "bold", "text": "ᴇᴠᴇʀʏᴛʜɪɴɢ ʏᴏᴜ ɴᴇᴇᴅ ᴛᴏ ᴘᴏᴡᴇʀ ʏᴏᴜʀ ɢʀᴏᴜᴘ's ʜǫ ᴍᴜsɪᴄ sᴛᴀᴛɪᴏɴ."},
+                {"type": "bold", "text": "EXPLORE ALL PLAYBACK CONTROLS, SMART QUEUES & GROUP SETTINGS BELOW."},
             ],
         },
         {

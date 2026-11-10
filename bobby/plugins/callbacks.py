@@ -318,21 +318,18 @@ async def _help(_, query: types.CallbackQuery):
     )
 
     if len(data) == 1 or data[1] == "back":
-        from bobby.helpers.rich_message import get_help_text
+        from bobby.helpers.rich_message import edit_rich_message, send_rich_message, get_help_menu_blocks, get_help_text
+        blocks = get_help_menu_blocks(staff=staff)
         markup = buttons.help_markup(query.lang, back=False, staff=staff)
-        text = get_help_text(staff=staff)
-        try:
-            if query.message.photo:
-                await query.message.delete()
-                await app.send_message(query.message.chat.id, text, reply_markup=markup)
-            else:
-                await query.edit_message_text(text=text, reply_markup=markup)
-        except Exception:
+        res = await edit_rich_message(query.message.chat.id, query.message.id, blocks, reply_markup=markup)
+        if not res.get("ok"):
             try:
                 await query.message.delete()
             except Exception:
                 pass
-            await app.send_message(query.message.chat.id, text, reply_markup=markup)
+            res2 = await send_rich_message(query.message.chat.id, blocks, reply_markup=markup)
+            if not res2.get("ok"):
+                await app.send_message(query.message.chat.id, get_help_text(staff=staff), reply_markup=markup)
         return await _safe_answer(query)
 
     elif data[1] == "close":
