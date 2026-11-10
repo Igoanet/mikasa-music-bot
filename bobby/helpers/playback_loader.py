@@ -6,10 +6,10 @@ logger = logging.getLogger("bobby")
 
 # Premium Animated Emojis:
 # 🔍 from VariousAnimations (5435907392334215552)
-# ⚡ from VariousAnimations (5436357131244680475)
+# ❤️‍🔥 from VariousAnimations (5436266163837351085)
 # 🌕 from ReaperSkullEmoji (5289930954410836372)
 TEXT_PREPARING = '<tg-emoji emoji-id="5435907392334215552">🔍</tg-emoji> <b>Preparing playback...</b>'
-EMOJI_LIGHTNING = '<tg-emoji emoji-id="5436357131244680475">⚡️</tg-emoji>'
+EMOJI_HEART_FIRE = '<tg-emoji emoji-id="5436266163837351085">❤️‍🔥</tg-emoji>'
 EMOJI_MOON = '<tg-emoji emoji-id="5289930954410836372">🌕</tg-emoji>'
 
 
@@ -17,9 +17,9 @@ class PlaybackLoader:
     """Handles playback preparation animation.
 
     Step 1: '<tg-emoji ...>🔍</tg-emoji> <b>Preparing playback...</b>' shows up first (~0.5s).
-    Step 2: Transitions to the premium animated ⚡ (~0.8s).
+    Step 2: Transitions to the premium animated ❤️‍🔥 (~0.8s).
     Step 3: Transitions to the premium animated 🌕 (from ReaperSkullEmoji).
-    Step 4: 🌕 carries forward continuously (never goes back to ⚡) until the
+    Step 4: 🌕 carries forward continuously (never goes back to ❤️‍🔥) until the
             track starts and the full music poster card with controls is sent.
     """
 
@@ -45,9 +45,9 @@ class PlaybackLoader:
             if self.stop_event.is_set():
                 return
 
-            # Step 2: Show premium animated ⚡ (~0.8s)
+            # Step 2: Show premium animated ❤️‍🔥 (~0.8s)
             try:
-                await self.message.edit_text(EMOJI_LIGHTNING, parse_mode=enums.ParseMode.HTML)
+                await self.message.edit_text(EMOJI_HEART_FIRE, parse_mode=enums.ParseMode.HTML)
             except Exception:
                 pass
 
@@ -66,7 +66,7 @@ class PlaybackLoader:
             except Exception:
                 pass
 
-            # Step 4: 🌕 carries forward — stays here and never goes back to ⚡
+            # Step 4: 🌕 carries forward — stays here and never goes back to ❤️‍🔥
             await self.stop_event.wait()
         except asyncio.CancelledError:
             pass
