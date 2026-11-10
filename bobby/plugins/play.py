@@ -53,11 +53,11 @@ async def play_hndlr(
         from bobby.helpers import _recs as recs
 
         recs.cancel(m.chat.id)
-    from bobby.helpers.playback_loader import STAGE_2_EMOJI_FIRST, PlaybackLoader
+    from bobby.helpers.playback_loader import TEXT_PREPARING, PlaybackLoader
     try:
-        sent = await m.reply_text(STAGE_2_EMOJI_FIRST, effect_id=5104841245755180586, parse_mode=enums.ParseMode.HTML)
+        sent = await m.reply_text(TEXT_PREPARING, effect_id=5104841245755180586, parse_mode=enums.ParseMode.HTML)
     except Exception:
-        sent = await m.reply_text(STAGE_2_EMOJI_FIRST, parse_mode=enums.ParseMode.HTML)
+        sent = await m.reply_text(TEXT_PREPARING, parse_mode=enums.ParseMode.HTML)
     loader = PlaybackLoader(sent).start()
     file = None
     mention = m.from_user.mention
