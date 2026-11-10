@@ -772,7 +772,7 @@ class TgCall(PyTgCalls):
             return
         from bobby.helpers.playback_loader import TEXT_PLAYBACK_PREPARING, PlaybackLoader
         msg = await app.send_message(chat_id=chat_id, text=TEXT_PLAYBACK_PREPARING, parse_mode=enums.ParseMode.HTML)
-        loader = PlaybackLoader(msg).start()
+        loader = PlaybackLoader(msg, is_playback=True).start()
         media.message_id = msg.id
         failed = await self._play_media(chat_id, msg, media, 0, generation)
         if failed is False:
