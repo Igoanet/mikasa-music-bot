@@ -9,7 +9,7 @@ logger = logging.getLogger("bobby")
 # ❤️‍🔥 from VariousAnimations (5436266163837351085)
 # 🌕 from ReaperSkullEmoji (5289930954410836372)
 TEXT_PREPARING = '<tg-emoji emoji-id="5435907392334215552">🔍</tg-emoji> <b>Preparing playback...</b>'
-EMOJI_HEART_FIRE = '<tg-emoji emoji-id="5436266163837351085">❤️‍🔥</tg-emoji>'
+EMOJI_HEART_FIRE = '<tg-emoji emoji-id="5436351771125494452">❤️‍🔥</tg-emoji>'
 EMOJI_MOON = '<tg-emoji emoji-id="5289930954410836372">🌕</tg-emoji>'
 
 

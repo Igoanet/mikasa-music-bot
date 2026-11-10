@@ -503,14 +503,6 @@ class TgCall(PyTgCalls):
                 if loader:
                     loader.stop()
 
-                if message:
-                    async def _del_loader(msg):
-                        try:
-                            await msg.delete()
-                        except Exception:
-                            pass
-                    asyncio.create_task(_del_loader(message))
-
                 sent = None
                 if _thumb:
                     try:
@@ -536,6 +528,12 @@ class TgCall(PyTgCalls):
                             text=text,
                             reply_markup=keyboard,
                         )
+
+                if message and sent and sent.id != getattr(message, "id", None):
+                    try:
+                        await message.delete()
+                    except Exception:
+                        pass
 
                 if sent:
                     media.message_id = sent.id
