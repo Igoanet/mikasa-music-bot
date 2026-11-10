@@ -484,12 +484,24 @@ class TgCall(PyTgCalls):
                 from bobby.helpers import emojis, clean_song_name
                 clean_track = clean_song_name(media.title)
                 media.title = clean_track
+
+                support_chat = config.SUPPORT_CHAT or "https://t.me/toolatetobloom"
+                if not support_chat.startswith("http"):
+                    support_chat = f"https://t.me/{support_chat.lstrip('@')}"
+
+                support_channel = config.SUPPORT_CHANNEL or "https://t.me/toolatetobloom"
+                if not support_channel.startswith("http"):
+                    support_channel = f"https://t.me/{support_channel.lstrip('@')}"
+
                 text = (
                     f"{emojis.HEADPHONE}  <b>˹ ᴍɪᴋᴀꜱᴀ {emojis.SWORD} ᴍᴜꜱɪᴄ♪ {emojis.DOVE} ˼</b>\n\n"
-                    f"<blockquote>"
+                    f"<blockquote expandable>"
                     f"{emojis.SPARKLES} <b>ᴛʀᴀᴄᴋ :</b> <a href=\"{media.url}\">{clean_track}</a>\n\n"
                     f"{emojis.CLOCK} <b>ᴅᴜʀᴀᴛɪᴏɴ :</b> {media.duration}\n\n"
-                    f"{emojis.USER} <b>ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> {media.user}"
+                    f"{emojis.USER} <b>ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> {media.user}\n\n"
+                    f"💡 <b>ɪғ ʏᴏᴜ ғᴏᴜɴᴅ ᴀɴʏ ɪssᴜᴇ ʀᴇᴘᴏʀᴛ ɪᴍᴍᴇᴅɪᴀᴛᴇʟʏ :</b>\n"
+                    f"👉 <a href=\"{support_chat}\">sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ</a> | <a href=\"{support_channel}\">sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ</a>\n\n"
+                    f"🎛 <b>ᴄᴏɴᴛʀᴏʟs :</b> 🔄 ʀᴇᴘʟᴀʏ • ⏪ -15s • ⏯ ᴘᴀᴜsᴇ/ʀᴇsᴜᴍᴇ • ⏩ +15s • ⏭ sᴋɪᴘ"
                     f"</blockquote>"
                 )
                 from bobby.core.disco import progress_bar as _bar
