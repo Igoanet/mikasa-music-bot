@@ -42,6 +42,16 @@ async def start(_, message: types.Message):
 
     private = message.chat.type == enums.ChatType.PRIVATE
     payload = message.command[1] if len(message.command) > 1 else ""
+
+    # Interactive premium emoji pop-up reaction (5458371097789472509 = 🤬 from Interactive_animation pack)
+    try:
+        await message.react(5458371097789472509)
+    except Exception:
+        try:
+            await message.react("🤬")
+        except Exception:
+            pass
+
     # [voice stack removed] voice deep-link hand-off dropped
     bot_user = getattr(app, "username", None) or (app.me.username if getattr(app, "me", None) else "MikasaMusic_Bot")
     _text = message.lang["start_pm"].format(
@@ -56,7 +66,9 @@ async def start(_, message: types.Message):
     blocks = get_start_chat_button_blocks(
         bot_user, config.SUPPORT_CHANNEL, config.SUPPORT_CHAT, is_group=not private
     )
-    resp = await send_rich_message(message.chat.id, blocks, reply_markup=key)
+    resp = await send_rich_message(
+        message.chat.id, blocks, reply_markup=key, message_effect_id=5104841245755180586
+    )
     if not resp.get("ok"):
         import os
         photo_path = "assets/start-preview.jpg" if os.path.exists("assets/start-preview.jpg") else config.START_IMG
@@ -65,9 +77,10 @@ async def start(_, message: types.Message):
                 photo=photo_path,
                 caption=_text,
                 reply_markup=key,
+                effect_id=5104841245755180586,
             )
         except Exception:
-            await message.reply_text(text=_text, reply_markup=key)
+            await message.reply_text(text=_text, reply_markup=key, effect_id=5104841245755180586)
 
     if private:
         if await db.is_user(message.from_user.id):

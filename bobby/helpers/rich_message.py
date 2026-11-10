@@ -45,6 +45,7 @@ async def send_rich_message(
     blocks: list[dict],
     reply_markup: types.InlineKeyboardMarkup | None = None,
     photo_path: str | None = None,
+    message_effect_id: str | int | None = None,
 ) -> dict:
     url = f"https://api.telegram.org/bot{config.BOT_TOKEN}/sendRichMessage"
     markup = _convert_markup(reply_markup)
@@ -61,6 +62,8 @@ async def send_rich_message(
         data.add_field("rich_message", json.dumps({"blocks": blocks}))
         if markup:
             data.add_field("reply_markup", json.dumps(markup))
+        if message_effect_id:
+            data.add_field("message_effect_id", str(message_effect_id))
         async with aiohttp.ClientSession() as session:
             async with session.post(url, data=data) as resp:
                 return await resp.json()
@@ -71,6 +74,8 @@ async def send_rich_message(
     }
     if markup:
         payload["reply_markup"] = markup
+    if message_effect_id:
+        payload["message_effect_id"] = str(message_effect_id)
 
     async with aiohttp.ClientSession() as session:
         async with session.post(url, json=payload) as resp:

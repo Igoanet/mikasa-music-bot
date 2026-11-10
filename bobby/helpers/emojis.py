@@ -37,6 +37,12 @@ EMOJI_IDS = {
     "mic": "6246851227032753502",         # 🎙 Statausproxtara (Animated)
     "wave": "5895444149699612825",        # 📊 ProtectStatus (Animated)
 
+    # Interactive Animation (Paneer's curated pack)
+    "interactive_angry": "5458371097789472509",      # 🤬 Interactive_animation
+    "interactive_cry": "5458918100529323300",        # 😭 Interactive_animation
+    "interactive_heart_fire": "5458754535289791569", # ❤️‍🔥 Interactive_animation
+    "interactive_fire": "5458539816989760062",       # 🔥 Interactive_animation
+
     # User & Identity (Animated)
     "user": "5902335789798265487",        # 👤 ProtectStatus (Animated)
     "users": "5316705578670636235",       # 👥 AdaptiveStatus (Animated)
