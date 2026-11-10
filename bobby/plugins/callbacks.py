@@ -298,7 +298,7 @@ async def _start_menu_cb(_, query: types.CallbackQuery):
 async def _start_info_cb(_, query: types.CallbackQuery):
     await _safe_answer(
         query,
-        "˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪ is active & ready!\n\n"
+        "˹ᴍɪᴋᴀꜱᴀ ✘ ᴍᴜꜱɪᴄ♪ is active & ready!\n\n"
         "⚡️ Lag Free — Ultra-Fast HQ Streaming\n"
         "🛡 100% Clean & Spam-Free\n"
         "🕞 24x7 Non-Stop Stable Playback\n"
