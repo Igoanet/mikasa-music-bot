@@ -136,6 +136,32 @@ class Inline:
                     ),
                 ]
             )
+
+            # Row 3 - Support & Support Channel buttons
+            support_chat = config.SUPPORT_CHAT or "https://t.me/toolatetobloom"
+            if not support_chat.startswith("http"):
+                support_chat = f"https://t.me/{support_chat.lstrip('@')}"
+
+            support_channel = config.SUPPORT_CHANNEL or "https://t.me/toolatetobloom"
+            if not support_channel.startswith("http"):
+                support_channel = f"https://t.me/{support_channel.lstrip('@')}"
+
+            rows.append(
+                [
+                    self.ikb(
+                        text=" Support",
+                        url=support_chat,
+                        style=enums.ButtonStyle.DANGER,
+                        icon_custom_emoji_id="5199612362021157840",
+                    ),
+                    self.ikb(
+                        text=" Support Channel",
+                        url=support_channel,
+                        style=enums.ButtonStyle.DANGER,
+                        icon_custom_emoji_id="5398024200235529935",
+                    ),
+                ]
+            )
         return self.ikm(rows)
 
     def help_markup(
