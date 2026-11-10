@@ -43,10 +43,10 @@ async def play_hndlr(
     # Phase 1: React to user's post first
     if not getattr(m, "autoplay", False):
         try:
-            await m.react("❤️")
+            await m.react("🕊")
         except Exception:
             try:
-                await m.react("👍")
+                await m.react("❤️")
             except Exception:
                 pass
         from bobby.helpers import _recs as recs

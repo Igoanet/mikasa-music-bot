@@ -43,14 +43,11 @@ async def start(_, message: types.Message):
     private = message.chat.type == enums.ChatType.PRIVATE
     payload = message.command[1] if len(message.command) > 1 else ""
 
-    # Interactive premium emoji pop-up reaction (5458371097789472509 = 🤬 from Interactive_animation pack)
+    # React with 🕊 to start command
     try:
-        await message.react(5458371097789472509)
+        await message.react("🕊")
     except Exception:
-        try:
-            await message.react("🤬")
-        except Exception:
-            pass
+        pass
 
     # [voice stack removed] voice deep-link hand-off dropped
     bot_user = getattr(app, "username", None) or (app.me.username if getattr(app, "me", None) else "MikasaMusic_Bot")
