@@ -333,11 +333,11 @@ class TgCall(PyTgCalls):
     ) -> bool | None:
         client = await db.get_assistant(chat_id)
         _lang = await lang.get_lang(chat_id)
-        _thumb = (
-            await thumb.generate(media)
-            if isinstance(media, Track)
-            else config.DEFAULT_THUMB
-        ) if config.THUMB_GEN else None
+        _thumb_task = (
+            asyncio.create_task(thumb.generate(media))
+            if config.THUMB_GEN and isinstance(media, Track)
+            else None
+        )
 
         if not await self._lifecycle.current(chat_id, generation):
             return
@@ -504,6 +504,16 @@ class TgCall(PyTgCalls):
                     loader.stop()
 
                 sent = None
+                _thumb = None
+                if _thumb_task:
+                    try:
+                        _thumb = await asyncio.wait_for(_thumb_task, timeout=3.5)
+                    except Exception as ex_t:
+                        logger.warning("thumb task error/timeout: %s", ex_t)
+                        _thumb = config.DEFAULT_THUMB
+                elif config.THUMB_GEN:
+                    _thumb = config.DEFAULT_THUMB
+
                 if _thumb:
                     try:
                         sent = await app.send_photo(

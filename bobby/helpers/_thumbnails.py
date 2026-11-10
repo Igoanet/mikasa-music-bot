@@ -98,6 +98,26 @@ def clean_song_name(raw_title: str) -> str:
     return t if t else raw_title.strip()
 
 
+def _build_gradient_overlay(W: int = 1024, H: int = 576) -> Image.Image:
+    grad = np.zeros((H, W, 4), dtype=np.uint8)
+    grad_h = 210
+    y_idx = np.arange(H - grad_h, H)
+    alpha_vals = (225 * (((y_idx - (H - grad_h)) / float(grad_h)) ** 1.6)).astype(np.uint8)
+    grad[H - grad_h:H, :, 0] = 8
+    grad[H - grad_h:H, :, 1] = 8
+    grad[H - grad_h:H, :, 2] = 12
+    grad[H - grad_h:H, :, 3] = alpha_vals[:, None]
+
+    top_h = 80
+    y_top = np.arange(0, top_h)
+    alpha_top = (110 * ((1.0 - y_top / float(top_h)) ** 1.5)).astype(np.uint8)
+    grad[:top_h, :, 3] = np.maximum(grad[:top_h, :, 3], alpha_top[:, None])
+    return Image.fromarray(grad, "RGBA")
+
+
+_GRADIENT_OVERLAY = _build_gradient_overlay(1024, 576)
+
+
 class Thumbnail:
     def __init__(self):
         self.session: aiohttp.ClientSession | None = None
@@ -128,7 +148,7 @@ class Thumbnail:
     async def generate(self, song: Track, size=(1024, 576)) -> str:
         try:
             temp = f"cache/temp_{song.id}.jpg"
-            output = f"cache/{song.id}_v5.png"
+            output = f"cache/{song.id}_v5.jpg"
             if os.path.exists(output):
                 try:
                     os.utime(output)
@@ -148,8 +168,8 @@ class Thumbnail:
                 # 16:9 widescreen poster - full edge-to-edge bleed
                 base = ImageOps.fit(raw_thumb, (W, H), method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
             else:
-                # Square or portrait cover: Rich ambient blurred backdrop + sharp centered album card
-                bg = raw_thumb.resize((W, H), Image.Resampling.LANCZOS).filter(ImageFilter.GaussianBlur(36))
+                # Square or portrait cover: Rich ambient backdrop + sharp centered album card
+                bg = raw_thumb.resize((W, H), Image.Resampling.BILINEAR).filter(ImageFilter.BoxBlur(20))
                 bg = ImageEnhance.Brightness(bg).enhance(0.55)
 
                 art_h = int(H * 0.88)
@@ -162,7 +182,7 @@ class Thumbnail:
                 shadow = Image.new("RGBA", (art_w + 32, art_h + 32), (0, 0, 0, 0))
                 s_draw = ImageDraw.Draw(shadow)
                 s_draw.rounded_rectangle([16, 16, art_w + 16, art_h + 16], radius=22, fill=(0, 0, 0, 190))
-                shadow = shadow.filter(ImageFilter.GaussianBlur(14))
+                shadow = shadow.filter(ImageFilter.BoxBlur(8))
 
                 art_rgba = art.convert("RGBA")
                 mask = Image.new("L", (art_w, art_h), 0)
@@ -176,24 +196,11 @@ class Thumbnail:
 
             base_rgba = base.convert("RGBA")
 
-            # 2. Sleek Cinematic Dark Gradients
-            overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-            d_ol = ImageDraw.Draw(overlay)
-
-            # Bottom gradient for typography and visualizer readability
-            grad_start = H - 210
-            for y in range(grad_start, H):
-                prog = (y - grad_start) / float(H - grad_start)
-                alpha = int(225 * (prog ** 1.6))
-                d_ol.line([(0, y), (W, y)], fill=(8, 8, 12, alpha))
-
-            # Top subtle vignette
-            for y in range(0, 80):
-                prog = 1.0 - (y / 80.0)
-                alpha = int(110 * (prog ** 1.5))
-                d_ol.line([(0, y), (W, y)], fill=(0, 0, 0, alpha))
-
-            base_rgba.alpha_composite(overlay)
+            # 2. Sleek Precomputed Cinematic Dark Gradients
+            if (W, H) == (1024, 576):
+                base_rgba.alpha_composite(_GRADIENT_OVERLAY)
+            else:
+                base_rgba.alpha_composite(_build_gradient_overlay(W, H))
 
             # 3. Audio Visualizer Spectrum Bars across the full bottom width
             eq_draw = ImageDraw.Draw(base_rgba)
@@ -252,7 +259,7 @@ class Thumbnail:
                 eq_draw.text((36, H - 68), l2, font=self.font_title_multi, fill=(0, 0, 0, 230))
                 eq_draw.text((34, H - 70), l2, font=self.font_title_multi, fill=(255, 255, 255, 255))
 
-            base_rgba.convert("RGB").save(output, "PNG")
+            base_rgba.convert("RGB").save(output, "JPEG", quality=92)
             try:
                 os.remove(temp)
             except Exception:

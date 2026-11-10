@@ -40,7 +40,7 @@ async def play_hndlr(
     url: str = None,
     query: str = "",
 ) -> None:
-    # React to user's post
+    # Phase 1: React to user's post first
     if not getattr(m, "autoplay", False):
         try:
             await m.react("❤️")
@@ -49,11 +49,13 @@ async def play_hndlr(
                 await m.react("👍")
             except Exception:
                 pass
-        # a real request always wins over a suggestion card or an autoplay
-        # pick that is still being looked up in the background
         from bobby.helpers import _recs as recs
 
         recs.cancel(m.chat.id)
+        # Distinct phase: allow reaction to register visually before sending reply
+        await asyncio.sleep(0.7)
+
+    # Phase 2: Preparing playback message and animated emoji sequence
     from bobby.helpers.playback_loader import TEXT_PREPARING, PlaybackLoader
     try:
         sent = await m.reply_text(TEXT_PREPARING, effect_id=5104841245755180586, parse_mode=enums.ParseMode.HTML)

@@ -52,9 +52,9 @@ class PlaybackLoader:
             seq = list(PLAYBACK_EMOJIS)
             random.shuffle(seq)
 
-            # Step 0: Initial text shown for ~0.4s
+            # Step 0: Initial text shown for ~0.8s
             try:
-                await asyncio.wait_for(self.stop_event.wait(), timeout=0.4)
+                await asyncio.wait_for(self.stop_event.wait(), timeout=0.8)
                 return
             except asyncio.TimeoutError:
                 pass
