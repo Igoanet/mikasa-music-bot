@@ -44,7 +44,7 @@ EMOJI_IDS = {
     "id": "5902449142575141204",          # 🔗 ProtectStatus (Animated)
 
     # Time & Duration (Animated)
-    "clock": "5893102202817352158",       # 🕞 ProtectStatus (Animated Round Clock)
+    "clock": "5316575093269214796",       # 🕞 ProtectStatus (Animated Round Clock)
     "duration": "5258113901106580375",    # ⌛ vector_icons (Animated)
 
     # Aesthetic, Status & Vibe (Animated)
@@ -92,10 +92,10 @@ EMOJI_IDS = {
     "key": "6257963359694491109",         # 🔑 Rnxtcx
 
     # VC Join Notice
-    "vc_user": "5238154170174820439",     # 👩‍🎓 KawaiiEmoji
-    "vc_username": "5474385437403395055", # 🤓 KawaiiEmoji
-    "vc_id": "5233298782661134388",       # 🧐 KawaiiEmoji
-    "vc_time": "5893102202817352158",     # 🕞 ProtectStatus
+    "vc_user": "5238154170174820439",     # 👩‍🎓 ProtectStatus
+    "vc_username": "5902335789798265487", # 🤓 ProtectStatus
+    "vc_id": "5233298782661134388",       # 🧐 ProtectStatus
+    "vc_time": "5316575093269214796",     # 🕞 AdaptiveStatus
 }
 
 # Pre-formatted HTML tags
@@ -147,7 +147,7 @@ LOCK = tg_emoji(EMOJI_IDS["lock"], "🔒")
 KEY = tg_emoji(EMOJI_IDS["key"], "🔑")
 
 VC_USER = tg_emoji(EMOJI_IDS["vc_user"], "👩‍🎓")
-VC_USERNAME = tg_emoji(EMOJI_IDS["vc_username"], "🤓")
+VC_USERNAME = tg_emoji(EMOJI_IDS["vc_username"], "👤")
 VC_ID = tg_emoji(EMOJI_IDS["vc_id"], "🧐")
-VC_TIME = tg_emoji(EMOJI_IDS["vc_time"], "⏱️")
+VC_TIME = tg_emoji(EMOJI_IDS["vc_time"], "⏰")
 SHIELD = tg_emoji(EMOJI_IDS["shield"], "🛡️")
