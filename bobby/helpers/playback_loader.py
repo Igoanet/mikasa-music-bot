@@ -4,19 +4,18 @@ from pyrogram import enums
 
 logger = logging.getLogger("bobby")
 
-# Step 2 emoji: 🌕 (ReaperSkullEmoji)
-STAGE_2_EMOJIS = [
-    '<tg-emoji emoji-id="5289930954410836372">🌕</tg-emoji>',
-]
+# Step 2 emojis from VariousAnimations pack:
+# First ❤️‍🔥 (5436266163837351085), then stick on second ❤️‍🔥 (5436351771125494452)
+STAGE_2_EMOJI_FIRST = '<tg-emoji emoji-id="5436266163837351085">❤️‍🔥</tg-emoji>'
+STAGE_2_EMOJI_STICK = '<tg-emoji emoji-id="5436351771125494452">❤️‍🔥</tg-emoji>'
 
 
 class PlaybackLoader:
     """Handles playback preparation animation.
 
-    Step 1: Displays initial message (0: 🍀 Next up or 1: 🔍 Preparing playback) once (~1.0s).
-    Step 2: Disappears initial text and displays the stage 2 emojis one at a time:
-            ⚡️ -> 👻 -> 👾. If preparation takes time, loops strictly within
-            Step 2 emojis and never returns to the initial message.
+    Step 1: Displays initial message (🔍 Preparing playback...) once (~0.8s).
+    Step 2: Disappears initial text and displays the first ❤️‍🔥 from VariousAnimations (~0.8s).
+    Step 3: Switches to and sticks on the second ❤️‍🔥 from VariousAnimations until the track begins.
     """
 
     def __init__(self, message):
@@ -31,27 +30,38 @@ class PlaybackLoader:
 
     async def _run(self):
         try:
-            # Keep initial text visible for ~1.0s
+            # Step 1: Keep initial text visible for ~0.8s
             try:
-                await asyncio.wait_for(self.stop_event.wait(), timeout=1.0)
+                await asyncio.wait_for(self.stop_event.wait(), timeout=0.8)
                 return
             except asyncio.TimeoutError:
                 pass
 
-            idx = 0
-            # Step 2: Loop exclusively through the stage 2 emojis one at a time
-            while not self.stop_event.is_set():
-                text = STAGE_2_EMOJIS[idx % len(STAGE_2_EMOJIS)]
-                idx += 1
-                try:
-                    await self.message.edit_text(text, parse_mode=enums.ParseMode.HTML)
-                except Exception:
-                    pass
-                try:
-                    await asyncio.wait_for(self.stop_event.wait(), timeout=1.0)
-                    break
-                except asyncio.TimeoutError:
-                    pass
+            if self.stop_event.is_set():
+                return
+
+            # Step 2: First VariousAnimations ❤️‍🔥
+            try:
+                await self.message.edit_text(STAGE_2_EMOJI_FIRST, parse_mode=enums.ParseMode.HTML)
+            except Exception:
+                pass
+
+            try:
+                await asyncio.wait_for(self.stop_event.wait(), timeout=0.8)
+                return
+            except asyncio.TimeoutError:
+                pass
+
+            if self.stop_event.is_set():
+                return
+
+            # Step 3: Second VariousAnimations ❤️‍🔥 (sticks here)
+            try:
+                await self.message.edit_text(STAGE_2_EMOJI_STICK, parse_mode=enums.ParseMode.HTML)
+            except Exception:
+                pass
+
+            await self.stop_event.wait()
         except asyncio.CancelledError:
             pass
 

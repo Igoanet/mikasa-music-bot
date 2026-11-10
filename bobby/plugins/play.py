@@ -139,6 +139,10 @@ async def play_hndlr(
     from bobby.helpers import clean_song_name
     file.title = clean_song_name(file.title)
 
+    # Pre-render card thumbnail in parallel with stream resolution
+    if config.THUMB_GEN and isinstance(file, Track):
+        asyncio.create_task(thumb.generate(file))
+
     # get_live keeps a LIVE metadata track even when every extracted feed is
     # unreadable, so an ended/private/broken broadcast is reported explicitly
     # instead of being queued as if it were an ordinary VOD.

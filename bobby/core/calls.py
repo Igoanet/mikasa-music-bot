@@ -424,11 +424,9 @@ class TgCall(PyTgCalls):
             binding = getattr(client, "_binding", None)
             if binding is not None:
                 try:
-                    active = await asyncio.wait_for(binding.calls(), timeout=10)
-                except Exception as ex:
-                    raise TimeoutError(f"post-play check failed: {ex}") from ex
-                if chat_id not in active:
-                    raise TimeoutError("play() returned but no active call")
+                    await asyncio.wait_for(binding.calls(), timeout=2)
+                except Exception:
+                    pass
 
         try:
             for attempt in (1, 2):
@@ -504,47 +502,31 @@ class TgCall(PyTgCalls):
                 loader = getattr(message, "_loader", None)
                 if loader:
                     loader.stop()
+
+                if message:
+                    async def _del_loader(msg):
+                        try:
+                            await msg.delete()
+                        except Exception:
+                            pass
+                    asyncio.create_task(_del_loader(message))
+
                 sent = None
                 if _thumb:
                     try:
-                        # Attempt edit_media in case message was already a media message
-                        sent = await message.edit_media(
-                            media=InputMediaPhoto(
-                                media=_thumb,
-                                caption=text,
-                            ),
+                        sent = await app.send_photo(
+                            chat_id=chat_id,
+                            photo=_thumb,
+                            caption=text,
                             reply_markup=keyboard,
                         )
-                    except Exception:
-                        # Text message cannot be converted to photo via edit_media in Telegram:
-                        # Delete the 'Preparing playback...' text and send the photo poster cleanly
-                        try:
-                            await message.delete()
-                        except Exception:
-                            pass
-                        try:
-                            sent = await app.send_photo(
-                                chat_id=chat_id,
-                                photo=_thumb,
-                                caption=text,
-                                reply_markup=keyboard,
-                                effect_id=5104841245755180586,
-                            )
-                        except Exception:
-                            try:
-                                sent = await app.send_photo(
-                                    chat_id=chat_id,
-                                    photo=_thumb,
-                                    caption=text,
-                                    reply_markup=keyboard,
-                                )
-                            except Exception as ex_photo:
-                                logger.warning("Failed to send photo card: %s; sending text card", ex_photo)
-                                sent = await app.send_message(
-                                    chat_id=chat_id,
-                                    text=text,
-                                    reply_markup=keyboard,
-                                )
+                    except Exception as ex_photo:
+                        logger.warning("Failed to send photo card: %s; sending text card", ex_photo)
+                        sent = await app.send_message(
+                            chat_id=chat_id,
+                            text=text,
+                            reply_markup=keyboard,
+                        )
                 else:
                     try:
                         sent = await message.edit_text(text, reply_markup=keyboard)
