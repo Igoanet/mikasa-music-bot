@@ -2,6 +2,8 @@
 # Licensed under the MIT License.
 # This file is part of BobbyXMusic
 
+import json
+import os
 import aiohttp
 from pyrogram import types
 from bobby import config
@@ -17,7 +19,7 @@ def _convert_markup(reply_markup):
         for row in reply_markup.inline_keyboard:
             r = []
             for b in row:
-                item = {"text": b.text}
+                item = {"text": b.text or "\u200b"}
                 if b.url:
                     item["url"] = b.url
                 elif b.callback_data:
@@ -42,13 +44,31 @@ async def send_rich_message(
     chat_id: int | str,
     blocks: list[dict],
     reply_markup: types.InlineKeyboardMarkup | None = None,
+    photo_path: str | None = None,
 ) -> dict:
     url = f"https://api.telegram.org/bot{config.BOT_TOKEN}/sendRichMessage"
+    markup = _convert_markup(reply_markup)
+
+    if photo_path and os.path.exists(str(photo_path)):
+        data = aiohttp.FormData()
+        data.add_field("chat_id", str(chat_id))
+        data.add_field(
+            "photo_file",
+            open(str(photo_path), "rb"),
+            filename=os.path.basename(str(photo_path)),
+            content_type="image/png" if str(photo_path).endswith(".png") else "image/jpeg",
+        )
+        data.add_field("rich_message", json.dumps({"blocks": blocks}))
+        if markup:
+            data.add_field("reply_markup", json.dumps(markup))
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, data=data) as resp:
+                return await resp.json()
+
     payload = {
         "chat_id": chat_id,
         "rich_message": {"blocks": blocks},
     }
-    markup = _convert_markup(reply_markup)
     if markup:
         payload["reply_markup"] = markup
 
@@ -410,3 +430,126 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
     ]
 
     return blocks
+
+
+def get_playback_blocks(
+    clean_track: str,
+    track_url: str,
+    duration: str,
+    user_name: str,
+    support_chat: str,
+    support_channel: str,
+    has_photo: bool = False,
+    photo_file_id: str | None = None,
+) -> list[dict]:
+    blocks = []
+    if has_photo:
+        blocks.append({
+            "type": "photo",
+            "photo": {
+                "type": "photo",
+                "media": photo_file_id or "attach://photo_file",
+            },
+        })
+    elif photo_file_id:
+        blocks.append({
+            "type": "photo",
+            "photo": {
+                "type": "photo",
+                "media": photo_file_id,
+            },
+        })
+
+    blocks.extend([
+        {
+            "type": "paragraph",
+            "text": [
+                {"type": "custom_emoji", "custom_emoji_id": "6269555901628159084", "alternative_text": "🎧"},
+                "  ",
+                {"type": "bold", "text": "˹ ᴍɪᴋᴀꜱᴀ "},
+                {"type": "custom_emoji", "custom_emoji_id": "5453991094435997597", "alternative_text": "⚔"},
+                {"type": "bold", "text": " ᴍᴜꜱɪᴄ♪ "},
+                {"type": "custom_emoji", "custom_emoji_id": "5316740183222140641", "alternative_text": "🕊"},
+                {"type": "bold", "text": " ˼"},
+            ],
+        },
+        {
+            "type": "blockquote",
+            "blocks": [
+                {
+                    "type": "paragraph",
+                    "text": [
+                        {"type": "custom_emoji", "custom_emoji_id": "5893321843149902412", "alternative_text": "✨"},
+                        "  ",
+                        {"type": "bold", "text": "ᴛʀᴀᴄᴋ : "},
+                        {"type": "url", "url": track_url, "text": clean_track},
+                        "\n\n",
+                        {"type": "custom_emoji", "custom_emoji_id": "5316575093269214796", "alternative_text": "🕞"},
+                        "  ",
+                        {"type": "bold", "text": "ᴅᴜʀᴀᴛɪᴏɴ : "},
+                        duration,
+                        "\n\n",
+                        {"type": "custom_emoji", "custom_emoji_id": "5902335789798265487", "alternative_text": "👤"},
+                        "  ",
+                        {"type": "bold", "text": "ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ : "},
+                        user_name,
+                    ],
+                }
+            ],
+        },
+        {
+            "type": "paragraph",
+            "text": ["\u2800"],
+        },
+        {
+            "type": "paragraph",
+            "text": [
+                {"type": "custom_emoji", "custom_emoji_id": "5212982655343141065", "alternative_text": "🛡"},
+                "  ",
+                {"type": "bold", "text": "ɪғ ʏᴏᴜ ғᴏᴜɴᴅ ᴀɴʏ ɪssᴜᴇ ʀᴇᴘᴏʀᴛ ɪᴍᴍᴇᴅɪᴀᴛᴇʟʏ :"},
+            ],
+        },
+        {
+            "type": "buttons",
+            "buttons": [
+                {
+                    "style": "primary",
+                    "url": support_chat,
+                    "text": [
+                        {
+                            "type": "custom_emoji",
+                            "custom_emoji_id": "5199612362021157840",
+                            "alternative_text": "❄️",
+                        },
+                        "  Support Chat",
+                    ],
+                },
+                {
+                    "style": "primary",
+                    "url": support_channel,
+                    "text": [
+                        {
+                            "type": "custom_emoji",
+                            "custom_emoji_id": "5398024200235529935",
+                            "alternative_text": "❄️",
+                        },
+                        "  Support Channel",
+                    ],
+                },
+            ],
+        },
+        {
+            "type": "paragraph",
+            "text": ["\u2800"],
+        },
+        {
+            "type": "paragraph",
+            "text": [
+                {"type": "custom_emoji", "custom_emoji_id": "5893402730268987918", "alternative_text": "🍀"},
+                "  ",
+                {"type": "bold", "text": "ᴜsᴇ ᴛʜᴇ ᴄᴏɴᴛʀᴏʟ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴘʟᴀʏʙᴀᴄᴋ !"},
+            ],
+        },
+    ])
+    return blocks
+

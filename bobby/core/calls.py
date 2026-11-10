@@ -481,7 +481,9 @@ class TgCall(PyTgCalls):
             media.time = seek_time if seek_time else 1
             await db.add_call(chat_id)
             if not seek_time:
+                import os
                 from bobby.helpers import emojis, clean_song_name
+                from bobby.helpers.rich_message import send_rich_message, get_playback_blocks
                 clean_track = clean_song_name(media.title)
                 media.title = clean_track
 
@@ -500,9 +502,9 @@ class TgCall(PyTgCalls):
                     f"{emojis.CLOCK} <b>ᴅᴜʀᴀᴛɪᴏɴ :</b> {media.duration}\n\n"
                     f"{emojis.USER} <b>ʀᴇǫᴜᴇsᴛᴇᴅ ʙʏ :</b> {media.user}"
                     f"</blockquote>\n\n"
-                    f"💡 <b>ɪғ ʏᴏᴜ ғᴏᴜɴᴅ ᴀɴʏ ɪssᴜᴇ ʀᴇᴘᴏʀᴛ ɪᴍᴍᴇᴅɪᴀᴛᴇʟʏ :</b>\n"
-                    f"👉 <a href=\"{support_chat}\"><b>sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ</b></a> | <a href=\"{support_channel}\"><b>sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ</b></a>\n\n"
-                    f"🎛 <b>ᴄᴏɴᴛʀᴏʟs :</b> 🔄 ʀᴇᴘʟᴀʏ • ⏪ -15s • ⏯ ᴘᴀᴜsᴇ/ʀᴇsᴜᴍᴇ • ⏩ +15s • ⏭ sᴋɪᴘ"
+                    f"{emojis.SHIELD} <b>ɪғ ʏᴏᴜ ғᴏᴜɴᴅ ᴀɴʏ ɪssᴜᴇ ʀᴇᴘᴏʀᴛ ɪᴍᴍᴇᴅɪᴀᴛᴇʟʏ :</b>\n"
+                    f"<a href=\"{support_chat}\"><b>sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ</b></a> | <a href=\"{support_channel}\"><b>sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ</b></a>\n\n"
+                    f"{emojis.LEAF} <b>ᴜsᴇ ᴛʜᴇ ᴄᴏɴᴛʀᴏʟ ʙᴜᴛᴛᴏɴs ʙᴇʟᴏᴡ ᴛᴏ ᴍᴀɴᴀɢᴇ ᴘʟᴀʏʙᴀᴄᴋ !</b>"
                 )
                 from bobby.core.disco import progress_bar as _bar
                 keyboard = buttons.controls(
@@ -526,30 +528,57 @@ class TgCall(PyTgCalls):
                 elif config.THUMB_GEN:
                     _thumb = config.DEFAULT_THUMB
 
-                if _thumb:
-                    try:
-                        sent = await app.send_photo(
-                            chat_id=chat_id,
-                            photo=_thumb,
-                            caption=text,
-                            reply_markup=keyboard,
-                        )
-                    except Exception as ex_photo:
-                        logger.warning("Failed to send photo card: %s; sending text card", ex_photo)
-                        sent = await app.send_message(
-                            chat_id=chat_id,
-                            text=text,
-                            reply_markup=keyboard,
-                        )
-                else:
-                    try:
-                        sent = await message.edit_text(text, reply_markup=keyboard)
-                    except Exception:
-                        sent = await app.send_message(
-                            chat_id=chat_id,
-                            text=text,
-                            reply_markup=keyboard,
-                        )
+                # Try Rich Message first (native Telegram Bot API 8.0 with blue article buttons & premium custom emojis)
+                try:
+                    has_photo = bool(_thumb and os.path.exists(str(_thumb)))
+                    blocks = get_playback_blocks(
+                        clean_track=clean_track,
+                        track_url=media.url,
+                        duration=media.duration,
+                        user_name=media.user,
+                        support_chat=support_chat,
+                        support_channel=support_channel,
+                        has_photo=has_photo,
+                    )
+                    rm_resp = await send_rich_message(
+                        chat_id=chat_id,
+                        blocks=blocks,
+                        reply_markup=keyboard,
+                        photo_path=_thumb if has_photo else None,
+                    )
+                    if rm_resp.get("ok"):
+                        sent_id = rm_resp["result"]["message_id"]
+                        sent = types.Message(id=sent_id, chat=types.Chat(id=chat_id, type=enums.ChatType.SUPERGROUP))
+                    else:
+                        logger.warning("Rich message failed: %s; falling back", rm_resp)
+                except Exception as ex_rm:
+                    logger.warning("Exception sending rich message: %s; falling back", ex_rm)
+
+                if not sent:
+                    if _thumb:
+                        try:
+                            sent = await app.send_photo(
+                                chat_id=chat_id,
+                                photo=_thumb,
+                                caption=text,
+                                reply_markup=keyboard,
+                            )
+                        except Exception as ex_photo:
+                            logger.warning("Failed to send photo card: %s; sending text card", ex_photo)
+                            sent = await app.send_message(
+                                chat_id=chat_id,
+                                text=text,
+                                reply_markup=keyboard,
+                            )
+                    else:
+                        try:
+                            sent = await message.edit_text(text, reply_markup=keyboard)
+                        except Exception:
+                            sent = await app.send_message(
+                                chat_id=chat_id,
+                                text=text,
+                                reply_markup=keyboard,
+                            )
 
                 if message and sent and sent.id != getattr(message, "id", None):
                     try:
