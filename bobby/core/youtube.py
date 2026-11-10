@@ -836,8 +836,8 @@ class YouTube:
                     "format": media_format,
                 }
                 response = None
-                for attempt in range(1):
-                    response = session.get(api_url, params=payload, timeout=12)
+                for attempt in range(WORKER_FALLBACK_API_ATTEMPTS):
+                    response = session.get(api_url, params=payload, timeout=25)
                     if response.status_code not in {429, 500, 502, 503, 504}:
                         break
                     time.sleep(1.0)
@@ -1054,6 +1054,17 @@ class YouTube:
         elif result and str(result).startswith("http"):
             logger.info("play_source[%s]: worker API stream URL", track.id)
             return result
+
+        # If YouTube resolution fails, fallback to JioSaavn CDN audio so playback never fails
+        if not video:
+            try:
+                from bobby.core.jiosaavn import saavn
+                s_track = await saavn.search(track.title, track.message_id)
+                if s_track and s_track.id != track.id:
+                    logger.info("play_source[%s]: YouTube failed, fallback to JioSaavn for %r", track.id, track.title)
+                    return await self.play_source(s_track, video=False, progress_msg=progress_msg, lang=lang)
+            except Exception as ex:
+                logger.warning("JioSaavn emergency fallback error: %s", ex)
 
         logger.error("play_source[%s]: failed to resolve playable source", track.id)
         return None
