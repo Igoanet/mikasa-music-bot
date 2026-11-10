@@ -11,7 +11,7 @@ from bobby.helpers import can_manage_vc
 
 
 @app.on_message(
-    filters.command(["seek", "seekforward", "seekf", "seekback", "seekb"])
+    filters.command(["seek", "seekforward", "seekforth", "seekf", "seekback", "seekb"])
     & filters.group & ~app.bl_users
 )
 @lang.language()

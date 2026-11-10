@@ -229,6 +229,42 @@ def _cat_header(emoji_id: str, fallback: str, title: str) -> dict:
     }
 
 
+def get_help_text(staff: bool = False) -> str:
+    text = (
+        '<tg-emoji emoji-id="6269555901628159084">🎧</tg-emoji><b> PLAY COMMANDS</b>  \n'
+        '<code>/play</code>                   <tg-emoji emoji-id="6258277974638858828">🎵</tg-emoji>  Stream Audio In VC\n'
+        '<code>/vplay</code>                  <tg-emoji emoji-id="6257814208365203474">🖼</tg-emoji>  Stream Video In VC\n'
+        '<code>/pause</code>                  <tg-emoji emoji-id="5265214392579925557">▶️</tg-emoji>  Pause Current Stream\n'
+        '<code>/resume</code>                <tg-emoji emoji-id="5264955367397270190">▶️</tg-emoji>  Resume Music Playback\n'
+        '<code>/skip</code>                     <tg-emoji emoji-id="6255624844491100107">🚪</tg-emoji>  skip To Next Song\n'
+        '<code>/playforce</code>      <tg-emoji emoji-id="6257850436414345286">📲</tg-emoji>  Force Immediate Play\n'
+        '<code>/cplay</code>                  <tg-emoji emoji-id="6257876274937598023">🖼</tg-emoji>  Channel Stream Play\n'
+        '<code>/seekback</code>         <tg-emoji emoji-id="6257833351034441574">⬅️</tg-emoji>  Seek Duration Back\n'
+        '<code>/seekforth</code>        <tg-emoji emoji-id="6258229583242333883">➡️</tg-emoji>  Seek Duration forth\n\n\n'
+        '<tg-emoji emoji-id="5319090522470495400">⭕️</tg-emoji><b>  AUTOPLAY ENGINE</b>  \n'
+        '<code>/autoplay on</code>       <tg-emoji emoji-id="6255981326776667522">📍</tg-emoji>  Turn autoplay on\n'
+        '<code>/autoplay off</code>      <tg-emoji emoji-id="6258005244215562150">📍</tg-emoji>  Turn autoplay off\n\n'
+        '<tg-emoji emoji-id="5316883317302246413">💫</tg-emoji><b>  LOOP &amp; QUEUE</b>  \n'
+        '<code>/loop</code>  <tg-emoji emoji-id="6257818730965766046">🔃</tg-emoji> Loop Track 1-10x\n'
+        '<code>/queue</code> <tg-emoji emoji-id="6255560325492379134">🗒</tg-emoji> View Queued Playlist\n\n\n'
+        '<tg-emoji emoji-id="5893161718179173515">⚙️</tg-emoji><b> SETTINGS &amp; TOOLS</b>  \n'
+        '<code>/speed</code> <tg-emoji emoji-id="6258066331535412617">⏲</tg-emoji>  Play Speed (0.5x-2x)\n'
+        '<code>/auth</code>  <tg-emoji emoji-id="6258110135906865510">👥</tg-emoji> Authorize Controllers\n'
+        '<code>/lang</code>  <tg-emoji emoji-id="6257916192363646612">🤖</tg-emoji> Switch Bot Language\n'
+        '<code>/ping</code>  <tg-emoji emoji-id="6255608862917791716">📶</tg-emoji> Check Latency &amp; Health\n'
+        '<code>/stats</code>  <tg-emoji emoji-id="6258205153468353758">📊</tg-emoji> Overall Bot Stats'
+    )
+    if staff:
+        text += (
+            '\n\n\n'
+            '<tg-emoji emoji-id="5902016123972358349">🛡</tg-emoji><b> STAFF COMMANDS</b>  \n'
+            '<code>/activevc</code>     <tg-emoji emoji-id="6258243546181013251">🎙</tg-emoji>  Active Voice Chats\n'
+            '<code>/broadcast</code>   <tg-emoji emoji-id="6257760143316881369">👥</tg-emoji> Global Broadcast\n'
+            '<code>/restart</code>     <tg-emoji emoji-id="6258260768999870546">🔄</tg-emoji> Restart Bot Engine'
+        )
+    return text
+
+
 def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) -> list[dict]:
     cells = [
         # 1. PLAY COMMANDS (Full row)
