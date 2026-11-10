@@ -436,75 +436,54 @@ class YouTube:
             except Exception as e:
                 logger.warning("JioSaavn url track resolution error: %s", e)
 
-        # For audio tracks, prioritize JioSaavn first for instant 320kbps CDN playback without YouTube bot blocks
-        if not video:
-            try:
-                from bobby.core.jiosaavn import saavn
-                saavn_track = await saavn.search(query, m_id)
-                if saavn_track:
-                    return saavn_track
-            except Exception as e:
-                logger.warning("JioSaavn search failed for query %r: %s", query, e)
+        # Clean tracking params if query looks like a link
+        clean_query = query
+        if ("http://" in clean_query or "https://" in clean_query or "youtu" in clean_query) and "&" in clean_query:
+            clean_query = clean_query.split("&")[0]
+        if "?si=" in clean_query:
+            clean_query = clean_query.split("?si=")[0]
+        elif "&si=" in clean_query:
+            clean_query = clean_query.split("&si=")[0]
 
         try:
-            from bobby.helpers.audio_ranker import score_audio_candidate
+            results = []
+            search = VideosSearch(clean_query, limit=10)
+            search_results = (await search.next()).get("result", [])
 
-            results = VideosSearch(query, limit=10)
-            res = await results.next()
-            items = res.get("result", [])
-            if not items and not video:
-                try:
-                    from bobby.core.jiosaavn import saavn
-                    saavn_track = await saavn.search(query, m_id)
-                    if saavn_track:
-                        return saavn_track
-                except Exception:
-                    pass
-            if not items:
+            # Filter videos longer than 1 hour (matching Youtube (3).py)
+            for item in search_results:
+                dur_str = item.get("duration", "0:00")
+                dur_sec = self._duration_to_seconds(dur_str)
+                if dur_sec <= 3600:
+                    results.append((item, dur_sec, dur_str))
+
+            if not results:
                 return None
 
-            scored_candidates = []
-            for item in items:
-                cand_title = item.get("title") or ""
-                dur_str = item.get("duration") or "—"
-                dur_sec = self._duration_to_seconds(dur_str)
-                chan_dict = item.get("channel") if isinstance(item.get("channel"), dict) else {}
-                chan_name = chan_dict.get("name") or ""
-                view_text = item.get("viewCount", {}).get("text") or "0" if isinstance(item.get("viewCount"), dict) else "0"
-                views = int(re.sub(r"[^0-9]", "", view_text) or 0)
+            # Pick candidate 0 (top YouTube match). If candidate 0 is a teaser (< 30s) and candidate 1 is full song, pick candidate 1.
+            selected, dur_sec, dur_str = results[0]
+            if dur_sec < 30 and len(results) > 1 and results[1][1] >= 30:
+                selected, dur_sec, dur_str = results[1]
 
-                score = score_audio_candidate(
-                    title=cand_title,
-                    artist="",
-                    album="",
-                    channel=chan_name,
-                    plays_or_views=views,
-                    duration_sec=dur_sec,
-                    is_320k=False,
-                    query=query,
-                    is_video_mode=video,
-                )
-                scored_candidates.append((score, item, dur_str, dur_sec, chan_name))
-
-            scored_candidates.sort(key=lambda x: x[0], reverse=True)
-            _best_score, best_item, best_dur_str, best_dur_sec, best_chan = scored_candidates[0]
-
-            vid = best_item["id"]
-            title = best_item.get("title") or "YouTube Track"
+            vid = selected["id"]
+            title = selected.get("title") or "YouTube Track"
             thumb = (
-                best_item["thumbnails"][0]["url"].split("?")[0]
-                if best_item.get("thumbnails")
+                selected["thumbnails"][0]["url"].split("?")[0]
+                if selected.get("thumbnails")
                 else f"https://img.youtube.com/vi/{vid}/hqdefault.jpg"
             )
+            chan_dict = selected.get("channel") if isinstance(selected.get("channel"), dict) else {}
+            chan_name = chan_dict.get("name") or None
+
             return Track(
                 id=vid,
-                channel_name=best_chan or None,
-                duration=best_dur_str,
-                duration_sec=best_dur_sec,
+                channel_name=chan_name,
+                duration=dur_str,
+                duration_sec=dur_sec,
                 message_id=m_id,
                 title=title[:100],
                 thumbnail=thumb,
-                url=best_item.get("link") or f"{self.base}{vid}",
+                url=selected.get("link") or f"{self.base}{vid}",
                 video=video,
             )
         except Exception as e:

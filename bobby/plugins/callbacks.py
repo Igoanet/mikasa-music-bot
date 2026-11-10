@@ -324,12 +324,12 @@ async def _help(_, query: types.CallbackQuery):
         res = await edit_rich_message(query.message.chat.id, query.message.id, blocks, reply_markup=markup)
         if not res.get("ok"):
             try:
-                await query.message.delete()
+                if query.message.photo:
+                    await query.edit_message_caption(caption=get_help_text(staff=staff), reply_markup=markup)
+                else:
+                    await query.edit_message_text(text=get_help_text(staff=staff), reply_markup=markup)
             except Exception:
-                pass
-            res2 = await send_rich_message(query.message.chat.id, blocks, reply_markup=markup)
-            if not res2.get("ok"):
-                await app.send_message(query.message.chat.id, get_help_text(staff=staff), reply_markup=markup)
+                await send_rich_message(query.message.chat.id, blocks, reply_markup=markup)
         return await _safe_answer(query)
 
     elif data[1] == "close":
