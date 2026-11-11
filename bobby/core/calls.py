@@ -499,7 +499,7 @@ class TgCall(PyTgCalls):
                     support_channel = f"https://t.me/{support_channel.lstrip('@')}"
 
                 text = (
-                    f"{emojis.HEADPHONE}  <b>˹ ᴍɪᴋᴀꜱᴀ {emojis.SWORD} ᴍᴜꜱɪᴄ♪ {emojis.DOVE} ˼</b>\n\n"
+                    f"{emojis.HEADPHONE}  <b>˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪</b>  {emojis.DOVE}\n\n"
                     f"\u2800\n"
                     f"<blockquote expandable>"
                     f"{emojis.SPARKLES}  <b>ᴛʀᴀᴄᴋ :</b> <a href=\"{media.url}\">{clean_track}</a>\n"

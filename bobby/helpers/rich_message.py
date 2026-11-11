@@ -138,7 +138,7 @@ def get_start_chat_button_blocks(
                 {
                     "type": "url",
                     "url": f"https://t.me/{bot_user}",
-                    "text": "˹ᴍɪᴋᴀꜱᴀ ✘ ᴍᴜꜱɪᴄ˼",
+                    "text": "˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪",
                 },
                 "  ",
                 {"type": "custom_emoji", "custom_emoji_id": "5316740183222140641", "alternative_text": "🕊️"},
@@ -471,11 +471,9 @@ def get_playback_blocks(
             "text": [
                 {"type": "custom_emoji", "custom_emoji_id": "6269555901628159084", "alternative_text": "🎧"},
                 "  ",
-                {"type": "bold", "text": "˹ ᴍɪᴋᴀꜱᴀ "},
-                {"type": "custom_emoji", "custom_emoji_id": "5453991094435997597", "alternative_text": "⚔"},
-                {"type": "bold", "text": " ᴍᴜꜱɪᴄ♪ "},
-                {"type": "custom_emoji", "custom_emoji_id": "5316740183222140641", "alternative_text": "🕊"},
-                {"type": "bold", "text": " ˼"},
+                {"type": "bold", "text": "˹ᴍɪᴋᴀꜱᴀ 𓆩⚔️𓆪 ᴍᴜꜱɪᴄ♪"},
+                "  ",
+                {"type": "custom_emoji", "custom_emoji_id": "5316740183222140641", "alternative_text": "🕊️"},
             ],
         },
         {
