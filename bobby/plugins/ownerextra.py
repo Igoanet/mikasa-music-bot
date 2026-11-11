@@ -295,11 +295,19 @@ async def _resolve_invite_link(cid: int) -> tuple[str | None, str | None]:
     except Exception:
         pass
 
-    # 2. Bot export_chat_invite_link with timeout
+    # 2. Bot export or create invite link with timeout
     try:
         link = await asyncio.wait_for(app.export_chat_invite_link(cid), timeout=3.0)
         if link:
             res = (link, "Exported via Bot")
+            _chat_link_cache[cid] = res
+            return res
+    except Exception:
+        pass
+    try:
+        inv = await asyncio.wait_for(app.create_chat_invite_link(cid), timeout=3.0)
+        if getattr(inv, "invite_link", None):
+            res = (inv.invite_link, "Created via Bot")
             _chat_link_cache[cid] = res
             return res
     except Exception:
@@ -318,11 +326,22 @@ async def _resolve_invite_link(cid: int) -> tuple[str | None, str | None]:
                     res = (c.invite_link, "Primary Link")
                     _chat_link_cache[cid] = res
                     return res
-                link = await asyncio.wait_for(ub.export_chat_invite_link(cid), timeout=3.0)
-                if link:
-                    res = (link, "Exported via Assistant")
-                    _chat_link_cache[cid] = res
-                    return res
+                try:
+                    link = await asyncio.wait_for(ub.export_chat_invite_link(cid), timeout=3.0)
+                    if link:
+                        res = (link, "Exported via Assistant")
+                        _chat_link_cache[cid] = res
+                        return res
+                except Exception:
+                    pass
+                try:
+                    inv = await asyncio.wait_for(ub.create_chat_invite_link(cid), timeout=3.0)
+                    if getattr(inv, "invite_link", None):
+                        res = (inv.invite_link, "Created via Assistant")
+                        _chat_link_cache[cid] = res
+                        return res
+                except Exception:
+                    pass
             except Exception:
                 pass
 
@@ -610,8 +629,7 @@ async def ogc_link(_, cq: types.CallbackQuery):
             f"<code>{cid}</code>\n\n"
             f"<b>Link:</b> <a href=\"{html.escape(link)}\">{html.escape(link)}</a>\n"
             f"<i>({html.escape(method)})</i>",
-            reply_markup=_gc_group_kb(cid),
-            disable_web_page_preview=True)
+            reply_markup=_gc_group_kb(cid))
     else:
         await cq.message.edit_text(
             f"<b>🔗 Invite link</b>\n"

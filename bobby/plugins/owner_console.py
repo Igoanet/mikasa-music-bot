@@ -63,8 +63,7 @@ async def _edit(msg, text: str):
     if msg is None:
         return
     try:
-        await msg.edit_text(text, parse_mode=enums.ParseMode.HTML,
-                            disable_web_page_preview=True)
+        await msg.edit_text(text, parse_mode=enums.ParseMode.HTML)
     except Exception:
         pass
 
