@@ -985,8 +985,7 @@ class TgCall(PyTgCalls):
             msg = await app.send_message(chat_id=chat_id, text=TEXT_PLAYBACK_PREPARING, parse_mode=enums.ParseMode.HTML)
             loader = PlaybackLoader(msg, is_playback=True).start()
         else:
-            search_text = _lang.get("play_searching", '<tg-emoji emoji-id="5226828843926460895">⏳</tg-emoji>  <b>sᴇᴀʀᴄʜɪɴɢ…</b>')
-            msg = await app.send_message(chat_id=chat_id, text=search_text, parse_mode=enums.ParseMode.HTML)
+            msg = await app.send_message(chat_id=chat_id, text='<tg-emoji emoji-id="5435907392334215552">🔍</tg-emoji>', parse_mode=enums.ParseMode.HTML)
             from bobby.helpers.playback_loader import _DummyLoader
             loader = _DummyLoader()
         if not self._is_live(media) and not media.file_path:

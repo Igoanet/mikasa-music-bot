@@ -2,12 +2,16 @@
 # Licensed under the MIT License.
 # This file is part of BobbyXMusic
 
+import asyncio
+import logging
 import re
 
 from pyrogram import enums, errors, filters, types
 
 from bobby import anon, app, config, db, lang, queue, tg, yt
 from bobby.helpers import buttons, can_manage_vc, is_group_owner, is_live_group_admin
+
+logger = logging.getLogger("bobby")
 
 
 def _panel_row1(chat_id: int) -> str:
@@ -38,9 +42,14 @@ async def _safe_answer(query: types.CallbackQuery, *args, **kwargs):
 async def _notify_chat(chat_id: int, text: str):
     """Send notification to chat without blocking."""
     try:
-        await app.send_message(chat_id, text, parse_mode=enums.ParseMode.HTML)
-    except Exception:
-        pass
+        sent = await app.send_message(chat_id, text, parse_mode=enums.ParseMode.HTML)
+        try:
+            from bobby.helpers.group_cleaner import track_group_message
+            track_group_message(chat_id, sent.id)
+        except Exception:
+            pass
+    except Exception as e:
+        logger.warning(f"Failed to send button notification in {chat_id}: {e}")
 
 
 @app.on_callback_query(filters.regex(r"^cancel_dl$") & ~app.bl_users)

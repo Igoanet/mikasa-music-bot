@@ -70,9 +70,8 @@ async def play_hndlr(
             sent = await m.reply_text(TEXT_PLAYBACK_PREPARING, parse_mode=enums.ParseMode.HTML)
         loader = PlaybackLoader(sent, is_playback=True).start()
     else:
-        # Normal user /play: clean searching status, no "Preparing playback..."
-        search_text = m.lang.get("play_searching", "<tg-emoji emoji-id=\"5226828843926460895\">⏳</tg-emoji>  <b>sᴇᴀʀᴄʜɪɴɢ…</b>")
-        sent = await m.reply_text(search_text, parse_mode=enums.ParseMode.HTML)
+        # Normal user /play: only emoji, no preparing/searching text
+        sent = await m.reply_text('<tg-emoji emoji-id="5435907392334215552">🔍</tg-emoji>', parse_mode=enums.ParseMode.HTML)
         loader = _DummyLoader()
     file = None
     mention = m.from_user.mention
