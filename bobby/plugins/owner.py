@@ -191,32 +191,36 @@ _assistant_group_cache: list = []
 _assistant_group_cache_ts: float = 0.0
 
 async def _assistant_group_ids() -> list:
-    """Every group id the assistant account and db know, cached for 60s."""
+    """Every group id known from the database (chats, assistant, auth, lang) and assistant dialogs."""
     global _assistant_group_cache, _assistant_group_cache_ts
     now = time.monotonic()
-    if _assistant_group_cache and (now - _assistant_group_cache_ts < 60.0):
+    if _assistant_group_cache and (now - _assistant_group_cache_ts < 30.0):
         return _assistant_group_cache
 
     ids = set()
+    # 1. Pull all group IDs recorded across all JSON tables in db._data
     try:
-        db_chats = await db.get_chats() or []
-        ids.update(int(c) for c in db_chats if int(c) < 0)
+        data = getattr(db, "_data", None) or {}
+        for category in ("assistant", "chats", "auth", "lang"):
+            for k in (data.get(category) or {}).keys():
+                try:
+                    cid = int(k)
+                    if cid < 0:
+                        ids.add(cid)
+                except Exception:
+                    pass
     except Exception:
         pass
 
+    # 2. Assistant dialog groups
     try:
         if getattr(userbot, "clients", None):
             for ub in userbot.clients:
                 try:
-                    async def _fetch():
-                        ub_ids = []
-                        async for d in ub.get_dialogs(limit=80):
-                            ch = d.chat
-                            if ch.type in (enums.ChatType.GROUP, enums.ChatType.SUPERGROUP):
-                                ub_ids.append(ch.id)
-                        return ub_ids
-                    ub_found = await asyncio.wait_for(_fetch(), timeout=2.5)
-                    ids.update(ub_found)
+                    async for d in ub.get_dialogs(limit=100):
+                        ch = getattr(d, "chat", None)
+                        if ch and ch.type in (enums.ChatType.GROUP, enums.ChatType.SUPERGROUP):
+                            ids.add(ch.id)
                 except Exception:
                     pass
     except Exception:
@@ -241,36 +245,39 @@ async def cb_own_groups(_, cq: CallbackQuery):
 
     known = await _assistant_group_ids()
     scanned = len(known)
+    bot_id = app.me.id if getattr(app, "me", None) else (await app.get_me()).id
+    sem = asyncio.Semaphore(10)
 
     async def _inspect_chat(chat_id: int):
-        try:
-            member = await asyncio.wait_for(app.get_chat_member(chat_id, "me"), timeout=1.8)
-        except Exception:
-            return None
-        if member.status not in (enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER):
-            return False
-        priv = getattr(member, "privileges", None)
-        if priv is None:
-            return False
-        try:
-            chat = await asyncio.wait_for(app.get_chat(chat_id), timeout=1.5)
-            title = chat.title or "?"
-        except Exception:
-            title = "?"
-        got = [l for a, l in _GROUP_PERMS if getattr(priv, a, False)]
-        missing = [l for a, l in _GROUP_PERMS if not getattr(priv, a, False)]
-        line = (f"<b>{html.escape(title)}</b> <code>{chat_id}</code>\n"
-                f"└ <b>{len(got)}/{len(_GROUP_PERMS)}</b> perms")
-        if missing:
-            line += f" • missing: {', '.join(missing)}"
-        if not getattr(priv, "can_manage_video_chats", False):
-            line += " ⚠️ <b>no video-chat perm — music can't play!</b>"
-        return line
+        async with sem:
+            try:
+                member = await asyncio.wait_for(app.get_chat_member(chat_id, bot_id), timeout=3.5)
+            except Exception:
+                return None
+            if member.status not in (enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER):
+                return False
+            priv = getattr(member, "privileges", None)
+            if priv is None:
+                return False
+            try:
+                chat = await asyncio.wait_for(app.get_chat(chat_id), timeout=2.5)
+                title = chat.title or "?"
+            except Exception:
+                title = "?"
+            got = [l for a, l in _GROUP_PERMS if getattr(priv, a, False)]
+            missing = [l for a, l in _GROUP_PERMS if not getattr(priv, a, False)]
+            line = (f"<b>{html.escape(title)}</b> <code>{chat_id}</code>\n"
+                    f"└ <b>{len(got)}/{len(_GROUP_PERMS)}</b> perms")
+            if missing:
+                line += f" • missing: {', '.join(missing)}"
+            if not getattr(priv, "can_manage_video_chats", False):
+                line += " ⚠️ <b>no video-chat perm — music can't play!</b>"
+            return line
 
     admin_lines = []
     plain = 0
     if known:
-        results = await asyncio.gather(*[_inspect_chat(cid) for cid in known[:100]])
+        results = await asyncio.gather(*[_inspect_chat(cid) for cid in known])
         for r in results:
             if isinstance(r, str):
                 admin_lines.append(r)

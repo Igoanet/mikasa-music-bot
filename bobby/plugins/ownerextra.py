@@ -270,6 +270,7 @@ _chat_link_cache: dict[int, tuple[str, str]] = {}
 _chat_title_cache: dict[int, str] = {}
 _admin_groups_cache: list[int] = []
 _admin_groups_cache_ts: float = 0.0
+_GC_PER_PAGE = 8
 
 
 async def _resolve_invite_link(cid: int) -> tuple[str | None, str | None]:
@@ -282,7 +283,7 @@ async def _resolve_invite_link(cid: int) -> tuple[str | None, str | None]:
 
     # 1. Fast Bot get_chat (already contains username or existing invite_link)
     try:
-        c = await asyncio.wait_for(app.get_chat(cid), timeout=1.8)
+        c = await asyncio.wait_for(app.get_chat(cid), timeout=3.0)
         if getattr(c, "username", None):
             res = (f"https://t.me/{c.username}", "Public Username")
             _chat_link_cache[cid] = res
@@ -294,9 +295,9 @@ async def _resolve_invite_link(cid: int) -> tuple[str | None, str | None]:
     except Exception:
         pass
 
-    # 2. Bot export_chat_invite_link with strict timeout
+    # 2. Bot export_chat_invite_link with timeout
     try:
-        link = await asyncio.wait_for(app.export_chat_invite_link(cid), timeout=2.0)
+        link = await asyncio.wait_for(app.export_chat_invite_link(cid), timeout=3.0)
         if link:
             res = (link, "Exported via Bot")
             _chat_link_cache[cid] = res
@@ -304,11 +305,11 @@ async def _resolve_invite_link(cid: int) -> tuple[str | None, str | None]:
     except Exception:
         pass
 
-    # 3. Assistant get_chat / export with strict timeout
+    # 3. Assistant get_chat / export with timeout
     if getattr(userbot, "clients", None):
         for ub in userbot.clients:
             try:
-                c = await asyncio.wait_for(ub.get_chat(cid), timeout=1.8)
+                c = await asyncio.wait_for(ub.get_chat(cid), timeout=3.0)
                 if getattr(c, "username", None):
                     res = (f"https://t.me/{c.username}", "Public Username")
                     _chat_link_cache[cid] = res
@@ -317,7 +318,7 @@ async def _resolve_invite_link(cid: int) -> tuple[str | None, str | None]:
                     res = (c.invite_link, "Primary Link")
                     _chat_link_cache[cid] = res
                     return res
-                link = await asyncio.wait_for(ub.export_chat_invite_link(cid), timeout=2.0)
+                link = await asyncio.wait_for(ub.export_chat_invite_link(cid), timeout=3.0)
                 if link:
                     res = (link, "Exported via Assistant")
                     _chat_link_cache[cid] = res
@@ -328,9 +329,17 @@ async def _resolve_invite_link(cid: int) -> tuple[str | None, str | None]:
     return None, None
 
 
-def _gc_list_kb(chat_ids):
+def _gc_list_kb(chat_ids, page: int = 0):
+    total = len(chat_ids)
+    max_pages = max(1, (total + _GC_PER_PAGE - 1) // _GC_PER_PAGE)
+    page = max(0, min(page, max_pages - 1))
+
+    start = page * _GC_PER_PAGE
+    end = start + _GC_PER_PAGE
+    page_ids = chat_ids[start:end]
+
     rows, row = [], []
-    for cid in chat_ids:
+    for cid in page_ids:
         title = _chat_title_cache.get(cid) or str(cid)
         row.append(_ikb(("💬 " + title)[:28], "%s:open:%s" % (_GCN, cid)))
         if len(row) == 2:
@@ -338,9 +347,24 @@ def _gc_list_kb(chat_ids):
             row = []
     if row:
         rows.append(row)
+
     if not rows:
         rows = [[_ikb("No admin groups found", "%s:list:refresh" % _GCN)]]
-    rows.append([_ikb("« Back", "own_back", enums.ButtonStyle.PRIMARY)])
+
+    # Pagination controls if more than 1 page
+    if max_pages > 1:
+        nav = []
+        if page > 0:
+            nav.append(_ikb("« Prev", f"{_GCN}:page:{page-1}"))
+        nav.append(_ikb(f"{page+1}/{max_pages}", f"{_GCN}:page:{page}"))
+        if page < max_pages - 1:
+            nav.append(_ikb("Next »", f"{_GCN}:page:{page+1}"))
+        rows.append(nav)
+
+    rows.append([
+        _ikb("🔄 Rescan", "%s:list:refresh" % _GCN),
+        _ikb("« Back", "own_back", enums.ButtonStyle.PRIMARY)
+    ])
     return _ikm(rows)
 
 
@@ -357,45 +381,63 @@ def _gc_group_kb(cid):
 
 
 async def _gc_group_ids(force_refresh: bool = False) -> list[int]:
-    """Every group where the bot is currently an administrator (cached for 30s)."""
+    """Every group where the bot is currently an administrator."""
     global _admin_groups_cache, _admin_groups_cache_ts
     now = time.monotonic()
     if not force_refresh and _admin_groups_cache and (now - _admin_groups_cache_ts < 30.0):
         return _admin_groups_cache
 
-    candidate_ids = set()
-    try:
-        candidate_ids.update([int(c) for c in (await db.get_chats() or []) if int(c) < 0])
-    except Exception:
-        pass
     try:
         import bobby.plugins.owner as _ow
-        candidate_ids.update(await _ow._assistant_group_ids())
+        candidate_ids = set(await _ow._assistant_group_ids())
+    except Exception:
+        candidate_ids = set()
+
+    # Always ensure every JSON category in db._data is checked
+    try:
+        data = getattr(db, "_data", None) or {}
+        for category in ("assistant", "chats", "auth", "lang"):
+            for k in (data.get(category) or {}).keys():
+                try:
+                    cid = int(k)
+                    if cid < 0:
+                        candidate_ids.add(cid)
+                except Exception:
+                    pass
     except Exception:
         pass
 
+    bot_id = app.me.id if getattr(app, "me", None) else (await app.get_me()).id
+    sem = asyncio.Semaphore(10)
+
     async def _check_admin(cid: int):
-        try:
-            m = await asyncio.wait_for(app.get_chat_member(cid, "me"), timeout=1.8)
-            if m.status in (enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER):
-                if cid not in _chat_title_cache or str(_chat_title_cache[cid]).startswith("-100"):
-                    try:
-                        chat = await asyncio.wait_for(app.get_chat(cid), timeout=1.5)
-                        _chat_title_cache[cid] = chat.title or str(cid)
-                    except Exception:
-                        _chat_title_cache[cid] = str(cid)
-                return cid
-        except errors.FloodWait as fw:
-            await asyncio.sleep(min(fw.value, 3))
+        async with sem:
             try:
-                m = await asyncio.wait_for(app.get_chat_member(cid, "me"), timeout=1.8)
+                m = await asyncio.wait_for(app.get_chat_member(cid, bot_id), timeout=4.0)
                 if m.status in (enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER):
+                    if cid not in _chat_title_cache or str(_chat_title_cache[cid]).startswith("-100"):
+                        try:
+                            chat = await asyncio.wait_for(app.get_chat(cid), timeout=3.0)
+                            _chat_title_cache[cid] = chat.title or str(cid)
+                        except Exception:
+                            _chat_title_cache[cid] = str(cid)
+                    try:
+                        if str(cid) not in (db._data.get("chats") or {}):
+                            await db.add_chat(cid)
+                    except Exception:
+                        pass
                     return cid
+            except errors.FloodWait as fw:
+                await asyncio.sleep(min(fw.value, 4))
+                try:
+                    m = await asyncio.wait_for(app.get_chat_member(cid, bot_id), timeout=4.0)
+                    if m.status in (enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER):
+                        return cid
+                except Exception:
+                    pass
             except Exception:
                 pass
-        except Exception:
-            pass
-        return None
+            return None
 
     if candidate_ids:
         results = await asyncio.gather(*[_check_admin(cid) for cid in candidate_ids])
@@ -407,6 +449,18 @@ async def _gc_group_ids(force_refresh: bool = False) -> list[int]:
     _admin_groups_cache = res
     _admin_groups_cache_ts = now
     return res
+
+
+@app.on_callback_query(filters.regex(r"^ogc:page:(\d+)$") & filters.user(config.OWNER_ID))
+async def ogc_page(_, cq: types.CallbackQuery):
+    await cq.answer()
+    page = int(cq.data.split(":")[-1])
+    ids = await _gc_group_ids(force_refresh=False)
+    await cq.message.edit_text(
+        "<b>🛠 Group console</b>\n\n"
+        f"<b>{len(ids)}</b> admin group{'s' if len(ids) != 1 else ''} — tap one to manage it.\n"
+        "<i>Showing only groups where the bot is an administrator.</i>",
+        reply_markup=_gc_list_kb(ids, page=page))
 
 
 @app.on_callback_query(filters.regex(r"^ogc:list(:refresh)?$") & filters.user(config.OWNER_ID))
@@ -423,7 +477,8 @@ async def ogc_list(_, cq: types.CallbackQuery):
         "<b>🛠 Group console</b>\n\n"
         f"<b>{len(ids)}</b> admin group{'s' if len(ids) != 1 else ''} — tap one to manage it.\n"
         "<i>Showing only groups where the bot is an administrator.</i>",
-        reply_markup=_gc_list_kb(ids))
+        reply_markup=_gc_list_kb(ids, page=0))
+
 
 @app.on_callback_query(filters.regex(r"^ogc:open:(-?\d+)$") & filters.user(config.OWNER_ID))
 async def ogc_open(_, cq: types.CallbackQuery):
@@ -437,14 +492,14 @@ async def ogc_open(_, cq: types.CallbackQuery):
     title = _chat_title_cache.get(cid) or str(cid)
     members = None
     try:
-        chat = await app.get_chat(cid)
+        chat = await asyncio.wait_for(app.get_chat(cid), timeout=3.0)
         title = chat.title or title
         members = getattr(chat, "members_count", None)
     except Exception:
         if getattr(userbot, "clients", None):
             for ub in userbot.clients:
                 try:
-                    chat = await ub.get_chat(cid)
+                    chat = await asyncio.wait_for(ub.get_chat(cid), timeout=3.0)
                     title = chat.title or title
                     members = getattr(chat, "members_count", None)
                     break
@@ -453,7 +508,6 @@ async def ogc_open(_, cq: types.CallbackQuery):
     _chat_title_cache[cid] = title
 
     kb_rows = _gc_group_kb(cid).inline_keyboard
-    # Add option to delete inactive group if unreachable
     if not members and title == str(cid):
         kb_rows.insert(3, [_ikb("🗑 Remove Inactive Group", "%s:delchat:%s" % (_GCN, cid), enums.ButtonStyle.DANGER)])
 
@@ -482,10 +536,10 @@ async def ogc_rights(_, cq: types.CallbackQuery):
               ("can_change_info", "Change info"),
               ("can_promote_members", "Promote"),
               ("can_manage_chat", "Manage chat")]
-    me = await app.get_me()
+    bot_id = app.me.id if getattr(app, "me", None) else (await app.get_me()).id
     mem, priv, st = None, None, None
     try:
-        mem = await app.get_chat_member(cid, me.id)
+        mem = await asyncio.wait_for(app.get_chat_member(cid, bot_id), timeout=3.5)
         st = getattr(mem.status, "value", str(mem.status))
         priv = getattr(mem, "privileges", None)
     except Exception:
@@ -497,7 +551,7 @@ async def ogc_rights(_, cq: types.CallbackQuery):
         if getattr(userbot, "clients", None):
             for ub in userbot.clients:
                 try:
-                    ub_mem = await ub.get_chat_member(cid, "me")
+                    ub_mem = await asyncio.wait_for(ub.get_chat_member(cid, "me"), timeout=3.0)
                     ub_st = getattr(ub_mem.status, "value", str(ub_mem.status))
                     break
                 except Exception:
@@ -505,7 +559,6 @@ async def ogc_rights(_, cq: types.CallbackQuery):
 
         title = html.escape(_chat_title_cache.get(cid, str(cid)))
         if ub_mem:
-            # Assistant is in group
             return await cq.message.edit_text(
                 f"<b>📋 Rights in {title}</b>\n<code>{cid}</code>\n\n"
                 f"⚠️ <b>Bot Status:</b> Not in this group\n"
@@ -516,7 +569,6 @@ async def ogc_rights(_, cq: types.CallbackQuery):
                     [_ikb("« Back", "%s:open:%s" % (_GCN, cid), enums.ButtonStyle.PRIMARY)],
                 ]))
         else:
-            # Neither in group
             return await cq.message.edit_text(
                 f"<b>📋 Rights in {title}</b>\n<code>{cid}</code>\n\n"
                 "⚠️ <b>Inactive Chat:</b> Neither the bot nor assistant is present in this group.\n"
@@ -528,8 +580,9 @@ async def ogc_rights(_, cq: types.CallbackQuery):
 
     have = [l for a, l in RIGHTS if priv and getattr(priv, a, False)]
     miss = [l for a, l in RIGHTS if not (priv and getattr(priv, a, False))]
+    title = html.escape(_chat_title_cache.get(cid, str(cid)))
     await cq.message.edit_text(
-        f"<b>📋 Rights in {html.escape(_chat_title_cache.get(cid, str(cid)))}</b>\n"
+        f"<b>📋 Rights in {title}</b>\n"
         f"<code>{cid}</code> · status <b>{st}</b>\n\n"
         f"<b>{len(have)}/8</b>\n"
         f"✅ {', '.join(have) or '—'}\n"
@@ -593,6 +646,8 @@ async def ogc_bans(_, cq: types.CallbackQuery):
                 label = (u.first_name or str(u.id))[:22]
                 rows.append([_ikb(f"🔓 {label}",
                                   "ogc:unban:%s:%s" % (cid, u.id))])
+            if n >= 60:
+                break
     except Exception as ex:
         return await cq.message.edit_text(
             f"⚠️ Cannot list bans: <code>{type(ex).__name__}</code>",
@@ -643,9 +698,7 @@ async def ogc_mbok(_, cq: types.CallbackQuery):
     await cq.answer("Starting…")
     cid = int(cq.data.rsplit(":", 1)[-1])
     from bobby.plugins.owner_console import _run_massban
-
     await _run_massban(cq.from_user.id, cid, cq.message)
-
 
 
 @app.on_callback_query(filters.regex(r"^ogc:delchat:(-?\d+)$") & filters.user(config.OWNER_ID))
@@ -689,6 +742,7 @@ async def ogc_addbot(_, cq: types.CallbackQuery):
             reply_markup=_gc_group_kb(cid)
         )
 
+
 @app.on_callback_query(filters.regex(r"^own_groupconsole$") & filters.user(config.OWNER_ID))
 async def cb_own_groupconsole(_, cq: types.CallbackQuery):
     await cq.answer()
@@ -696,9 +750,9 @@ async def cb_own_groupconsole(_, cq: types.CallbackQuery):
         await cq.message.edit_text("<b>🛠 Group console</b>\n\n<i>Scanning admin groups, please wait...</i>", reply_markup=_back())
     except Exception:
         pass
-    ids = await _gc_group_ids()
+    ids = await _gc_group_ids(force_refresh=True)
     await cq.message.edit_text(
-        "<b>\U0001f6e0 Group console</b>\n\n"
+        "<b>🛠 Group console</b>\n\n"
         f"<b>{len(ids)}</b> admin group{'s' if len(ids) != 1 else ''} — tap one to manage it.\n"
         "<i>Showing only groups where the bot is an administrator.</i>",
-        reply_markup=_gc_list_kb(ids))
+        reply_markup=_gc_list_kb(ids, page=0))
