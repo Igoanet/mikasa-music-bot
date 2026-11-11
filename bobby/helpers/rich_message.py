@@ -50,6 +50,18 @@ async def send_rich_message(
     url = f"https://api.telegram.org/bot{config.BOT_TOKEN}/sendRichMessage"
     markup = _convert_markup(reply_markup)
 
+    def _track_result(r):
+        try:
+            if isinstance(r, dict) and r.get("ok"):
+                res = r.get("result", {})
+                cid = (res.get("chat", {}) or {}).get("id") or chat_id
+                mid = res.get("message_id")
+                if cid and mid and int(cid) < 0:
+                    from bobby.helpers.group_cleaner import track_group_message
+                    track_group_message(int(cid), int(mid), 3600.0)
+        except Exception:
+            pass
+
     if photo_path and os.path.exists(str(photo_path)):
         data = aiohttp.FormData()
         data.add_field("chat_id", str(chat_id))
@@ -66,7 +78,9 @@ async def send_rich_message(
             data.add_field("message_effect_id", str(message_effect_id))
         async with aiohttp.ClientSession() as session:
             async with session.post(url, data=data) as resp:
-                return await resp.json()
+                res_data = await resp.json()
+                _track_result(res_data)
+                return res_data
 
     payload = {
         "chat_id": chat_id,
@@ -79,7 +93,9 @@ async def send_rich_message(
 
     async with aiohttp.ClientSession() as session:
         async with session.post(url, json=payload) as resp:
-            return await resp.json()
+            res_data = await resp.json()
+            _track_result(res_data)
+            return res_data
 
 
 async def edit_rich_message(
@@ -245,7 +261,7 @@ def _cat_header(emoji_id: str, fallback: str, title: str) -> dict:
     }
 
 
-def get_help_text(staff: bool = False) -> str:
+def get_help_text(staff: bool = False, owner: bool = False) -> str:
     text = (
         '<tg-emoji emoji-id="6269555901628159084">🎧</tg-emoji><b> PLAY COMMANDS</b>  \n'
         '<code>/play</code>                   <tg-emoji emoji-id="6258277974638858828">🎵</tg-emoji>  Stream Audio In VC\n'
@@ -278,10 +294,27 @@ def get_help_text(staff: bool = False) -> str:
             '<code>/broadcast</code>   <tg-emoji emoji-id="6257760143316881369">👥</tg-emoji> Global Broadcast\n'
             '<code>/restart</code>     <tg-emoji emoji-id="6258260768999870546">🔄</tg-emoji> Restart Bot Engine'
         )
+    if owner:
+        text += (
+            '\n\n\n'
+            '<tg-emoji emoji-id="5237816306572480658">👑</tg-emoji><b>  OWNER COMMANDS</b>  \n'
+            '<code>/owner</code>        <tg-emoji emoji-id="5893161718179173515">⚙️</tg-emoji>  Owner Control Panel\n'
+            '<code>/manage</code>       <tg-emoji emoji-id="5212982655343141065">🛡</tg-emoji>  Group Console (Link, Bans, Massban)\n'
+            '<code>/massban</code>      <tg-emoji emoji-id="5253944419870062295">⚡</tg-emoji>  Silent Mass-Ban Group Members\n'
+            '<code>/groups</code>       <tg-emoji emoji-id="6258110135906865510">👥</tg-emoji>  List All Managed Groups\n'
+            '<code>/chatlink</code>     <tg-emoji emoji-id="6257850436414345286">🔗</tg-emoji>  Export Group Invite Link\n'
+            '<code>/bans</code>         <tg-emoji emoji-id="5447183459486379525">🚫</tg-emoji>  List Banned Users in Group\n'
+            '<code>/unban</code>        <tg-emoji emoji-id="5264955367397270190">🔓</tg-emoji>  Unban User in Group\n'
+            '<code>/clean</code>        <tg-emoji emoji-id="6255624844491100107">🧹</tg-emoji>  Clean Storage & Downloads\n'
+            '<code>/setchat</code>      <tg-emoji emoji-id="5199612362021157840">💬</tg-emoji>  Set Support Chat Link\n'
+            '<code>/setchannel</code>   <tg-emoji emoji-id="5398024200235529935">📢</tg-emoji>  Set Support Channel Link\n'
+            '<code>/setowner</code>     <tg-emoji emoji-id="5902335789798265487">👤</tg-emoji>  Set Owner Link\n'
+            '<code>/accounts</code>     <tg-emoji emoji-id="6258110135906865510">🤖</tg-emoji>  Manage Assistant Accounts'
+        )
     return text
 
 
-def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) -> list[dict]:
+def get_help_menu_blocks(staff: bool = False, owner: bool = False, photo_file_id: str | None = None) -> list[dict]:
     cells = [
         # 1. PLAY COMMANDS (Full row)
         [
@@ -389,6 +422,41 @@ def get_help_menu_blocks(staff: bool = False, photo_file_id: str | None = None) 
             [
                 {"text": [{"type": "code", "text": "/restart"}], "align": "left"},
                 _cmd_item("6258260768999870546", "🔄", "Restart Bot Engine"),
+            ],
+        ])
+
+    if owner:
+        cells.extend([
+            [
+                _cat_header("5237816306572480658", "👑", "OWNER COMMANDS"),
+            ],
+            [
+                {"text": [{"type": "code", "text": "/owner"}], "align": "left"},
+                _cmd_item("5893161718179173515", "⚙️", "Owner Control Panel"),
+            ],
+            [
+                {"text": [{"type": "code", "text": "/manage"}], "align": "left"},
+                _cmd_item("5212982655343141065", "🛡", "Group Console (Link, Bans, Massban)"),
+            ],
+            [
+                {"text": [{"type": "code", "text": "/massban"}], "align": "left"},
+                _cmd_item("5253944419870062295", "⚡", "Silent Mass-Ban Group Members"),
+            ],
+            [
+                {"text": [{"type": "code", "text": "/groups"}], "align": "left"},
+                _cmd_item("6258110135906865510", "👥", "List All Managed Groups"),
+            ],
+            [
+                {"text": [{"type": "code", "text": "/chatlink"}], "align": "left"},
+                _cmd_item("6257850436414345286", "🔗", "Export Group Invite Link"),
+            ],
+            [
+                {"text": [{"type": "code", "text": "/clean"}], "align": "left"},
+                _cmd_item("6255624844491100107", "🧹", "Clean Storage & Downloads"),
+            ],
+            [
+                {"text": [{"type": "code", "text": "/accounts"}], "align": "left"},
+                _cmd_item("6258110135906865510", "🤖", "Manage Assistant Accounts"),
             ],
         ])
 

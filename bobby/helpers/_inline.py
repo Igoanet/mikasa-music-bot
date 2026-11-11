@@ -142,7 +142,7 @@ class Inline:
         self, _lang: dict, back: bool = False, staff: bool = False,
         owner: bool = False,
     ) -> types.InlineKeyboardMarkup:
-        return self.ikm([
+        rows = [
             [
                 self.ikb(
                     text=_lang.get("back", "« Back"),
@@ -151,7 +151,18 @@ class Inline:
                     icon_custom_emoji_id="5881992582711480058",
                 )
             ]
-        ])
+        ]
+        if owner and not back:
+            rows.append(
+                [
+                    self.ikb(
+                        text="👑 Owner Panel",
+                        callback_data="own_panel",
+                        style=enums.ButtonStyle.PRIMARY,
+                    )
+                ]
+            )
+        return self.ikm(rows)
 
     def lang_markup(self, _lang: str) -> types.InlineKeyboardMarkup:
         langs = lang.get_languages()
@@ -343,6 +354,16 @@ class Inline:
                     ),
                 ]
             )
+            if owner:
+                rows.append(
+                    [
+                        self.ikb(
+                            text="👑 Owner Panel",
+                            callback_data="own_panel",
+                            style=enums.ButtonStyle.PRIMARY,
+                        )
+                    ]
+                )
         return self.ikm(rows)
 
     def recs_markup(

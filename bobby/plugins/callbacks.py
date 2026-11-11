@@ -314,22 +314,20 @@ async def _start_info_cb(_, query: types.CallbackQuery):
 @lang.language()
 async def _help(_, query: types.CallbackQuery):
     data = query.data.split()
-    staff = bool(query.from_user) and (
-        query.from_user.id == config.OWNER_ID
-        or query.from_user.id in app.sudoers
-    )
+    is_owner = bool(query.from_user and query.from_user.id == config.OWNER_ID)
+    staff = is_owner or (bool(query.from_user) and query.from_user.id in app.sudoers)
 
     if len(data) == 1 or data[1] == "back":
         from bobby.helpers.rich_message import edit_rich_message, send_rich_message, get_help_menu_blocks, get_help_text
-        blocks = get_help_menu_blocks(staff=staff)
-        markup = buttons.help_markup(query.lang, back=False, staff=staff)
+        blocks = get_help_menu_blocks(staff=staff, owner=is_owner)
+        markup = buttons.help_markup(query.lang, back=False, staff=staff, owner=is_owner)
         res = await edit_rich_message(query.message.chat.id, query.message.id, blocks, reply_markup=markup)
         if not res.get("ok"):
             try:
                 if query.message.photo:
-                    await query.edit_message_caption(caption=get_help_text(staff=staff), reply_markup=markup)
+                    await query.edit_message_caption(caption=get_help_text(staff=staff, owner=is_owner), reply_markup=markup)
                 else:
-                    await query.edit_message_text(text=get_help_text(staff=staff), reply_markup=markup)
+                    await query.edit_message_text(text=get_help_text(staff=staff, owner=is_owner), reply_markup=markup)
             except Exception:
                 await send_rich_message(query.message.chat.id, blocks, reply_markup=markup)
         return await _safe_answer(query)

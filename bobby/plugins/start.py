@@ -13,20 +13,19 @@ from bobby.helpers import buttons, is_group_owner, utils
 @app.on_message(filters.command(["help"]) & filters.private & ~app.bl_users)
 @lang.language()
 async def _help(_, m: types.Message):
-    staff = bool(m.from_user) and (
-        m.from_user.id == config.OWNER_ID or m.from_user.id in app.sudoers
-    )
+    is_owner = bool(m.from_user and m.from_user.id == config.OWNER_ID)
+    staff = is_owner or (bool(m.from_user) and m.from_user.id in app.sudoers)
     markup = buttons.help_markup(
         m.lang,
         staff=staff,
-        owner=bool(m.from_user and m.from_user.id == config.OWNER_ID),
+        owner=is_owner,
     )
     from bobby.helpers.rich_message import send_rich_message, get_help_menu_blocks, get_help_text
-    blocks = get_help_menu_blocks(staff=staff)
+    blocks = get_help_menu_blocks(staff=staff, owner=is_owner)
     res = await send_rich_message(m.chat.id, blocks, reply_markup=markup)
     if not res.get("ok"):
         await m.reply_text(
-            text=get_help_text(staff=staff),
+            text=get_help_text(staff=staff, owner=is_owner),
             reply_markup=markup,
         )
 

@@ -65,7 +65,7 @@ def _panel_text() -> str:
     )
 
 
-@app.on_message(filters.command("owner") & _OWNER)
+@app.on_message(filters.command("owner", prefixes=["/", "!", "?", "."]) & _OWNER)
 async def owner_cmd(_, msg: Message):
     await msg.reply_text(_panel_text(), reply_markup=_panel_kb())
 
@@ -176,51 +176,26 @@ _GROUP_PERMS = [
 
 
 async def _assistant_group_ids() -> list:
-    """Every group id the assistant account is in.
-
-    A bot cannot list its own dialogs (BOT_METHOD_INVALID), so the scan goes
-    through the assistant user session stored in data/sessions.json.
-    Falls back to the bot's own known chats if that session is unavailable.
-    """
+    """Every group id the assistant account is in."""
     try:
-        raw = json.loads(pathlib.Path("data/sessions.json").read_text())
+        if getattr(userbot, "clients", None):
+            ids = []
+            for ub in userbot.clients:
+                try:
+                    async for d in ub.get_dialogs():
+                        ch = d.chat
+                        if ch.type in (enums.ChatType.GROUP, enums.ChatType.SUPERGROUP):
+                            ids.append(ch.id)
+                    if ids:
+                        return sorted(list(set(ids)))
+                except Exception:
+                    pass
     except Exception:
-        raw = {}
-    sess = None
-    for _uid, val in (raw or {}).items():
-        if isinstance(val, str) and len(val) > 60:
-            sess = val
-            break
-        if isinstance(val, dict):
-            for key in ("session", "session_string", "string", "value"):
-                if isinstance(val.get(key), str) and len(val[key]) > 60:
-                    sess = val[key]
-                    break
-        if sess:
-            break
-    if not sess:
-        return [int(c) for c in (await db.get_chats() or []) if int(c) < 0]
+        pass
     try:
-        from pyrogram import Client as _C
-        ub = _C("own_groups_scan", api_id=config.API_ID, api_hash=config.API_HASH,
-                session_string=sess, in_memory=True)
-        await ub.start()
-        ids = []
-        try:
-            async for d in ub.get_dialogs():
-                ch = d.chat
-                if ch.type in (enums.ChatType.GROUP, enums.ChatType.SUPERGROUP):
-                    ids.append(ch.id)
-        finally:
-            try:
-                await ub.stop()
-            except Exception:
-                pass
-        if ids:
-            return ids
-    except Exception as exc:
-        logger.info("owner: assistant dialog scan failed: %s", type(exc).__name__)
-    return [int(c) for c in (await db.get_chats() or []) if int(c) < 0]
+        return [int(c) for c in (await db.get_chats() or []) if int(c) < 0]
+    except Exception:
+        return []
 
 
 @app.on_callback_query(filters.regex(r"^own_groups$") & filters.user(config.OWNER_ID))

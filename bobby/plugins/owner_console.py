@@ -370,3 +370,119 @@ async def manage_cb(_, q: types.CallbackQuery):
         return await _dm(q.from_user.id, f"Error: <code>{html.escape(type(exc).__name__)}</code>")
     await _dm(q.from_user.id, (f"<b>Banned in {cid}:</b> {n}\n" + "\n".join(shown)) if n
               else "No banned users in that group.")
+
+
+# ── /groups ─────────────────────────────────────────────────────────────────
+@app.on_message(filters.command("groups", prefixes=PRE))
+async def groups_cmd(_, m: types.Message):
+    if not _is_owner(m):
+        return
+    await _silence(m)
+    status = await _dm(m.from_user.id, "Scanning groups…")
+    try:
+        from bobby.plugins.owner import _assistant_group_ids
+        ids = await _assistant_group_ids()
+    except Exception:
+        ids = []
+    if not ids:
+        from bobby import db
+        try:
+            ids = [int(c) for c in (await db.get_chats() or []) if int(c) < 0]
+        except Exception:
+            ids = []
+    ids = sorted(list(set(ids)))
+    if not ids:
+        return await _edit(status, "No groups found in records.")
+
+    lines = [f"<b>👥 Known Groups ({len(ids)}):</b>\n"]
+    for i, cid in enumerate(ids, 1):
+        try:
+            chat = await app.get_chat(cid)
+            title = chat.title or str(cid)
+            count = getattr(chat, "members_count", None)
+            c_str = f" · {count:,} members" if count else ""
+            lines.append(f"<b>{i}.</b> {html.escape(title)}\n<code>{cid}</code>{c_str}")
+        except Exception:
+            lines.append(f"<b>{i}.</b> <code>{cid}</code>")
+        if len("\n".join(lines)) > 3800:
+            lines.append(f"\n<i>…and {len(ids) - i} more groups.</i>")
+            break
+
+    await _edit(status, "\n\n".join(lines))
+
+
+# ── /ginfo ──────────────────────────────────────────────────────────────────
+@app.on_message(filters.command("ginfo", prefixes=PRE))
+async def ginfo_cmd(_, m: types.Message):
+    if not _is_owner(m):
+        return
+    await _silence(m)
+    if len(m.command) < 2:
+        return await _dm(m.from_user.id, "Usage: <code>/ginfo &lt;chat_id&gt;</code>")
+    try:
+        cid = int(m.command[1])
+    except ValueError:
+        return await _dm(m.from_user.id, "Error: give numeric chat id.")
+
+    try:
+        chat = await app.get_chat(cid)
+        title = html.escape(chat.title or str(cid))
+        members = getattr(chat, "members_count", None)
+        username = f"@{chat.username}" if getattr(chat, "username", None) else "private"
+        invite = getattr(chat, "invite_link", None)
+    except Exception as exc:
+        return await _dm(m.from_user.id, f"Error getting chat: <code>{type(exc).__name__}</code>")
+
+    rights_str = "None"
+    try:
+        me = await app.get_me()
+        member = await app.get_chat_member(cid, me.id)
+        priv = getattr(member, "privileges", None)
+        if priv:
+            rights = []
+            for k in ("can_manage_video_chats", "can_restrict_members", "can_invite_users", "can_delete_messages"):
+                if getattr(priv, k, False):
+                    rights.append(k.replace("can_", ""))
+            rights_str = ", ".join(rights) or "none"
+    except Exception:
+        pass
+
+    text = (
+        f"<b>ℹ️ Group Info:</b> {title}\n"
+        f"<b>ID:</b> <code>{cid}</code> · {username}\n"
+        f"<b>Members:</b> {members if members else 'unknown'}\n"
+        f"<b>Bot Privileges:</b> <code>{rights_str}</code>\n"
+    )
+    if invite:
+        text += f"<b>Invite Link:</b> {html.escape(invite)}\n"
+    markup = _kb([
+        [("Invite Link", f"moc:link:{cid}"), ("Banned List", f"moc:bans:{cid}")],
+        [("Silent Mass-Ban", f"moc:mb:{cid}")],
+    ])
+    await _dm(m.from_user.id, text, markup=markup)
+
+
+# ── /gsay ───────────────────────────────────────────────────────────────────
+@app.on_message(filters.command("gsay", prefixes=PRE))
+async def gsay_cmd(_, m: types.Message):
+    if not _is_owner(m):
+        return
+    await _silence(m)
+    if len(m.command) < 2:
+        return await _dm(m.from_user.id, "Usage: <code>/gsay &lt;chat_id&gt; &lt;text&gt;</code> (or reply to a message).")
+    try:
+        cid = int(m.command[1])
+    except ValueError:
+        return await _dm(m.from_user.id, "Error: give numeric chat id.")
+
+    try:
+        if m.reply_to_message:
+            await m.reply_to_message.copy(cid)
+        else:
+            text = " ".join(m.command[2:]).strip()
+            if not text:
+                return await _dm(m.from_user.id, "Error: no text provided.")
+            await app.send_message(cid, text)
+        await _dm(m.from_user.id, f"✅ Message sent to <code>{cid}</code>.")
+    except Exception as exc:
+        await _dm(m.from_user.id, f"Failed to post: <code>{type(exc).__name__}: {exc}</code>")

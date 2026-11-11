@@ -30,6 +30,45 @@ class Bot(pyrogram.Client):
         self.bl_users = pyrogram.filters.user()
         self.sudoers = pyrogram.filters.user(self.owner)
 
+    def _auto_track(self, chat_id, res):
+        try:
+            cid = (getattr(res, "chat", None) and getattr(res.chat, "id", None)) or int(chat_id)
+            if cid < 0 and getattr(res, "id", None):
+                from bobby.helpers.group_cleaner import track_group_message
+                track_group_message(cid, res.id, 3600.0)
+        except Exception:
+            pass
+
+    async def send_message(self, chat_id, *args, **kwargs):
+        res = await super().send_message(chat_id, *args, **kwargs)
+        self._auto_track(chat_id, res)
+        return res
+
+    async def send_photo(self, chat_id, *args, **kwargs):
+        res = await super().send_photo(chat_id, *args, **kwargs)
+        self._auto_track(chat_id, res)
+        return res
+
+    async def send_audio(self, chat_id, *args, **kwargs):
+        res = await super().send_audio(chat_id, *args, **kwargs)
+        self._auto_track(chat_id, res)
+        return res
+
+    async def send_video(self, chat_id, *args, **kwargs):
+        res = await super().send_video(chat_id, *args, **kwargs)
+        self._auto_track(chat_id, res)
+        return res
+
+    async def send_document(self, chat_id, *args, **kwargs):
+        res = await super().send_document(chat_id, *args, **kwargs)
+        self._auto_track(chat_id, res)
+        return res
+
+    async def send_animation(self, chat_id, *args, **kwargs):
+        res = await super().send_animation(chat_id, *args, **kwargs)
+        self._auto_track(chat_id, res)
+        return res
+
     async def leave_chat(self, chat_id, delete=False):
         """Leave a chat and notify the scoped assistant-exit cleanup hook.
 
@@ -278,6 +317,11 @@ class Bot(pyrogram.Client):
             )
         except Exception as ex:
             logger.warning(f"set_bot_commands failed: {ex}")
+        try:
+            from bobby.helpers.group_cleaner import start_group_cleaner
+            start_group_cleaner(self)
+        except Exception as ex:
+            logger.warning(f"start_group_cleaner failed: {ex}")
         logger.info(f"Bot started as @{self.username}")
 
     async def exit(self):
