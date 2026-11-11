@@ -52,8 +52,6 @@ async def play_hndlr(
         from bobby.helpers import _recs as recs
 
         recs.cancel(m.chat.id)
-        # Distinct phase: allow reaction to register visually before sending reply
-        await asyncio.sleep(0.7)
 
     # Phase 2: Playback preparing is ONLY shown for replay, loop, or autoplay
     is_autoplay = getattr(m, "autoplay", False)

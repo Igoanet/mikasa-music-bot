@@ -51,6 +51,20 @@ def _get_db() -> sqlite3.Connection:
     return conn
 
 
+def _db_insert(cid: int, mid: int, due_at: float):
+    try:
+        conn = _get_db()
+        try:
+            conn.execute(
+                "INSERT OR REPLACE INTO pending_group_deletes (chat_id, message_id, delete_at) VALUES (?, ?, ?)",
+                (cid, mid, due_at),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as ex:
+        logger.debug("group_cleaner insert error: %s", ex)
+
 def track_group_message(chat_id: int | str, message_id: int | str, delay_seconds: float = DEFAULT_DELAY) -> None:
     """Track a message sent by the bot in a group for auto-deletion after delay_seconds (default 1 hour).
     Only group chats (chat_id < 0) are tracked; private DMs are strictly ignored."""
@@ -61,15 +75,11 @@ def track_group_message(chat_id: int | str, message_id: int | str, delay_seconds
             return  # strictly ignore private DMs
 
         due_at = time.time() + float(delay_seconds)
-        conn = _get_db()
         try:
-            conn.execute(
-                "INSERT OR REPLACE INTO pending_group_deletes (chat_id, message_id, delete_at) VALUES (?, ?, ?)",
-                (cid, mid, due_at),
-            )
-            conn.commit()
-        finally:
-            conn.close()
+            loop = asyncio.get_running_loop()
+            loop.run_in_executor(None, _db_insert, cid, mid, due_at)
+        except RuntimeError:
+            _db_insert(cid, mid, due_at)
     except Exception as ex:
         logger.debug("group_cleaner track failed: %s", ex)
 

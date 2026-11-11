@@ -102,6 +102,38 @@ class TgCall(PyTgCalls):
         except (ConnectionNotFound, exceptions.NotInCallError):
             await self.stop(chat_id)
 
+    async def mute(self, chat_id: int) -> bool:
+        client = await db.get_assistant(chat_id)
+        await db.playing(chat_id, paused=True)
+        try:
+            import inspect
+            res = client.mute(chat_id)
+            if inspect.isawaitable(res):
+                await res
+        except Exception:
+            pass
+        try:
+            return await client.pause(chat_id)
+        except Exception:
+            pass
+        return True
+
+    async def unmute(self, chat_id: int) -> bool:
+        client = await db.get_assistant(chat_id)
+        await db.playing(chat_id, paused=False)
+        try:
+            import inspect
+            res = client.unmute(chat_id)
+            if inspect.isawaitable(res):
+                await res
+        except Exception:
+            pass
+        try:
+            return await client.resume(chat_id)
+        except Exception:
+            pass
+        return True
+
     async def is_call_active(self, chat_id: int) -> bool:
         """Check whether there is an active voice call in this chat."""
         if chat_id in self._joining:

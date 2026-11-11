@@ -35,6 +35,14 @@ async def _safe_answer(query: types.CallbackQuery, *args, **kwargs):
         return None
 
 
+async def _notify_chat(chat_id: int, text: str):
+    """Send notification to chat without blocking."""
+    try:
+        await app.send_message(chat_id, text, parse_mode=enums.ParseMode.HTML)
+    except Exception:
+        pass
+
+
 @app.on_callback_query(filters.regex(r"^cancel_dl$") & ~app.bl_users)
 @lang.language()
 async def cancel_dl(_, query: types.CallbackQuery):
@@ -87,88 +95,129 @@ async def _controls(_, query: types.CallbackQuery):
     if not call_active:
         return await _safe_answer(query, query.lang["not_playing"], show_alert=True)
 
-    if action == "mute":
-        try:
-            import bobby
-            calls = getattr(bobby, "anon", None) or getattr(bobby, "calls", None)
-            if calls is None:
-                from bobby.core.calls import calls as _c
-                calls = _c
-            state = _MUTE_STATE.get(chat_id, False)
-            if state:
-                await calls.unmute(chat_id)
-                _MUTE_STATE[chat_id] = False
-                note = f"🔊 <b>{user} has unmuted the music.</b>"
-            else:
-                await calls.mute(chat_id)
-                _MUTE_STATE[chat_id] = True
-                note = f"🔇 <b>{user} has muted the music.</b>"
-            await _notify_chat(chat_id, note)
-        except Exception as ex:
-            return await _safe_answer(query, f"Couldn't change mute: {type(ex).__name__}", show_alert=True)
-        try:
-            timer_text = (
-                query.message.reply_markup.inline_keyboard[0][0].text
-                if query.message.reply_markup and query.message.reply_markup.inline_keyboard
-                else None
-            )
-            await query.edit_message_reply_markup(
-                reply_markup=buttons.controls(
-                    chat_id,
-                    timer=timer_text,
-                    autoplay=await db.get_autoplay(chat_id),
-                    muted=_MUTE_STATE.get(chat_id, False),
-                    is_admin=True,
-                    autoplay_all=await db.get_autoplay_all(chat_id),
-                    _lang=query.lang,
-                )
-            )
-        except Exception:
-            pass
-        return await _safe_answer(query, note, show_alert=True)
-
     if action == "status":
         return await _safe_answer(query)
 
-    # Resolve pause / resume state dynamically so button tap always does what it displays
-    if action in ("pause", "resume"):
+    # 1. MUTE / UNMUTE (or PAUSE / RESUME)
+    if action in ("mute", "pause", "resume"):
+        await _safe_answer(query)
         _is_playing = await db.playing(chat_id)
-        if action == "pause" and not _is_playing:
-            action = "resume"
-        elif action == "resume" and _is_playing:
-            action = "pause"
+        if action == "mute":
+            should_pause = _is_playing
+        elif action == "pause":
+            should_pause = True
+        else:
+            should_pause = False
 
-    reply = None
-    if action == "pause":
+        if should_pause:
+            await anon.pause(chat_id)
+            _MUTE_STATE[chat_id] = True
+            reply = f"🔇 <b>{user} has muted the music.</b>"
+        else:
+            await anon.resume(chat_id)
+            _MUTE_STATE[chat_id] = False
+            reply = f"🔊 <b>{user} has unmuted the music.</b>"
+
+        asyncio.create_task(_notify_chat(chat_id, reply))
+
+        if qaction:
+            try:
+                await query.edit_message_reply_markup(
+                    reply_markup=buttons.queue_markup(chat_id, query.lang["paused"] if should_pause else query.lang["playing"], not should_pause)
+                )
+            except Exception:
+                pass
+            return
+
+        try:
+            keyboard = buttons.controls(
+                chat_id,
+                status=_panel_row1(chat_id),
+                paused=should_pause,
+                autoplay=await db.get_autoplay(chat_id),
+                _lang=query.lang,
+                is_admin=True,
+                autoplay_all=await db.get_autoplay_all(chat_id),
+            )
+            await query.edit_message_reply_markup(reply_markup=keyboard)
+        except Exception:
+            pass
+        return
+
+    # 2. REPLAY
+    elif action == "replay":
+        media = queue.get_current(chat_id)
+        if not media:
+            return await _safe_answer(query, query.lang["not_playing"], show_alert=True)
+        await _safe_answer(query)
+        media.user = user
+        reply = f"🔁 <b>{user} has requested replay.</b>"
+        asyncio.create_task(_notify_chat(chat_id, reply))
+        try:
+            await query.message.delete()
+        except Exception:
+            pass
+        await anon.replay(chat_id)
+        return
+
+    # 3. SEEK BACK (-15s)
+    elif action == "seekb":
+        media = queue.get_current(chat_id)
+        if not media:
+            return await _safe_answer(query, query.lang["not_playing"], show_alert=True)
+        await _safe_answer(query, "-15s", show_alert=False)
+        reply = f"⏪ <b>{user} has seeked 15s back.</b>"
+        asyncio.create_task(_notify_chat(chat_id, reply))
+        start_from = max(1, getattr(media, "time", 0) - 15)
+        media.time = start_from
+        await anon.play_media(chat_id, query.message, media, start_from)
+        return
+
+    # 4. SEEK FORWARD (+15s)
+    elif action == "seekf":
+        media = queue.get_current(chat_id)
+        if not media:
+            return await _safe_answer(query, query.lang["not_playing"], show_alert=True)
         if not await db.playing(chat_id):
             return await _safe_answer(query, query.lang["play_already_paused"], show_alert=True)
-        await anon.pause(chat_id)
-        if qaction:
-            await _safe_answer(query)
-            return await query.edit_message_reply_markup(
-                reply_markup=buttons.queue_markup(chat_id, query.lang["paused"], False)
-            )
-        reply = f"⏸️ <b>{user} has paused the stream.</b>"
-        await _notify_chat(chat_id, reply)
+        dur = getattr(media, "duration_sec", 0) or 0
+        if not dur:
+            return await _safe_answer(query, query.lang["play_seek_no_dur"], show_alert=True)
+        await _safe_answer(query, "+15s", show_alert=False)
+        reply = f"⏩ <b>{user} has seeked 15s forward.</b>"
+        asyncio.create_task(_notify_chat(chat_id, reply))
+        start_from = getattr(media, "time", 0) + 15
+        if start_from + 10 > dur:
+            start_from = max(1, dur - 5)
+        media.time = start_from
+        await anon.play_media(chat_id, query.message, media, start_from)
+        return
 
-    elif action == "resume":
-        if await db.playing(chat_id):
-            return await _safe_answer(query, query.lang["play_not_paused"], show_alert=True)
-        await anon.resume(chat_id)
-        if qaction:
-            await _safe_answer(query)
-            return await query.edit_message_reply_markup(
-                reply_markup=buttons.queue_markup(chat_id, query.lang["playing"], True)
-            )
-        reply = f"▶️ <b>{user} has resumed the stream.</b>"
-        await _notify_chat(chat_id, reply)
-
+    # 5. SKIP
     elif action == "skip":
         await _safe_answer(query, query.lang.get("skipped", "Skipped."))
-        await anon.play_next(chat_id)
         reply = f"⏭️ <b>{user} has skipped the song.</b>"
-        await _notify_chat(chat_id, reply)
+        asyncio.create_task(_notify_chat(chat_id, reply))
+        try:
+            await query.message.delete()
+        except Exception:
+            pass
+        await anon.play_next(chat_id)
+        return
 
+    # 6. STOP
+    elif action == "stop":
+        await _safe_answer(query)
+        reply = f"⏹️ <b>{user} has stopped the playback.</b>"
+        asyncio.create_task(_notify_chat(chat_id, reply))
+        try:
+            await query.message.delete()
+        except Exception:
+            pass
+        await anon.stop(chat_id)
+        return
+
+    # 7. FORCE PLAY FROM QUEUE
     elif action == "force":
         pos, media = queue.check_item(chat_id, args[3])
         if not media or pos == -1:
@@ -186,83 +235,10 @@ async def _controls(_, query: types.CallbackQuery):
         except Exception:
             pass
 
-        from bobby.helpers.playback_loader import TEXT_PLAYBACK_PREPARING, PlaybackLoader
-        msg = await app.send_message(chat_id=chat_id, text=TEXT_PLAYBACK_PREPARING, parse_mode=enums.ParseMode.HTML)
-        loader = PlaybackLoader(msg, is_playback=True).start()
         if not media.file_path:
             media.file_path = await yt.download(media.id, video=media.video)
-        media.message_id = msg.id
         await _safe_answer(query)
-        return await anon.play_media(chat_id, msg, media)
-
-    elif action == "replay":
-        media = queue.get_current(chat_id)
-        if not media:
-            return await _safe_answer(query, query.lang["not_playing"], show_alert=True)
-        media.user = user
-        await anon.replay(chat_id)
-        reply = f"🔁 <b>{user} has replayed the song.</b>"
-        await _notify_chat(chat_id, reply)
-
-    elif action == "seekb":
-        media = queue.get_current(chat_id)
-        if not media:
-            return await _safe_answer(query, query.lang["not_playing"], show_alert=True)
-        start_from = max(1, getattr(media, "time", 0) - 15)
-        await anon.play_media(chat_id, query.message, media, start_from)
-        media.time = start_from
-        reply = f"⏪ <b>{user} has seeked 15s back.</b>"
-        await _notify_chat(chat_id, reply)
-
-    elif action == "seekf":
-        media = queue.get_current(chat_id)
-        if not media:
-            return await _safe_answer(query, query.lang["not_playing"], show_alert=True)
-        if not await db.playing(chat_id):
-            return await _safe_answer(query, query.lang["play_already_paused"], show_alert=True)
-        dur = getattr(media, "duration_sec", 0) or 0
-        if not dur:
-            return await _safe_answer(query, query.lang["play_seek_no_dur"], show_alert=True)
-        start_from = getattr(media, "time", 0) + 15
-        if start_from + 10 > dur:
-            start_from = max(1, dur - 5)
-        await anon.play_media(chat_id, query.message, media, start_from)
-        media.time = start_from
-        reply = f"⏩ <b>{user} has seeked 15s forward.</b>"
-        await _notify_chat(chat_id, reply)
-
-    elif action == "stop":
-        await anon.stop(chat_id)
-        reply = f"⏹️ <b>{user} has stopped the playback.</b>"
-        await _notify_chat(chat_id, reply)
-
-    # Acknowledge button tap
-    await _safe_answer(query)
-
-    try:
-        if action in ["skip", "replay", "stop"]:
-            try:
-                await query.message.delete()
-            except Exception:
-                pass
-        else:
-            keyboard = buttons.controls(
-                chat_id,
-                status=_panel_row1(chat_id),
-                paused=(action == "pause"),
-                autoplay=await db.get_autoplay(chat_id),
-                _lang=query.lang,
-                is_admin=True,
-                autoplay_all=await db.get_autoplay_all(chat_id),
-            )
-            try:
-                await query.edit_message_reply_markup(reply_markup=keyboard)
-            except Exception:
-                pass
-            if reply:
-                await _safe_answer(query, reply)
-    except Exception:
-        pass
+        return await anon.play_media(chat_id, query.message, media)
 
 
 @app.on_callback_query(filters.regex(r"^start_menu$") & ~app.bl_users)
