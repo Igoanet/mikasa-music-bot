@@ -12,6 +12,7 @@ from ntgcalls import (ConnectionNotFound, TelegramServerError,
 from pyrogram.errors import (ChatAdminRequired, ChatSendMediaForbidden,
                              FloodWait,
                              ChatSendPhotosForbidden, MessageIdInvalid)
+from pyrogram import enums
 from pyrogram.types import InputMediaPhoto, Message
 from pytgcalls import PyTgCalls, exceptions, types
 from pytgcalls.pytgcalls_session import PyTgCallsSession

@@ -62,8 +62,12 @@ async def play_hndlr(
 
     if is_autoplay:
         from bobby.helpers.playback_loader import TEXT_PLAYBACK_PREPARING, PlaybackLoader
+        eff = 5104841245755180586 if m.chat.type == enums.ChatType.PRIVATE else None
         try:
-            sent = await m.reply_text(TEXT_PLAYBACK_PREPARING, effect_id=5104841245755180586, parse_mode=enums.ParseMode.HTML)
+            if eff:
+                sent = await m.reply_text(TEXT_PLAYBACK_PREPARING, effect_id=eff, parse_mode=enums.ParseMode.HTML)
+            else:
+                sent = await m.reply_text(TEXT_PLAYBACK_PREPARING, parse_mode=enums.ParseMode.HTML)
         except Exception:
             sent = await m.reply_text(TEXT_PLAYBACK_PREPARING, parse_mode=enums.ParseMode.HTML)
         loader = PlaybackLoader(sent, is_playback=True).start()

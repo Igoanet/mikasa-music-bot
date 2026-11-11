@@ -98,11 +98,12 @@ async def _controls(_, query: types.CallbackQuery):
             if state:
                 await calls.unmute(chat_id)
                 _MUTE_STATE[chat_id] = False
-                note = "🔊 Unmuted."
+                note = f"🔊 <b>{user} has unmuted the music.</b>"
             else:
                 await calls.mute(chat_id)
                 _MUTE_STATE[chat_id] = True
-                note = "🔇 Muted."
+                note = f"🔇 <b>{user} has muted the music.</b>"
+            await _notify_chat(chat_id, note)
         except Exception as ex:
             return await _safe_answer(query, f"Couldn't change mute: {type(ex).__name__}", show_alert=True)
         try:
@@ -147,7 +148,8 @@ async def _controls(_, query: types.CallbackQuery):
             return await query.edit_message_reply_markup(
                 reply_markup=buttons.queue_markup(chat_id, query.lang["paused"], False)
             )
-        reply = query.lang["play_paused"].format(user)
+        reply = f"⏸️ <b>{user} has paused the stream.</b>"
+        await _notify_chat(chat_id, reply)
 
     elif action == "resume":
         if await db.playing(chat_id):
@@ -158,12 +160,14 @@ async def _controls(_, query: types.CallbackQuery):
             return await query.edit_message_reply_markup(
                 reply_markup=buttons.queue_markup(chat_id, query.lang["playing"], True)
             )
-        reply = query.lang["play_resumed"].format(user)
+        reply = f"▶️ <b>{user} has resumed the stream.</b>"
+        await _notify_chat(chat_id, reply)
 
     elif action == "skip":
         await _safe_answer(query, query.lang.get("skipped", "Skipped."))
         await anon.play_next(chat_id)
-        reply = query.lang["play_skipped"].format(user)
+        reply = f"⏭️ <b>{user} has skipped the song.</b>"
+        await _notify_chat(chat_id, reply)
 
     elif action == "force":
         pos, media = queue.check_item(chat_id, args[3])
@@ -197,7 +201,8 @@ async def _controls(_, query: types.CallbackQuery):
             return await _safe_answer(query, query.lang["not_playing"], show_alert=True)
         media.user = user
         await anon.replay(chat_id)
-        reply = query.lang["play_replayed"].format(user)
+        reply = f"🔁 <b>{user} has replayed the song.</b>"
+        await _notify_chat(chat_id, reply)
 
     elif action == "seekb":
         media = queue.get_current(chat_id)
@@ -206,9 +211,8 @@ async def _controls(_, query: types.CallbackQuery):
         start_from = max(1, getattr(media, "time", 0) - 15)
         await anon.play_media(chat_id, query.message, media, start_from)
         media.time = start_from
-        reply = query.lang["play_seeked"].format(
-            query.lang.get("backward", "⏪"), start_from, user
-        )
+        reply = f"⏪ <b>{user} has seeked 15s back.</b>"
+        await _notify_chat(chat_id, reply)
 
     elif action == "seekf":
         media = queue.get_current(chat_id)
@@ -224,21 +228,19 @@ async def _controls(_, query: types.CallbackQuery):
             start_from = max(1, dur - 5)
         await anon.play_media(chat_id, query.message, media, start_from)
         media.time = start_from
-        reply = query.lang["play_seeked"].format(
-            query.lang.get("forward", "⏩"), start_from, user
-        )
+        reply = f"⏩ <b>{user} has seeked 15s forward.</b>"
+        await _notify_chat(chat_id, reply)
 
     elif action == "stop":
         await anon.stop(chat_id)
-        reply = query.lang["play_stopped"].format(user)
+        reply = f"⏹️ <b>{user} has stopped the playback.</b>"
+        await _notify_chat(chat_id, reply)
 
     # Acknowledge button tap
     await _safe_answer(query)
 
     try:
         if action in ["skip", "replay", "stop"]:
-            if reply:
-                await query.message.reply_text(reply)
             try:
                 await query.message.delete()
             except Exception:
