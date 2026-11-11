@@ -2,8 +2,6 @@
   <img src="assets/banner.svg" alt="mikasa-music-bot" width="100%">
 </div>
 
-
-
 <div align="center">
 
 [![Stars](https://img.shields.io/github/stars/Igoanet/mikasa-music-bot?style=for-the-badge&logo=github&color=f5c542&labelColor=1a1b27)](https://github.com/Igoanet/mikasa-music-bot/stargazers)
@@ -15,14 +13,14 @@
 [![Telegram](https://img.shields.io/badge/Telegram-Bot-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://core.telegram.org/bots/api)
 [![PyTgCalls](https://img.shields.io/badge/PyTgCalls-2.x-ff6b6b?style=for-the-badge)](https://github.com/pytgcalls/pytgcalls)
 [![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
-[![Last Commit](https://img.shields.io/github/last-commit/Igoanet/mikasa-music-bot?style=for-the-badge&color=orange&labelColor=1a1b27)](https://github.com/Igoanet/mikasa-music-bot/commits/main)
-[![Code Size](https://img.shields.io/github/languages/code-size/Igoanet/mikasa-music-bot?style=for-the-badge&color=purple&labelColor=1a1b27)](https://github.com/Igoanet/mikasa-music-bot)
+[![Release](https://img.shields.io/github/v/release/Igoanet/mikasa-music-bot?style=for-the-badge&color=orange&labelColor=1a1b27)](https://github.com/Igoanet/mikasa-music-bot/releases)
+[![Last Commit](https://img.shields.io/github/last-commit/Igoanet/mikasa-music-bot?style=for-the-badge&color=pink&labelColor=1a1b27)](https://github.com/Igoanet/mikasa-music-bot/commits/main)
 
 <br>
 
-**🎵 Smooth, jitter‑free music for Telegram voice chats.**
+**🎵 Smooth, jitter-free music for Telegram voice chats.**
 
-*Local‑first playback · live control panel · a skip that always works*
+*Local-first playback · live disco control panel · a skip that always works · full owner command centre*
 
 <br>
 </div>
@@ -35,7 +33,7 @@
 
 <img src="assets/start-preview.jpg" alt="Mikasa /start" width="620">
 
-<sub>Now‑playing panel: a live progress bar, four clean rows, colours that rotate without ever clashing</sub>
+<sub>Now-playing panel: a live progress bar, four clean rows, premium animated emoji, colours that rotate without ever clashing</sub>
 
 </div>
 
@@ -45,30 +43,80 @@
 
 Most music bots stutter, skip songs by themselves, and drift out of sync. **Mikasa was built to fix exactly that.**
 
-| | |
+| Feature | Detail |
 |---|---|
-| 🎧 **Local‑first playback** | The track is fetched through the API and played **from disk**, so a network blip can never starve the voice chat. |
-| 🎛️ **Live control panel** | Progress bar, seek ±15s, replay, pause/resume, next and autoplay across four clean rows. |
-| 🌈 **Disco buttons** | Panel colours reshuffle every 2s — randomised so **no two touching buttons ever match**. |
-| ⏭️ **A skip that works** | A stale‑claim guard means `/skip` always advances, even after a failed play. |
-| 🎚️ **Smarter search** | Prefers the original studio upload — no lofi rips, no fan edits, no promo pre‑rolls. |
-| 🌏 **Search that recovers** | If a title returns nothing, the query is broadened instead of reporting *"not found"*. |
-| 😴 **Auto‑leave** | A pause is honoured for 5 minutes; the bot leaves after 30 minutes idle. |
-| 🤖 **Assistant guard** | Keeps the assistant a member of every group it should serve — and repairs a kick by itself. |
+| 🎧 **Local-first playback** | Track is fetched and played **from disk**, so a network blip never starves the voice chat |
+| 🎛️ **Live disco control panel** | Progress bar, seek ±15 s, replay, pause/resume, next, loop and autoplay across four clean rows |
+| 🌈 **Disco buttons** | Panel colours reshuffle every 5 s — randomised so **no two touching buttons ever match** |
+| ⭐️ **A skip that works** | A stale-claim guard means `/skip` always advances, even after a failed play |
+| 🎚️ **Smarter search** | Prefers the original studio upload — no lofi rips, no fan edits, no promo pre-rolls |
+| 🌐 **Search that recovers** | If a title returns nothing, the query is broadened instead of reporting *"not found"* |
+| 😴 **Auto-leave** | Pause honoured for 5 min; bot leaves after 30 min idle |
+| 🤖 **Assistant guard** | Keeps the assistant a member of every group it should serve — repairs a kick by itself |
+| 👑 **Full Owner Panel** | One `/owner` command opens a private control hub: assistants, stats, group console, sudoers, blacklist, streams, storage, broadcast, restart and more |
+| 📢 **Smart broadcast** | Broadcast with optional silent **pin** in every group where the bot has pin permission |
+| 🗺️ **Multi-language** | 13 built-in locales — ar, de, en, es, fr, hi, ja, my, pa, pt, ru, tr, zh |
 
 ---
 
-## 🎵 Commands
+## 🎵 Playback Commands
 
 | Command | What it does |
 |---|---|
-| `/play <song or link>` | Search and play — or queue if something is already going |
-| `/pause` · `/resume` | One toggle: **Pause** while playing, **Play** while paused |
-| `/skip` | Advance to the next track in the queue |
-| `/seek <sec>` · `/seekback [sec]` | Jump forward, or back 15s by default |
-| `/queue` | Now playing + everything lined up (text only, no buttons) |
-| `/autoplay on\|off` | Let the bot keep the music going when the queue runs dry |
+| `/play <song or link>` | Search and play — or queue if something is already running |
+| `/vplay <song or link>` | Same as `/play`, streams as video |
+| `/song <query>` | Download and send the song as an audio file |
+| `/pause` · `/resume` | Toggle pause/resume |
+| `/skip` | Advance to the next track |
+| `/seek <sec>` | Jump forward by seconds |
+| `/seekback [sec]` | Jump back (default 15 s) |
+| `/queue` | Now-playing + everything lined up |
+| `/loop` | Loop the current track |
+| `/shuffle` | Shuffle the queue |
+| `/speed <0.5–2.0>` | Change playback speed |
+| `/autoplay on\|off` | Keep music going when queue runs dry |
 | `/stop` | Stop and leave the voice chat |
+| `/active` | List all chats with active streams |
+
+---
+
+## 👑 Owner Panel
+
+One tap to `/owner` in your DM — every section answers in-place.
+
+| Section | What it does |
+|---|---|
+| 👥 **Assistants** | View and manage all userbot assistant sessions |
+| 📊 **Stats** | Users, groups, assistants, sudoers, blacklist counts — live |
+| 🛡 **Admin Groups** | Full scan: every group where the bot is admin, with per-group permission breakdown |
+| 👑 **Sudoers** | List and manage sudo-level users |
+| 🛠 **Group Console** | Browse all admin groups (paginated), tap any group → Rights / Invite Link / Banned List / Mass-ban / Add Bot / Remove |
+| 📄 **Log channel** | Show and test the bound log channel |
+| 🚫 **Blacklist** | Blocked groups and users counts |
+| 📡 **Streams** | Live view of all active voice chat streams |
+| 🧹 **Storage** | Downloads, cache and disk usage + one-tap clean |
+| 🔒 **Play mode** | Per-group `/playmode admins\|everyone` reference |
+| 📢 **Broadcast** | Reply to any message → choose 📌 With Pin or 📢 No Pin |
+| 📜 **Commands** | Full command reference in DM |
+| 🔄 **Restart** | Confirm and restart (systemd brings it straight back) |
+| ✖ **Close** | Delete the panel |
+
+### Owner-only silent commands
+
+| Command | What it does |
+|---|---|
+| `/massban <chat_id>` | Ban every non-admin member silently — nothing posted to the group |
+| `/manage <chat_id>` | Invite link + banned list panel for any group |
+| `/chatlink <chat_id>` | Export or generate an invite link (bot → assistant fallback) |
+| `/bans <chat_id>` | List banned users |
+| `/unban <chat_id> <user_id>` | Lift a ban |
+| `/groups` | List all known groups with member counts |
+| `/ginfo <chat_id>` | Full group info + bot privilege breakdown |
+| `/gsay <chat_id> <text>` | Send a message to any group from DM |
+| `/broadcast` | Reply to a message to broadcast it (with or without pin) |
+| `/addsudo` · `/delsudo` | Manage sudo users |
+| `/blacklist` · `/unblacklist` | Block / unblock a chat or user |
+| `/setlog` · `/unsetlog` | Bind or unbind the log channel |
 
 ---
 
@@ -76,98 +124,97 @@ Most music bots stutter, skip songs by themselves, and drift out of sync. **Mika
 
 ```mermaid
 graph LR
-    Q[/play/] --> S[search]
-    S --> P[play_source]
-    P --> T1[local file]
-    T1 -->|miss| T2[API stream]
-    T2 -->|miss| T3[catalogue CDN]
-    T3 -->|miss| T4[relay]
-    T4 -->|miss| T5[yt-dlp]
-    T5 -->|miss| T6[download]
-    T6 --> VC[PyTgCalls to voice chat]
+    Q["/play"] --> S[search]
+    S --> Y[Yuki API primary]
+    Y -->|hit| D[download to disk]
+    Y -->|miss| B[broaden query]
+    B --> Y2[Yuki API retry]
+    Y2 -->|hit| D
+    Y2 -->|miss| F["Not found"]
+    D --> P[PyTgCalls stream]
+    P --> C[control panel]
 ```
-
-Every tier falls through to the next, so one dead source costs a song nothing.
-
-**[→ Read the full architecture](ARCHITECTURE.md)** — the state machine, the skip guard, the synced colour clock and the measured `pipe fill` telemetry that drove the local‑first design.
 
 ---
 
-## 🚀 Quick start
+## ⚙️ Self-host Setup
+
+### Requirements
+
+- Python **3.11+**
+- `ffmpeg` in PATH
+- Telegram **API ID** and **API Hash** — [my.telegram.org](https://my.telegram.org)
+- A bot token from [@BotFather](https://t.me/BotFather)
+- A userbot assistant session string (Pyrogram)
+
+### Quick start
 
 ```bash
-git clone https://github.com/Igoanet/mikasa-music-bot
+git clone https://github.com/Igoanet/mikasa-music-bot.git
 cd mikasa-music-bot
-
-python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-
-cp .env.example .env      # then fill it in
-python3 -m bobby
+cp config.env.example config.env   # fill in your values
+python -m bobby
 ```
 
-**Requires `ffmpeg`** on the host.
+### Environment variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `BOT_TOKEN` | ✅ | Your bot token from BotFather |
+| `API_ID` | ✅ | Telegram API ID |
+| `API_HASH` | ✅ | Telegram API Hash |
+| `OWNER_ID` | ✅ | Your Telegram numeric user ID |
+| `SESSION_STRING` | ✅ | Pyrogram session string for the assistant |
+| `LOGGER_ID` | ☑️ | Channel or group ID for log events |
+| `SUDO_USERS` | ☑️ | Space-separated user IDs with sudo rights |
+| `DATABASE_URL` | ☑️ | Postgres URL (uses local JSON if unset) |
 
 ---
 
-## ⚙️ Configuration
-
-| Variable | Purpose |
-|---|---|
-| `API_ID` · `API_HASH` | Telegram app credentials |
-| `BOT_TOKEN` | Token from [@BotFather](https://t.me/BotFather) |
-| `OWNER_ID` | Your numeric Telegram id |
-| `SESSION` | Assistant account string session |
-| `YUKI_API_KEY` | Music API key for the instant‑stream tier |
-| `VC_LOCAL_FIRST` | `true` plays from disk first — recommended |
-| `VC_PAUSE_LIMIT` | Seconds a pause stays valid (default `300`) |
-| `DISCO_EVERY` | Panel colour interval in seconds (default `2`) |
-
----
-
-## 📊 Diagnostics
-
-The bot reports its own health, so problems are visible instead of guessed:
+## 🗂️ Project Layout
 
 ```
-pulse[-100…] rqc7f6rBTAg: source underruns 0, consumer stalls 0,
-   pipe fill avg 58 KB min 40992 B, send gaps 0, socket rx drops 0
+mikasa-music-bot/
+├── bobby/
+│   ├── core/           # bot client, database, calls engine, VC monitor
+│   ├── helpers/        # inline buttons, poster generator, emoji IDs, lang loader
+│   ├── locales/        # 13 locale JSON files
+│   └── plugins/        # one file per feature
+│       ├── play.py     # /play /vplay /song
+│       ├── controls/   # pause resume skip seek loop shuffle speed stop
+│       ├── owner.py    # /owner panel + Admin Groups scan
+│       ├── ownerextra.py     # Group Console full UI
+│       ├── owner_console.py  # /massban /manage /chatlink /bans /unban /groups
+│       ├── broadcast.py      # /broadcast with pin/no-pin
+│       ├── sudoers.py        # /addsudo /delsudo
+│       ├── blacklist.py      # /blacklist /unblacklist
+│       └── ...
+├── assets/
+│   ├── banner.svg
+│   └── start-preview.jpg
+├── requirements.txt
+└── README.md
 ```
 
-That line is what proved the stutter was a **starved pipe** (`min 0 B`) and drove the local‑first fix — rather than assuming.
+---
+
+## 🛡️ Security
+
+See [SECURITY.md](SECURITY.md) for the responsible-disclosure policy.
 
 ---
 
-## 🤝 Contributing
+## 📝 License
 
-See **[CONTRIBUTING.md](CONTRIBUTING.md)** — every audio source is a *tier* that returns `None` on failure, and every background job is registered in `__main__.py`.
-
----
-
-## 🔐 Security
-
-`.env`, `*.session`, `cookies.txt`, `downloads/` and all media are excluded by `.gitignore`.
-**A `.session` file grants full account access.**
-
-See **[SECURITY.md](SECURITY.md)**.
+MIT © [Igoanet](https://github.com/Igoanet) — see [LICENSE](LICENSE).
 
 ---
-
-## 📜 License
-
-MIT — see [LICENSE](LICENSE).
 
 <div align="center">
-<br>
 
-**If this bot sounds good in your group, a ⭐ helps others find it.**
+Made with ⚔️ by **Igoanet**
 
-<a href="https://github.com/Igoanet/mikasa-music-bot/stargazers">
-  <img src="https://img.shields.io/badge/⭐_Star_this_repo-f5c542?style=for-the-badge&labelColor=1a1b27" alt="Star">
-</a>
-
-<br><br>
-
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0b1120,100:1e2f63&height=120&section=footer" width="100%">
+*Bot: [@MikasaMusic_Bot](https://t.me/MikasaMusic_Bot)*
 
 </div>

@@ -36,3 +36,9 @@ models/
 *.onnx
 *.pt
 *.tflite
+
+# Runtime log & error files — never commit these
+log.txt
+unknown_errors.txt
+errors.txt
+*.log
