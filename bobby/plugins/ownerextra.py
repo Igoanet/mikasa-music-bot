@@ -9,7 +9,8 @@ import os
 import shutil
 import time
 
-from pyrogram import enums, filters, types
+import asyncio
+from pyrogram import enums, errors, filters, types
 
 from bobby import app, config, db, logger
 
@@ -327,7 +328,7 @@ def _gc_list_kb(chat_ids):
     if row:
         rows.append(row)
     if not rows:
-        rows = [[_ikb("No groups found", "%s:list" % _GCN)]]
+        rows = [[_ikb("No admin groups found", "%s:list" % _GCN)]]
     rows.append([_ikb("« Back", "own_back", enums.ButtonStyle.PRIMARY)])
     return _ikm(rows)
 
@@ -349,52 +350,62 @@ def _gc_group_kb(cid):
 
 
 async def _gc_group_ids():
-    """Every group the assistant and bot know, cached titles included."""
-    from bobby import userbot
+    """Every group where the bot is currently an administrator."""
+    candidate_ids = set()
+    try:
+        candidate_ids.update([int(c) for c in (await db.get_chats() or []) if int(c) < 0])
+    except Exception:
+        pass
     try:
         import bobby.plugins.owner as _ow
-        ids = await _ow._assistant_group_ids()
+        candidate_ids.update(await _ow._assistant_group_ids())
     except Exception:
-        ids = []
-    if not ids:
-        try:
-            ids = [int(c) for c in (await db.get_chats() or []) if int(c) < 0]
-        except Exception:
-            ids = []
+        pass
 
-    for cid in ids:
-        if cid in _chat_title_cache and not str(_chat_title_cache[cid]).startswith("-100"):
-            continue
-        title = None
+    async def _check_admin(cid: int):
         try:
-            chat = await app.get_chat(cid)
-            title = chat.title
+            m = await app.get_chat_member(cid, "me")
+            if m.status in (enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER):
+                if cid not in _chat_title_cache or str(_chat_title_cache[cid]).startswith("-100"):
+                    try:
+                        chat = await app.get_chat(cid)
+                        _chat_title_cache[cid] = chat.title or str(cid)
+                    except Exception:
+                        _chat_title_cache[cid] = str(cid)
+                return cid
+        except errors.FloodWait as fw:
+            await asyncio.sleep(min(fw.value, 5))
+            try:
+                m = await app.get_chat_member(cid, "me")
+                if m.status in (enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER):
+                    return cid
+            except Exception:
+                pass
         except Exception:
             pass
-        if not title and getattr(userbot, "clients", None):
-            for ub in userbot.clients:
-                try:
-                    chat = await ub.get_chat(cid)
-                    title = chat.title
-                    break
-                except Exception:
-                    pass
-        _chat_title_cache[cid] = title or str(cid)
-    return sorted(set(ids), key=lambda c: _chat_title_cache.get(c, str(c)).lower())
+        return None
+
+    if candidate_ids:
+        results = await asyncio.gather(*[_check_admin(cid) for cid in candidate_ids])
+        admin_ids = [cid for cid in results if cid is not None]
+    else:
+        admin_ids = []
+
+    return sorted(admin_ids, key=lambda c: _chat_title_cache.get(c, str(c)).lower())
 
 
 @app.on_callback_query(filters.regex(r"^ogc:list$") & filters.user(config.OWNER_ID))
 async def ogc_list(_, cq: types.CallbackQuery):
     await cq.answer()
     try:
-        await cq.message.edit_text("<b>🛠 Group console</b>\n\n<i>Scanning managed groups, please wait...</i>", reply_markup=_back())
+        await cq.message.edit_text("<b>🛠 Group console</b>\n\n<i>Scanning admin groups, please wait...</i>", reply_markup=_back())
     except Exception:
         pass
     ids = await _gc_group_ids()
     await cq.message.edit_text(
         "<b>🛠 Group console</b>\n\n"
-        f"<b>{len(ids)}</b> groups — tap one to manage it.\n"
-        "<i>Every action runs silently: nothing is posted to the group.</i>",
+        f"<b>{len(ids)}</b> admin group{'s' if len(ids) != 1 else ''} — tap one to manage it.\n"
+        "<i>Showing only groups where the bot is an administrator.</i>",
         reply_markup=_gc_list_kb(ids))
 
 
@@ -666,12 +677,12 @@ async def ogc_addbot(_, cq: types.CallbackQuery):
 async def cb_own_groupconsole(_, cq: types.CallbackQuery):
     await cq.answer()
     try:
-        await cq.message.edit_text("<b>🛠 Group console</b>\n\n<i>Scanning managed groups, please wait...</i>", reply_markup=_back())
+        await cq.message.edit_text("<b>🛠 Group console</b>\n\n<i>Scanning admin groups, please wait...</i>", reply_markup=_back())
     except Exception:
         pass
     ids = await _gc_group_ids()
     await cq.message.edit_text(
         "<b>\U0001f6e0 Group console</b>\n\n"
-        f"<b>{len(ids)}</b> groups — tap one to manage it.\n"
-        "<i>Every action runs silently: nothing is posted to the group.</i>",
+        f"<b>{len(ids)}</b> admin group{'s' if len(ids) != 1 else ''} — tap one to manage it.\n"
+        "<i>Showing only groups where the bot is an administrator.</i>",
         reply_markup=_gc_list_kb(ids))
