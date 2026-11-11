@@ -17,13 +17,7 @@ _HELPERS_DIR = os.path.dirname(__file__)
 _FONT_BOLD = os.path.join(_HELPERS_DIR, "CenturyGothic-Bold.ttf")
 _FONT_LIGHT = os.path.join(_HELPERS_DIR, "Inter-Light.ttf")
 
-KNOWN_LABELS = {
-    "sony music", "sony music india", "t-series", "tseries", "zee music company",
-    "zee music", "tips official", "tips", "yrf", "yash raj films", "saregama",
-    "saregama music", "speed records", "lahari music", "aditya music", "geet mp3",
-    "white hill music", "eros now", "shemaroo", "desimelodies", "desi melodies",
-    "t-series apna punjab", "t-series bhakti sagar", "vevo", "sonymusicindiavevo"
-}
+KNOWN_LABELS_REGEX = r'(?i)\b(?:t-series|tseries|zee\s*music(?:\s*company)?|sony\s*music(?:\s*india)?|yrf|tips(?:\s*official)?|speed\s*records|aditya\s*music|saregama|lahari\s*music|white\s*hill\s*music|geet\s*mp3|desimelodies|desi\s*melodies|vevo)\b'
 
 
 def clean_song_name(raw_title: str) -> str:
@@ -32,65 +26,54 @@ def clean_song_name(raw_title: str) -> str:
         return "Unknown Track"
     t = raw_title.strip()
 
-    had_pipe = '|' in t
-
-    # 1. Strip bracketed content: (Official Video), [4K], (From "Movie"), (Audio), (Lyrics), etc.
+    # 1. Bracketed noise: (Official Video), [4K], (From "Movie"), (Audio), (Lyrics), etc.
     t = re.sub(r'[\(\[].*?[\)\]]', '', t).strip()
 
-    # 2. If title has pipe '|', split on '|'
-    # In Indian / commercial tracks, everything after the first pipe is movie/actors/credits
+    # 2. Pipe separator (everything after first pipe in YouTube/Indian videos is movie/credits)
     if '|' in t:
         parts = [p.strip() for p in t.split('|') if p.strip()]
         if parts:
             t = parts[0]
 
-    # 3. Clean common noise words anywhere
+    # 3. Strip known music label brandings
+    t = re.sub(KNOWN_LABELS_REGEX, '', t).strip()
+
+    # 4. Clean common noise words anywhere
     noise_patterns = [
-        r'(?i)\b(?:official\s*(?:music\s*)?video|official\s*audio|official\s*lyric\s*video)\b',
-        r'(?i)\b(?:full\s*(?:video\s*)?song|video\s*song|audio\s*song|lyric(?:s|al)?\s*video)\b',
-        r'(?i)\b(?:music\s*video|lyric\s*video|visualizer|audio|video|lyrics?)\b',
+        r'(?i)\b(?:with\s+)?lyric(?:s|al)?(?:\s+video)?\b',
+        r'(?i)\b(?:official\s*(?:music\s*)?video|official\s*audio|official\s*video)\b',
+        r'(?i)\b(?:full\s*(?:video\s*)?song|video\s*song|audio\s*song)\b',
+        r'(?i)\b(?:music\s*video|visualizer|audio|video)\b',
         r'(?i)\b(?:hd|hq|4k|1080p|720p)\b',
         r'(?i)\b(?:remastered|remix|version)\b',
+        r'(?i)\b(?:full\s*song)\b',
     ]
     for np in noise_patterns:
         t = re.sub(np, '', t).strip()
 
-    # Handle cases where "Song" got glued like "Deewani MastaniSong"
     t = re.sub(r'(?i)(?<=[a-zA-Z])Song\b', '', t).strip()
     t = re.sub(r'(?i)\bSong\b', '', t).strip()
 
-    # 4. Handle dashes: "Artist - Title" or "Channel - Song - Artist" or "Song - Movie"
-    if ' - ' in t or ' – ' in t or ' — ' in t or '-' in t:
+    # 5. Handle dashes: 'Song - Movie' or 'Artist - Song' or 'Channel - Song'
+    if any(d in t for d in [' - ', ' – ', ' — ']):
         dash_regex = r'\s*[\-–—]\s*'
         segments = [s.strip() for s in re.split(dash_regex, t) if s.strip()]
-
-        # Filter out known label names from segments
-        filtered = []
-        for s in segments:
-            s_clean = re.sub(r'[^a-zA-Z0-9 ]', '', s).strip().lower()
-            if s_clean not in KNOWN_LABELS:
-                filtered.append(s)
-        if filtered:
-            segments = filtered
-
         if len(segments) >= 2:
             s0, s1 = segments[0], segments[1]
-            actor_keywords = ["deepika", "ranveer", "ranbir", "salman", "actor", "movie", "film",
-                              "shreya", "arijit", "pritam", "anirudh", "shah rukh", "alia", "vicky"]
-            if had_pipe:
-                # If title originally had '|', the first part before '-' was the song, second part was movie/video
-                t = s0
-            elif any(k in s1.lower() for k in actor_keywords):
-                t = s0
-            elif any(k in s0.lower() for k in actor_keywords):
+            s0_clean = s0.lower()
+            channel_indicators = ['vevo', 'records', 'entertainment', 'channel', 'presents', 'production']
+            if any(ci in s0_clean for ci in channel_indicators):
                 t = s1
             else:
-                # In western standard "Artist - Title", the song title is the right side (s1)
-                t = s1 if len(segments) == 2 and not any(k in s1.lower() for k in ["movie", "ost", "soundtrack"]) else s0
+                t = s0
         elif len(segments) == 1:
             t = segments[0]
+    elif '-' in t:
+        parts = [p.strip() for p in t.split('-') if p.strip()]
+        if len(parts) >= 2:
+            t = parts[0]
 
-    # Clean dangling punctuation and spaces
+    # 6. Clean dangling punctuation and spaces
     t = re.sub(r'^\s*[-|:,.]+\s*', '', t)
     t = re.sub(r'\s*[-|:,.]+\s*$', '', t)
     t = re.sub(r'\s+', ' ', t).strip()
@@ -297,13 +280,12 @@ class Thumbnail:
 
             pure_name = clean_song_name(song.title)
 
-            # Song Title (Century Gothic Bold)
+            # Song Title (Century Gothic Bold) - vertically centered above progress bar (bar_y = 336)
+            # strictly song name, no description per paneer's instructions
             if len(pure_name) <= 18:
-                draw.text((info_x, 212), pure_name, font=self.font_bold, fill=(255, 255, 255, 255))
-                y_sub = 276
+                draw.text((info_x, 230), pure_name, font=self.font_bold, fill=(255, 255, 255, 255))
             elif len(pure_name) <= 26:
-                draw.text((info_x, 216), pure_name, font=self.font_title_med, fill=(255, 255, 255, 255))
-                y_sub = 276
+                draw.text((info_x, 234), pure_name, font=self.font_title_med, fill=(255, 255, 255, 255))
             else:
                 words = pure_name.split()
                 mid = len(words) // 2
@@ -313,15 +295,8 @@ class Thumbnail:
                     l1 = l1[:20] + "..."
                 if len(l2) > 22:
                     l2 = l2[:20] + "..."
-                draw.text((info_x, 192), l1, font=self.font_title_med, fill=(255, 255, 255, 255))
-                draw.text((info_x, 238), l2, font=self.font_title_med, fill=(255, 255, 255, 255))
-                y_sub = 286
-
-            # Subtitle (Channel name or artist)
-            channel = (getattr(song, "channel_name", "") or "Mikasa Music").strip()
-            if len(channel) > 30:
-                channel = channel[:28] + "..."
-            draw.text((info_x, y_sub), channel, font=self.font_sub, fill=(210, 210, 210, 230))
+                draw.text((info_x, 210), l1, font=self.font_title_med, fill=(255, 255, 255, 255))
+                draw.text((info_x, 256), l2, font=self.font_title_med, fill=(255, 255, 255, 255))
 
             # Progress Bar (Wider: 445px spanning edge)
             bar_y = 336

@@ -195,6 +195,9 @@ async def _controls(_, query: types.CallbackQuery):
 
     # 5. SKIP
     elif action == "skip":
+        media = queue.get_current(chat_id)
+        if not media:
+            return await _safe_answer(query, query.lang["not_playing"], show_alert=True)
         await _safe_answer(query, query.lang.get("skipped", "Skipped."))
         reply = f"⏭️ <b>{user} has skipped the song.</b>"
         asyncio.create_task(_notify_chat(chat_id, reply))
@@ -202,7 +205,7 @@ async def _controls(_, query: types.CallbackQuery):
             await query.message.delete()
         except Exception:
             pass
-        await anon.play_next(chat_id)
+        await anon.play_next(chat_id, force_skip=True)
         return
 
     # 6. STOP

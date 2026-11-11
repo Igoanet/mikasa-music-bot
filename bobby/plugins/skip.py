@@ -17,5 +17,5 @@ async def _skip(_, m: types.Message):
     if not await db.get_call(m.chat.id):
         return await clean_reply(m, m.lang["not_playing"])
 
-    await anon.play_next(m.chat.id)
+    await anon.play_next(m.chat.id, force_skip=True)
     await clean_reply(m, m.lang["play_skipped"].format(m.from_user.mention))

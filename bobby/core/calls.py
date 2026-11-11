@@ -873,23 +873,28 @@ class TgCall(PyTgCalls):
         expected_generation: int | None = None,
         *,
         stream_ended: bool = False,
+        force_skip: bool = False,
     ) -> None:
         # Walk unavailable sources without one Python stack frame per item.
         # A queue loop gets at most one full failed round, never infinite retries.
         budget = max(1, len(queue.get_queue(chat_id)))
         for _ in range(budget):
             failed_generation = await self._advance_once(
-                chat_id, expected_generation, stream_ended=stream_ended,
+                chat_id,
+                expected_generation,
+                stream_ended=stream_ended,
+                force_skip=force_skip,
             )
             if failed_generation is None:
                 return
             expected_generation = failed_generation
             stream_ended = False
+            force_skip = False
         await self.stop(chat_id, expected_generation)
 
     async def _advance_once(
         self, chat_id: int, expected_generation: int | None = None,
-        *, stream_ended: bool = False,
+        *, stream_ended: bool = False, force_skip: bool = False,
     ) -> int | None:
         generation = await self._lifecycle.claim_advance(
             chat_id, expected_generation, stream_ended=stream_ended,
@@ -904,14 +909,14 @@ class TgCall(PyTgCalls):
             await self._lifecycle.release_advance(chat_id, claimed)
             return
         finished = None
-        if loop == -1:
+        if loop == -1 and not force_skip:
             # queue loop: rotate the finished track to the back instead of
             # dropping it — the queue repeats until /loop off or /stop
             if queue.queues[chat_id]:
                 queue.queues[chat_id].rotate(-1)
             media = queue.get_current(chat_id)
         else:
-            if loop:
+            if loop and stream_ended and not force_skip:
                 await db.set_loop(chat_id, loop - 1)
                 return await self.replay(chat_id, generation)
             finished = queue.get_current(chat_id)
@@ -926,6 +931,11 @@ class TgCall(PyTgCalls):
             try:
                 if await db.get_autoplay(chat_id):
                     if seed and not queue.get_queue(chat_id):
+                        try:
+                            client = await db.get_assistant(chat_id)
+                            await client.pause(chat_id)
+                        except Exception:
+                            pass
                         from bobby.helpers import _recs as recs
                         _lang = await lang.get_lang(chat_id)
                         recs.autoplay(chat_id, seed, _lang)
@@ -969,9 +979,16 @@ class TgCall(PyTgCalls):
         _lang = await lang.get_lang(chat_id)
         if not await self._lifecycle.current(chat_id, generation):
             return
-        from bobby.helpers.playback_loader import TEXT_PREPARING, PlaybackLoader
-        msg = await app.send_message(chat_id=chat_id, text=TEXT_PREPARING, parse_mode=enums.ParseMode.HTML)
-        loader = PlaybackLoader(msg).start()
+        is_loop_or_auto = bool(loop or getattr(media, "autoplay", False))
+        if is_loop_or_auto:
+            from bobby.helpers.playback_loader import TEXT_PLAYBACK_PREPARING, PlaybackLoader
+            msg = await app.send_message(chat_id=chat_id, text=TEXT_PLAYBACK_PREPARING, parse_mode=enums.ParseMode.HTML)
+            loader = PlaybackLoader(msg, is_playback=True).start()
+        else:
+            search_text = _lang.get("play_searching", '<tg-emoji emoji-id="5226828843926460895">⏳</tg-emoji>  <b>sᴇᴀʀᴄʜɪɴɢ…</b>')
+            msg = await app.send_message(chat_id=chat_id, text=search_text, parse_mode=enums.ParseMode.HTML)
+            from bobby.helpers.playback_loader import _DummyLoader
+            loader = _DummyLoader()
         if not self._is_live(media) and not media.file_path:
             # saavn tracks stream straight from the CDN; everything else
             # (and any stream failure) falls back to downloading

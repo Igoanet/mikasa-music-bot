@@ -182,6 +182,8 @@ async def _autoplay(chat_id: int, seed: str, _lang: dict, token: int) -> None:
         if not chosen:
             # nothing new related to this seed — fall back to the card
             logger.info("autoplay: nothing fresh after %s in %s", seed, chat_id)
+            from bobby import anon
+            await anon.stop(chat_id)
             if _gen.get(chat_id) != token:
                 return
             return await _post(chat_id, seed, _lang, token)
