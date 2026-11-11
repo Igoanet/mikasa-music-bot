@@ -40,39 +40,29 @@ async def play_hndlr(
     url: str = None,
     query: str = "",
 ) -> None:
-    # Phase 1: React to user's post first
+    # Phase 1: React to user's post first (ONLY bird emoji)
     if not getattr(m, "autoplay", False):
         try:
             await m.react("🕊")
         except Exception:
-            try:
-                await m.react("❤️")
-            except Exception:
-                pass
+            pass
         from bobby.helpers import _recs as recs
 
         recs.cancel(m.chat.id)
 
     # Phase 2: Playback preparing is ONLY shown for replay, loop, or autoplay
     is_autoplay = getattr(m, "autoplay", False)
-    class _DummyLoader:
-        def stop(self): pass
-
     if is_autoplay:
-        from bobby.helpers.playback_loader import TEXT_PLAYBACK_PREPARING, PlaybackLoader
-        eff = 5104841245755180586 if m.chat.type == enums.ChatType.PRIVATE else None
-        try:
-            if eff:
-                sent = await m.reply_text(TEXT_PLAYBACK_PREPARING, effect_id=eff, parse_mode=enums.ParseMode.HTML)
-            else:
-                sent = await m.reply_text(TEXT_PLAYBACK_PREPARING, parse_mode=enums.ParseMode.HTML)
-        except Exception:
-            sent = await m.reply_text(TEXT_PLAYBACK_PREPARING, parse_mode=enums.ParseMode.HTML)
+        from bobby.helpers.playback_loader import get_preparing_playback_text, PlaybackLoader
+        text = get_preparing_playback_text()
+        sent = await m.reply_text(text, parse_mode=enums.ParseMode.HTML)
         loader = PlaybackLoader(sent, is_playback=True).start()
     else:
-        # Normal user /play: only emoji, no preparing/searching text
-        sent = await m.reply_text('<tg-emoji emoji-id="5435907392334215552">🔍</tg-emoji>', parse_mode=enums.ParseMode.HTML)
-        loader = _DummyLoader()
+        # Standard user /play: only ONE of the 3 randomized premium emojis (❤️‍🔥, 🌕, 🍃), strictly no text
+        from bobby.helpers.playback_loader import get_random_playback_emoji, PlaybackLoader
+        initial_emoji = get_random_playback_emoji()
+        sent = await m.reply_text(initial_emoji, parse_mode=enums.ParseMode.HTML)
+        loader = PlaybackLoader(sent, is_playback=False).start()
     file = None
     mention = m.from_user.mention
     media = tg.get_media(m.reply_to_message) if m.reply_to_message else None

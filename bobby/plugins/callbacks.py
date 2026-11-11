@@ -61,7 +61,6 @@ async def cancel_dl(_, query: types.CallbackQuery):
 
 @app.on_callback_query(filters.regex(r"^controls ") & ~app.bl_users)
 @lang.language()
-@can_manage_vc
 async def _controls(_, query: types.CallbackQuery):
     args = query.data.split()
     action, chat_id = args[1], int(args[2])
@@ -70,6 +69,17 @@ async def _controls(_, query: types.CallbackQuery):
 
     if query.message.chat.id != chat_id:
         return await _safe_answer(query, query.lang["user_no_perms"], show_alert=True)
+
+    user_id = query.from_user.id
+    if await db.get_play_mode(chat_id):
+        is_adm = (
+            user_id in app.sudoers
+            or await db.is_auth(chat_id, user_id)
+            or user_id in await db.get_admins(chat_id)
+            or await is_live_group_admin(chat_id, query)
+        )
+        if not is_adm:
+            return await _safe_answer(query, query.lang["play_admin"], show_alert=True)
 
     if action == "autoplay":
         enabled = not await db.get_autoplay(chat_id)
@@ -94,10 +104,6 @@ async def _controls(_, query: types.CallbackQuery):
             query.lang["autoplay_toggle_on"] if enabled else query.lang["autoplay_toggle_off"],
             show_alert=True,
         )
-
-    if action in {"force", "replay"} and await db.get_play_mode(chat_id):
-        if not await is_live_group_admin(chat_id, query):
-            return await _safe_answer(query, query.lang["play_admin"], show_alert=True)
 
     # Check factual state: is a call active or is there a track currently queued/playing?
     call_active = await db.get_call(chat_id) or bool(queue.get_current(chat_id))

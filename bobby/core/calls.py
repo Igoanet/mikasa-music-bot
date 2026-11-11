@@ -859,8 +859,8 @@ class TgCall(PyTgCalls):
         _lang = await lang.get_lang(chat_id)
         if not await self._lifecycle.current(chat_id, generation):
             return
-        from bobby.helpers.playback_loader import TEXT_PLAYBACK_PREPARING, PlaybackLoader
-        msg = await app.send_message(chat_id=chat_id, text=TEXT_PLAYBACK_PREPARING, parse_mode=enums.ParseMode.HTML)
+        from bobby.helpers.playback_loader import get_preparing_playback_text, PlaybackLoader
+        msg = await app.send_message(chat_id=chat_id, text=get_preparing_playback_text(), parse_mode=enums.ParseMode.HTML)
         loader = PlaybackLoader(msg, is_playback=True).start()
         media.message_id = msg.id
         failed = await self._play_media(chat_id, msg, media, 0, generation)
@@ -981,13 +981,13 @@ class TgCall(PyTgCalls):
             return
         is_loop_or_auto = bool(loop or getattr(media, "autoplay", False))
         if is_loop_or_auto:
-            from bobby.helpers.playback_loader import TEXT_PLAYBACK_PREPARING, PlaybackLoader
-            msg = await app.send_message(chat_id=chat_id, text=TEXT_PLAYBACK_PREPARING, parse_mode=enums.ParseMode.HTML)
+            from bobby.helpers.playback_loader import get_preparing_playback_text, PlaybackLoader
+            msg = await app.send_message(chat_id=chat_id, text=get_preparing_playback_text(), parse_mode=enums.ParseMode.HTML)
             loader = PlaybackLoader(msg, is_playback=True).start()
         else:
-            msg = await app.send_message(chat_id=chat_id, text='<tg-emoji emoji-id="5435907392334215552">🔍</tg-emoji>', parse_mode=enums.ParseMode.HTML)
-            from bobby.helpers.playback_loader import _DummyLoader
-            loader = _DummyLoader()
+            from bobby.helpers.playback_loader import get_random_playback_emoji, PlaybackLoader
+            msg = await app.send_message(chat_id=chat_id, text=get_random_playback_emoji(), parse_mode=enums.ParseMode.HTML)
+            loader = PlaybackLoader(msg, is_playback=False).start()
         if not self._is_live(media) and not media.file_path:
             # saavn tracks stream straight from the CDN; everything else
             # (and any stream failure) falls back to downloading
