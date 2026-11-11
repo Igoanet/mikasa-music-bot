@@ -47,7 +47,7 @@ async def _auto_delete_msg(chat_id: int, message_id: int, delay: int):
         pass
 
 
-async def _notify_chat(chat_id: int, text: str, delay: int = 526):
+async def _notify_chat(chat_id: int, text: str, delay: int = 3):
     """Send notification to chat with premium emoji and auto-delete after delay (526s)."""
     try:
         sent = await app.send_message(chat_id, text, parse_mode=enums.ParseMode.HTML)
@@ -143,7 +143,7 @@ async def _controls(_, query: types.CallbackQuery):
             _MUTE_STATE[chat_id] = False
             reply = f'<tg-emoji emoji-id="6258076978759339419">🔊</tg-emoji> <b>{user} has unmuted.</b>'
 
-        asyncio.create_task(_notify_chat(chat_id, reply, delay=526))
+        asyncio.create_task(_notify_chat(chat_id, reply, delay=3))
 
         if qaction:
             try:
@@ -177,7 +177,7 @@ async def _controls(_, query: types.CallbackQuery):
         await _safe_answer(query, "Replaying from start...", show_alert=False)
         media.user = user
         reply = f'<tg-emoji emoji-id="6257944822615641633">🔁</tg-emoji> <b>{user} has replayed.</b>'
-        asyncio.create_task(_notify_chat(chat_id, reply, delay=526))
+        asyncio.create_task(_notify_chat(chat_id, reply, delay=3))
         # Seamlessly restart audio playback from second 1 without editing or resending the post card
         media.time = 1
         await anon.play_media(chat_id, query.message, media, seek_time=1)
@@ -190,7 +190,7 @@ async def _controls(_, query: types.CallbackQuery):
             return await _safe_answer(query, query.lang["not_playing"], show_alert=True)
         await _safe_answer(query, "-15s", show_alert=False)
         reply = f'<tg-emoji emoji-id="6257833351034441574">⏪</tg-emoji> <b>{user} seeked -15s.</b>'
-        asyncio.create_task(_notify_chat(chat_id, reply, delay=526))
+        asyncio.create_task(_notify_chat(chat_id, reply, delay=3))
         start_from = max(1, getattr(media, "time", 0) - 15)
         media.time = start_from
         await anon.play_media(chat_id, query.message, media, start_from)
@@ -208,7 +208,7 @@ async def _controls(_, query: types.CallbackQuery):
             return await _safe_answer(query, query.lang["play_seek_no_dur"], show_alert=True)
         await _safe_answer(query, "+15s", show_alert=False)
         reply = f'<tg-emoji emoji-id="6258229583242333883">⏩</tg-emoji> <b>{user} seeked +15s.</b>'
-        asyncio.create_task(_notify_chat(chat_id, reply, delay=526))
+        asyncio.create_task(_notify_chat(chat_id, reply, delay=3))
         start_from = getattr(media, "time", 0) + 15
         if start_from + 10 > dur:
             start_from = max(1, dur - 5)
@@ -223,7 +223,7 @@ async def _controls(_, query: types.CallbackQuery):
             return await _safe_answer(query, query.lang["not_playing"], show_alert=True)
         await _safe_answer(query, query.lang.get("skipped", "Skipped."))
         reply = f'<tg-emoji emoji-id="6255624844491100107">⏭️</tg-emoji> <b>{user} has skipped.</b>'
-        asyncio.create_task(_notify_chat(chat_id, reply, delay=526))
+        asyncio.create_task(_notify_chat(chat_id, reply, delay=3))
         try:
             await query.message.delete()
         except Exception:
@@ -235,7 +235,7 @@ async def _controls(_, query: types.CallbackQuery):
     elif action == "stop":
         await _safe_answer(query)
         reply = f'<tg-emoji emoji-id="5319109106793986870">⏹️</tg-emoji> <b>{user} has stopped.</b>'
-        asyncio.create_task(_notify_chat(chat_id, reply, delay=526))
+        asyncio.create_task(_notify_chat(chat_id, reply, delay=3))
         try:
             await query.message.delete()
         except Exception:
