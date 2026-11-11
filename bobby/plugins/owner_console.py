@@ -231,15 +231,13 @@ async def chatlink(_, m: types.Message):
         cid = int(m.command[1])
     except ValueError:
         return await _dm(m.from_user.id, "Error: give the numeric chat id.")
-    try:
-        chat = await app.get_chat(cid)
-        link = getattr(chat, "invite_link", None) or await app.export_chat_invite_link(cid)
-        title = html.escape(chat.title or str(cid))
-    except Exception as exc:
-        return await _dm(m.from_user.id,
-                         f"Error: <code>{html.escape(type(exc).__name__)}</code> — "
-                         "the bot needs <b>Invite Users</b> there.")
-    await _dm(m.from_user.id, f"<b>{title}</b>\n<code>{cid}</code>\n\n{html.escape(link)}")
+    from bobby.plugins.ownerextra import _resolve_invite_link, _chat_title_cache
+    link, method = await _resolve_invite_link(cid)
+    title = html.escape(_chat_title_cache.get(cid, str(cid)))
+    if link:
+        await _dm(m.from_user.id, f"<b>{title}</b>\n<code>{cid}</code>\n\n<b>Link:</b> {html.escape(link)}\n<i>({html.escape(method)})</i>")
+    else:
+        await _dm(m.from_user.id, f"<b>{title}</b>\n<code>{cid}</code>\n\n⚠️ Could not export or find an invite link — neither bot nor assistant has invite permissions in this chat.")
 
 
 # ── /unban ──────────────────────────────────────────────────────────────────

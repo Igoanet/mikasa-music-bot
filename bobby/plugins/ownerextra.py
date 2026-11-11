@@ -274,7 +274,47 @@ async def cb_own_cmds(_, cq: types.CallbackQuery):
 
 
 # ── 🛠 Group console (button-driven) ────────────────────────────────────────
-_GCN = "ogc"          # callback prefix, kept short for the 64-byte limit
+_GCN = "ogc"
+
+async def _resolve_invite_link(cid: int) -> tuple[str | None, str | None]:
+    """Resolve an invite link via Bot or Assistant without crashing on ChannelInvalid."""
+    from bobby import userbot
+
+    # 1. Bot export
+    try:
+        link = await app.export_chat_invite_link(cid)
+        if link:
+            return link, "Exported via Bot"
+    except Exception:
+        pass
+
+    # 2. Bot get_chat username or primary link
+    try:
+        c = await app.get_chat(cid)
+        if getattr(c, "username", None):
+            return f"https://t.me/{c.username}", "Public Username"
+        if getattr(c, "invite_link", None):
+            return c.invite_link, "Primary Link"
+    except Exception:
+        pass
+
+    # 3. Assistant get_chat / export
+    if getattr(userbot, "clients", None):
+        for ub in userbot.clients:
+            try:
+                c = await ub.get_chat(cid)
+                if getattr(c, "username", None):
+                    return f"https://t.me/{c.username}", "Public Username"
+                if getattr(c, "invite_link", None):
+                    return c.invite_link, "Primary Link"
+                link = await ub.export_chat_invite_link(cid)
+                if link:
+                    return link, "Exported via Assistant"
+            except Exception:
+                pass
+
+    return None, None
+          # callback prefix, kept short for the 64-byte limit
 
 
 def _gc_list_kb(chat_ids):
@@ -309,7 +349,8 @@ def _gc_group_kb(cid):
 
 
 async def _gc_group_ids():
-    """Every group the assistant knows, cached titles included."""
+    """Every group the assistant and bot know, cached titles included."""
+    from bobby import userbot
     try:
         import bobby.plugins.owner as _ow
         ids = await _ow._assistant_group_ids()
@@ -320,13 +361,25 @@ async def _gc_group_ids():
             ids = [int(c) for c in (await db.get_chats() or []) if int(c) < 0]
         except Exception:
             ids = []
+
     for cid in ids:
-        if cid in _chat_title_cache:
+        if cid in _chat_title_cache and not str(_chat_title_cache[cid]).startswith("-100"):
             continue
+        title = None
         try:
-            _chat_title_cache[cid] = (await app.get_chat(cid)).title or str(cid)
+            chat = await app.get_chat(cid)
+            title = chat.title
         except Exception:
-            _chat_title_cache[cid] = str(cid)
+            pass
+        if not title and getattr(userbot, "clients", None):
+            for ub in userbot.clients:
+                try:
+                    chat = await ub.get_chat(cid)
+                    title = chat.title
+                    break
+                except Exception:
+                    pass
+        _chat_title_cache[cid] = title or str(cid)
     return sorted(set(ids), key=lambda c: _chat_title_cache.get(c, str(c)).lower())
 
 
@@ -347,6 +400,7 @@ async def ogc_list(_, cq: types.CallbackQuery):
 
 @app.on_callback_query(filters.regex(r"^ogc:open:(-?\d+)$") & filters.user(config.OWNER_ID))
 async def ogc_open(_, cq: types.CallbackQuery):
+    from bobby import userbot
     await cq.answer()
     cid = int(cq.data.rsplit(":", 1)[-1])
     try:
@@ -354,22 +408,39 @@ async def ogc_open(_, cq: types.CallbackQuery):
     except Exception:
         pass
     title = _chat_title_cache.get(cid) or str(cid)
+    members = None
     try:
         chat = await app.get_chat(cid)
         title = chat.title or title
         members = getattr(chat, "members_count", None)
     except Exception:
-        members = None
+        if getattr(userbot, "clients", None):
+            for ub in userbot.clients:
+                try:
+                    chat = await ub.get_chat(cid)
+                    title = chat.title or title
+                    members = getattr(chat, "members_count", None)
+                    break
+                except Exception:
+                    pass
+    _chat_title_cache[cid] = title
+
+    kb_rows = _gc_group_kb(cid).inline_keyboard
+    # Add option to delete inactive group if unreachable
+    if not members and title == str(cid):
+        kb_rows.insert(3, [_ikb("🗑 Remove Inactive Group", "%s:delchat:%s" % (_GCN, cid), enums.ButtonStyle.DANGER)])
+
     await cq.message.edit_text(
         f"<b>🛠 {html.escape(str(title))}</b>\n"
         f"<code>{cid}</code>"
         + (f" · <b>{members:,}</b> members" if members else "")
         + "\n\nPick an action.",
-        reply_markup=_gc_group_kb(cid))
+        reply_markup=_ikm(kb_rows))
 
 
 @app.on_callback_query(filters.regex(r"^ogc:rights:(-?\d+)$") & filters.user(config.OWNER_ID))
 async def ogc_rights(_, cq: types.CallbackQuery):
+    from bobby import userbot
     await cq.answer()
     cid = int(cq.data.rsplit(":", 1)[-1])
     try:
@@ -384,15 +455,50 @@ async def ogc_rights(_, cq: types.CallbackQuery):
               ("can_change_info", "Change info"),
               ("can_promote_members", "Promote"),
               ("can_manage_chat", "Manage chat")]
+    me = await app.get_me()
+    mem, priv, st = None, None, None
     try:
-        me = await app.get_me()
         mem = await app.get_chat_member(cid, me.id)
         st = getattr(mem.status, "value", str(mem.status))
         priv = getattr(mem, "privileges", None)
-    except Exception as ex:
-        return await cq.message.edit_text(
-            f"⚠️ Cannot read rights: <code>{type(ex).__name__}</code>",
-            reply_markup=_gc_group_kb(cid))
+    except Exception:
+        pass
+
+    # If bot is not in chat or ChannelInvalid, check assistant
+    if not mem:
+        ub_mem, ub_st = None, None
+        if getattr(userbot, "clients", None):
+            for ub in userbot.clients:
+                try:
+                    ub_mem = await ub.get_chat_member(cid, "me")
+                    ub_st = getattr(ub_mem.status, "value", str(ub_mem.status))
+                    break
+                except Exception:
+                    pass
+
+        title = html.escape(_chat_title_cache.get(cid, str(cid)))
+        if ub_mem:
+            # Assistant is in group
+            return await cq.message.edit_text(
+                f"<b>📋 Rights in {title}</b>\n<code>{cid}</code>\n\n"
+                f"⚠️ <b>Bot Status:</b> Not in this group\n"
+                f"👤 <b>Assistant Status:</b> <b>{ub_st}</b>\n\n"
+                "<i>The assistant is in the chat. You can add the bot using the button below.</i>",
+                reply_markup=_ikm([
+                    [_ikb("➕ Add Bot with Assistant", "%s:addbot:%s" % (_GCN, cid), enums.ButtonStyle.PRIMARY)],
+                    [_ikb("« Back", "%s:open:%s" % (_GCN, cid), enums.ButtonStyle.PRIMARY)],
+                ]))
+        else:
+            # Neither in group
+            return await cq.message.edit_text(
+                f"<b>📋 Rights in {title}</b>\n<code>{cid}</code>\n\n"
+                "⚠️ <b>Inactive Chat:</b> Neither the bot nor assistant is present in this group.\n"
+                "<i>The group was deleted or the bot and assistant were removed.</i>",
+                reply_markup=_ikm([
+                    [_ikb("🗑 Remove Inactive Group", "%s:delchat:%s" % (_GCN, cid), enums.ButtonStyle.DANGER)],
+                    [_ikb("« Back", "%s:open:%s" % (_GCN, cid), enums.ButtonStyle.PRIMARY)],
+                ]))
+
     have = [l for a, l in RIGHTS if priv and getattr(priv, a, False)]
     miss = [l for a, l in RIGHTS if not (priv and getattr(priv, a, False))]
     await cq.message.edit_text(
@@ -414,18 +520,30 @@ async def ogc_link(_, cq: types.CallbackQuery):
         await cq.message.edit_text(f"<b>🔗 Invite link</b>\n<code>{cid}</code>\n\n<i>Exporting invite link...</i>", reply_markup=_gc_group_kb(cid))
     except Exception:
         pass
-    try:
-        link = await app.export_chat_invite_link(cid)
-    except Exception as ex:
-        return await cq.message.edit_text(
-            f"⚠️ No link: <code>{type(ex).__name__}</code> — "
-            "the bot needs <b>Invite users</b> in that group.",
-            reply_markup=_gc_group_kb(cid))
-    await cq.message.edit_text(
-        f"<b>🔗 Invite link</b>\n"
-        f"{html.escape(_chat_title_cache.get(cid, str(cid)))}\n"
-        f"<code>{cid}</code>\n\n{html.escape(link)}",
-        reply_markup=_gc_group_kb(cid))
+
+    link, method = await _resolve_invite_link(cid)
+    title = html.escape(_chat_title_cache.get(cid, str(cid)))
+    if link:
+        await cq.message.edit_text(
+            f"<b>🔗 Invite link</b>\n"
+            f"{title}\n"
+            f"<code>{cid}</code>\n\n"
+            f"<b>Link:</b> <a href=\"{html.escape(link)}\">{html.escape(link)}</a>\n"
+            f"<i>({html.escape(method)})</i>",
+            reply_markup=_gc_group_kb(cid),
+            disable_web_page_preview=True)
+    else:
+        await cq.message.edit_text(
+            f"<b>🔗 Invite link</b>\n"
+            f"{title}\n"
+            f"<code>{cid}</code>\n\n"
+            "⚠️ <b>Cannot generate invite link.</b>\n\n"
+            "Neither the bot nor assistant is present or has <b>Invite users</b> permissions in this chat.\n"
+            "<i>If this group is no longer active, you can remove it from the list.</i>",
+            reply_markup=_ikm([
+                [_ikb("🗑 Remove Inactive Group", "%s:delchat:%s" % (_GCN, cid), enums.ButtonStyle.DANGER)],
+                [_ikb("« Back", "%s:open:%s" % (_GCN, cid), enums.ButtonStyle.PRIMARY)],
+            ]))
 
 
 @app.on_callback_query(filters.regex(r"^ogc:bans:(-?\d+)$") & filters.user(config.OWNER_ID))
@@ -501,6 +619,48 @@ async def ogc_mbok(_, cq: types.CallbackQuery):
 
     await _run_massban(cq.from_user.id, cid, cq.message)
 
+
+
+@app.on_callback_query(filters.regex(r"^ogc:delchat:(-?\d+)$") & filters.user(config.OWNER_ID))
+async def ogc_delchat(_, cq: types.CallbackQuery):
+    await cq.answer()
+    cid = int(cq.data.rsplit(":", 1)[-1])
+    try:
+        await db.rm_chat(cid)
+    except Exception:
+        pass
+    _chat_title_cache.pop(cid, None)
+    await cq.message.edit_text(
+        f"<b>🗑 Inactive Group Removed</b>\n\nGroup <code>{cid}</code> has been removed from the bot database.",
+        reply_markup=_ikm([[_ikb("« Back to Groups", f"{_GCN}:list", enums.ButtonStyle.PRIMARY)]])
+    )
+
+
+@app.on_callback_query(filters.regex(r"^ogc:addbot:(-?\d+)$") & filters.user(config.OWNER_ID))
+async def ogc_addbot(_, cq: types.CallbackQuery):
+    await cq.answer("Adding bot…")
+    cid = int(cq.data.rsplit(":", 1)[-1])
+    success = False
+    me = await app.get_me()
+    from bobby import userbot
+    if getattr(userbot, "clients", None):
+        for ub in userbot.clients:
+            try:
+                await ub.add_chat_members(cid, me.id)
+                success = True
+                break
+            except Exception as ex:
+                logger.warning("Failed to add bot to %s via assistant: %s", cid, ex)
+    if success:
+        await cq.message.edit_text(
+            f"<b>✅ Bot Added to Group!</b>\n\nBot successfully joined <code>{cid}</code> via Assistant.",
+            reply_markup=_gc_group_kb(cid)
+        )
+    else:
+        await cq.message.edit_text(
+            f"<b>⚠️ Failed to Add Bot</b>\n\nAssistant does not have permissions to add members in <code>{cid}</code>.",
+            reply_markup=_gc_group_kb(cid)
+        )
 
 @app.on_callback_query(filters.regex(r"^own_groupconsole$") & filters.user(config.OWNER_ID))
 async def cb_own_groupconsole(_, cq: types.CallbackQuery):
