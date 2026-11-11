@@ -54,7 +54,11 @@ def _dir_mb(path) -> float:
 # ── 🧹 Storage & clean ──────────────────────────────────────────────────────
 @app.on_callback_query(filters.regex(r"^own_clean$") & filters.user(config.OWNER_ID))
 async def cb_own_clean(_, cq: types.CallbackQuery):
-    await cq.answer("Measuring…")
+    await cq.answer()
+    try:
+        await cq.message.edit_text("<b>🧹 Storage</b>\n\n<i>Measuring storage usage...</i>", reply_markup=_back())
+    except Exception:
+        pass
     # dirs are relative to the bot's working directory (see core/dir.py)
     rows = [("Downloads", "downloads"), ("Cache", "cache"),
             ("Scratch (/tmp)", "/tmp")]
@@ -78,7 +82,11 @@ async def cb_own_clean(_, cq: types.CallbackQuery):
 
 @app.on_callback_query(filters.regex(r"^own_clean_go$") & filters.user(config.OWNER_ID))
 async def cb_own_clean_go(_, cq: types.CallbackQuery):
-    await cq.answer("Cleaning…")
+    await cq.answer()
+    try:
+        await cq.message.edit_text("<b>🧹 Storage</b>\n\n<i>Cleaning downloads and cache...</i>", reply_markup=_back())
+    except Exception:
+        pass
     freed = 0.0
     for path in ("downloads", "cache"):
         before = _dir_mb(path)
@@ -102,7 +110,11 @@ async def cb_own_clean_go(_, cq: types.CallbackQuery):
 # ── 📡 Active streams ───────────────────────────────────────────────────────
 @app.on_callback_query(filters.regex(r"^own_vc$") & filters.user(config.OWNER_ID))
 async def cb_own_vc(_, cq: types.CallbackQuery):
-    await cq.answer("Checking…")
+    await cq.answer()
+    try:
+        await cq.message.edit_text("<b>📡 Active streams</b>\n\n<i>Checking active streams...</i>", reply_markup=_back())
+    except Exception:
+        pass
     lines = []
     found = False
     for modname in ("bobby.core.calls", "bobby.core.bot"):
@@ -141,7 +153,11 @@ async def cb_own_playmode(_, cq: types.CallbackQuery):
 # ── 🚫 Blacklist ────────────────────────────────────────────────────────────
 @app.on_callback_query(filters.regex(r"^own_blacklist$") & filters.user(config.OWNER_ID))
 async def cb_own_blacklist(_, cq: types.CallbackQuery):
-    await cq.answer("Counting…")
+    await cq.answer()
+    try:
+        await cq.message.edit_text("<b>🚫 Blacklist</b>\n\n<i>Loading blacklist...</i>", reply_markup=_back())
+    except Exception:
+        pass
     try:
         chats = len(db.blacklisted)
     except Exception:
@@ -164,6 +180,10 @@ async def cb_own_blacklist(_, cq: types.CallbackQuery):
 @app.on_callback_query(filters.regex(r"^own_logbind$") & filters.user(config.OWNER_ID))
 async def cb_own_logbind(_, cq: types.CallbackQuery):
     await cq.answer()
+    try:
+        await cq.message.edit_text("<b>📄 Log channel</b>\n\n<i>Loading log channel configuration...</i>", reply_markup=_back())
+    except Exception:
+        pass
     cid = 0
     try:
         cid = int(await db.get("log_channel") or 0)
@@ -312,7 +332,11 @@ async def _gc_group_ids():
 
 @app.on_callback_query(filters.regex(r"^ogc:list$") & filters.user(config.OWNER_ID))
 async def ogc_list(_, cq: types.CallbackQuery):
-    await cq.answer("Scanning groups…")
+    await cq.answer()
+    try:
+        await cq.message.edit_text("<b>🛠 Group console</b>\n\n<i>Scanning managed groups, please wait...</i>", reply_markup=_back())
+    except Exception:
+        pass
     ids = await _gc_group_ids()
     await cq.message.edit_text(
         "<b>🛠 Group console</b>\n\n"
@@ -325,6 +349,10 @@ async def ogc_list(_, cq: types.CallbackQuery):
 async def ogc_open(_, cq: types.CallbackQuery):
     await cq.answer()
     cid = int(cq.data.rsplit(":", 1)[-1])
+    try:
+        await cq.message.edit_text("<b>🛠 Group console</b>\n\n<i>Loading group details...</i>", reply_markup=_ikm([[_ikb("« Back", "ogc:list", enums.ButtonStyle.PRIMARY)]]))
+    except Exception:
+        pass
     title = _chat_title_cache.get(cid) or str(cid)
     try:
         chat = await app.get_chat(cid)
@@ -342,8 +370,12 @@ async def ogc_open(_, cq: types.CallbackQuery):
 
 @app.on_callback_query(filters.regex(r"^ogc:rights:(-?\d+)$") & filters.user(config.OWNER_ID))
 async def ogc_rights(_, cq: types.CallbackQuery):
-    await cq.answer("Checking…")
+    await cq.answer()
     cid = int(cq.data.rsplit(":", 1)[-1])
+    try:
+        await cq.message.edit_text(f"<b>📋 Rights</b>\n<code>{cid}</code>\n\n<i>Checking administrator rights...</i>", reply_markup=_gc_group_kb(cid))
+    except Exception:
+        pass
     RIGHTS = [("can_manage_video_chats", "Video chats"),
               ("can_delete_messages", "Delete msgs"),
               ("can_restrict_members", "Ban users"),
@@ -376,8 +408,12 @@ async def ogc_rights(_, cq: types.CallbackQuery):
 
 @app.on_callback_query(filters.regex(r"^ogc:link:(-?\d+)$") & filters.user(config.OWNER_ID))
 async def ogc_link(_, cq: types.CallbackQuery):
-    await cq.answer("Getting link…")
+    await cq.answer()
     cid = int(cq.data.rsplit(":", 1)[-1])
+    try:
+        await cq.message.edit_text(f"<b>🔗 Invite link</b>\n<code>{cid}</code>\n\n<i>Exporting invite link...</i>", reply_markup=_gc_group_kb(cid))
+    except Exception:
+        pass
     try:
         link = await app.export_chat_invite_link(cid)
     except Exception as ex:
@@ -394,8 +430,12 @@ async def ogc_link(_, cq: types.CallbackQuery):
 
 @app.on_callback_query(filters.regex(r"^ogc:bans:(-?\d+)$") & filters.user(config.OWNER_ID))
 async def ogc_bans(_, cq: types.CallbackQuery):
-    await cq.answer("Fetching…")
+    await cq.answer()
     cid = int(cq.data.rsplit(":", 1)[-1])
+    try:
+        await cq.message.edit_text(f"<b>🚫 Banned list</b>\n<code>{cid}</code>\n\n<i>Fetching banned members...</i>", reply_markup=_gc_group_kb(cid))
+    except Exception:
+        pass
     rows, n = [], 0
     try:
         async for mem in app.get_chat_members(
@@ -464,7 +504,11 @@ async def ogc_mbok(_, cq: types.CallbackQuery):
 
 @app.on_callback_query(filters.regex(r"^own_groupconsole$") & filters.user(config.OWNER_ID))
 async def cb_own_groupconsole(_, cq: types.CallbackQuery):
-    await cq.answer("Scanning groups…")
+    await cq.answer()
+    try:
+        await cq.message.edit_text("<b>🛠 Group console</b>\n\n<i>Scanning managed groups, please wait...</i>", reply_markup=_back())
+    except Exception:
+        pass
     ids = await _gc_group_ids()
     await cq.message.edit_text(
         "<b>\U0001f6e0 Group console</b>\n\n"

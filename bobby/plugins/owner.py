@@ -43,7 +43,7 @@ def _panel_kb() -> InlineKeyboardMarkup:
             [b("📡 Streams", "own_vc"), b("🧹 Storage", "own_clean")],
             [b("🔒 Play mode", "own_playmode"), b("📢 Broadcast", "own_bcast")],
             [b("📜 Commands", "own_cmds"), b("🔄 Restart", "own_restart", D)],
-            [b("✖️ Close", "own_close", D, buttons.prem["cross"])],
+            [b("Close", "own_close", D, buttons.prem["cross"])],
         ]
     )
 
@@ -99,6 +99,10 @@ async def cb_own_close(_, cq: CallbackQuery):
 @app.on_callback_query(filters.regex(r"^own_acct$") & filters.user(config.OWNER_ID))
 async def cb_own_acct(_, cq: CallbackQuery):
     await cq.answer()
+    try:
+        await cq.message.edit_text("<b>👥 Assistants</b>\n\n<i>Loading assistants...</i>", reply_markup=_back_kb())
+    except Exception:
+        pass
     # reuse the /accounts panel; its acct_* buttons work on any message
     rows = acct_kb().inline_keyboard[:-1]  # drop its Close button
     rows.append([InlineKeyboardButton("« Back", callback_data="own_back",
@@ -108,7 +112,11 @@ async def cb_own_acct(_, cq: CallbackQuery):
 
 @app.on_callback_query(filters.regex(r"^own_stats$") & filters.user(config.OWNER_ID))
 async def cb_own_stats(_, cq: CallbackQuery):
-    await cq.answer("Counting…")
+    await cq.answer()
+    try:
+        await cq.message.edit_text("<b>📊 Stats</b>\n\n<i>Loading stats...</i>", reply_markup=_back_kb())
+    except Exception:
+        pass
     text = (
         "<b>📊 Stats</b>\n\n"
         f"• Users: <b>{len(await db.get_users())}</b>\n"
@@ -124,6 +132,10 @@ async def cb_own_stats(_, cq: CallbackQuery):
 @app.on_callback_query(filters.regex(r"^own_sudo$") & filters.user(config.OWNER_ID))
 async def cb_own_sudo(_, cq: CallbackQuery):
     await cq.answer()
+    try:
+        await cq.message.edit_text("<b>👑 Sudoers</b>\n\n<i>Loading sudoers...</i>", reply_markup=_back_kb())
+    except Exception:
+        pass
     lines = ["<b>👑 Sudoers</b>", ""]
     sudoers = await db.get_sudoers()
     if not sudoers:
@@ -200,7 +212,14 @@ async def _assistant_group_ids() -> list:
 
 @app.on_callback_query(filters.regex(r"^own_groups$") & filters.user(config.OWNER_ID))
 async def cb_own_groups(_, cq: CallbackQuery):
-    await cq.answer("Scanning groups…")
+    await cq.answer()
+    try:
+        await cq.message.edit_text(
+            "<b>🛡 Bot Admin Rights</b>\n\n<i>Scanning groups and admin permissions, please wait...</i>",
+            reply_markup=_back_kb(),
+        )
+    except Exception:
+        pass
     admin_lines, scanned, plain, capped = [], 0, 0, False
 
     # A bot account cannot list its dialogs (Telegram answers
