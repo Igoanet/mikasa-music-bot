@@ -45,7 +45,7 @@ async def start(_, message: types.Message):
 
     # React with 🕊 to start command
     try:
-        await message.react("🕊")
+        await message.react("🔥")
     except Exception:
         pass
 
@@ -80,6 +80,10 @@ async def start(_, message: types.Message):
             await message.reply_text(text=_text, reply_markup=key, effect_id=5104841245755180586)
 
     if private:
+        try:
+            await app.send_message(message.chat.id, "🔥")
+        except Exception:
+            pass
         if await db.is_user(message.from_user.id):
             return
         await utils.send_log(message)
