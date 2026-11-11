@@ -15,9 +15,7 @@ logger = logging.getLogger("bobby")
 TEXT_PREPARING = '<tg-emoji emoji-id="5435907392334215552">🔍</tg-emoji> <b>Preparing playback...</b>'
 
 TEXT_PLAYBACK_PREPARING = (
-    '<tg-emoji emoji-id="5355051922862653659">🤖</tg-emoji>'
-    '<tg-emoji emoji-id="5337037846475720165">👾</tg-emoji>'
-    '<tg-emoji emoji-id="5305388752162539722">👻</tg-emoji> '
+    '<tg-emoji emoji-id="5355051922862653659">🤖</tg-emoji> '
     '<b>Preparing playback...</b>'
 )
 

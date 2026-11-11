@@ -55,13 +55,23 @@ async def play_hndlr(
         # Distinct phase: allow reaction to register visually before sending reply
         await asyncio.sleep(0.7)
 
-    # Phase 2: Preparing playback message and animated emoji sequence
-    from bobby.helpers.playback_loader import TEXT_PREPARING, PlaybackLoader
-    try:
-        sent = await m.reply_text(TEXT_PREPARING, effect_id=5104841245755180586, parse_mode=enums.ParseMode.HTML)
-    except Exception:
-        sent = await m.reply_text(TEXT_PREPARING, parse_mode=enums.ParseMode.HTML)
-    loader = PlaybackLoader(sent).start()
+    # Phase 2: Playback preparing is ONLY shown for replay, loop, or autoplay
+    is_autoplay = getattr(m, "autoplay", False)
+    class _DummyLoader:
+        def stop(self): pass
+
+    if is_autoplay:
+        from bobby.helpers.playback_loader import TEXT_PLAYBACK_PREPARING, PlaybackLoader
+        try:
+            sent = await m.reply_text(TEXT_PLAYBACK_PREPARING, effect_id=5104841245755180586, parse_mode=enums.ParseMode.HTML)
+        except Exception:
+            sent = await m.reply_text(TEXT_PLAYBACK_PREPARING, parse_mode=enums.ParseMode.HTML)
+        loader = PlaybackLoader(sent, is_playback=True).start()
+    else:
+        # Normal user /play: clean searching status, no "Preparing playback..."
+        search_text = m.lang.get("play_searching", "<tg-emoji emoji-id=\"5226828843926460895\">⏳</tg-emoji>  <b>sᴇᴀʀᴄʜɪɴɢ…</b>")
+        sent = await m.reply_text(search_text, parse_mode=enums.ParseMode.HTML)
+        loader = _DummyLoader()
     file = None
     mention = m.from_user.mention
     media = tg.get_media(m.reply_to_message) if m.reply_to_message else None
