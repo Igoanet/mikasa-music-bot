@@ -434,10 +434,16 @@ async def _gc_group_ids(force_refresh: bool = False) -> list[int]:
                         pass
                     return cid
             except errors.FloodWait as fw:
-                await asyncio.sleep(min(fw.value, 4))
+                await asyncio.sleep(min(fw.value, 5))
                 try:
-                    m = await asyncio.wait_for(app.get_chat_member(cid, bot_id), timeout=3.5)
+                    m = await asyncio.wait_for(app.get_chat_member(cid, bot_id), timeout=4.0)
                     if m.status in (enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER):
+                        if cid not in _chat_title_cache or str(_chat_title_cache[cid]).startswith("-100"):
+                            try:
+                                chat = await asyncio.wait_for(app.get_chat(cid), timeout=2.5)
+                                _chat_title_cache[cid] = chat.title or str(cid)
+                            except Exception:
+                                _chat_title_cache[cid] = str(cid)
                         return cid
                 except Exception:
                     pass
@@ -557,7 +563,8 @@ async def ogc_rights(_, cq: types.CallbackQuery):
         if getattr(userbot, "clients", None):
             for ub in userbot.clients:
                 try:
-                    ub_mem = await asyncio.wait_for(ub.get_chat_member(cid, "me"), timeout=3.0)
+                    ub_me = await ub.get_me()
+                    ub_mem = await asyncio.wait_for(ub.get_chat_member(cid, ub_me.id), timeout=3.0)
                     ub_st = getattr(ub_mem.status, "value", str(ub_mem.status))
                     break
                 except Exception:

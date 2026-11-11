@@ -1,5 +1,3 @@
-import pathlib
-import json
 # Copyright (c) 2025 Bobby Maharaj
 # Licensed under the MIT License.
 # This file is part of BobbyXMusic
@@ -10,13 +8,14 @@ and the logger toggle. Owner-only (not even sudoers)."""
 
 import asyncio
 import html
+import time
+from pathlib import Path
 
 from pyrogram import enums, errors, filters
 from pyrogram.types import (CallbackQuery, InlineKeyboardButton,
                             InlineKeyboardMarkup, Message)
 
 from bobby import app, config, db, userbot
-from bobby.helpers import buttons
 from bobby.plugins.account import _kb as acct_kb
 from bobby.plugins.account import _text as acct_text
 
@@ -43,7 +42,7 @@ def _panel_kb() -> InlineKeyboardMarkup:
             [b("📡 Streams", "own_vc"), b("🧹 Storage", "own_clean")],
             [b("🔒 Play mode", "own_playmode"), b("📢 Broadcast", "own_bcast")],
             [b("📜 Commands", "own_cmds"), b("🔄 Restart", "own_restart", D)],
-            [b("Close", "own_close", D, buttons.prem["cross"])],
+            [b("✖ Close", "own_close", D)],
         ]
     )
 

@@ -52,7 +52,7 @@ async def _dm(owner_id: int, text: str, markup=None):
     try:
         return await app.send_message(
             owner_id, text, parse_mode=enums.ParseMode.HTML,
-            disable_web_page_preview=True, reply_markup=markup,
+            reply_markup=markup,
         )
     except Exception as exc:
         logger.info("manage: DM to owner failed: %s", type(exc).__name__)
