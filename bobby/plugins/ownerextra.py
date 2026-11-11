@@ -111,30 +111,19 @@ async def cb_own_clean_go(_, cq: types.CallbackQuery):
 # ── 📡 Active streams ───────────────────────────────────────────────────────
 @app.on_callback_query(filters.regex(r"^own_vc$") & filters.user(config.OWNER_ID))
 async def cb_own_vc(_, cq: types.CallbackQuery):
+    from bobby import queue
     await cq.answer()
-    try:
-        await cq.message.edit_text("<b>📡 Active streams</b>\n\n<i>Checking active streams...</i>", reply_markup=_back())
-    except Exception:
-        pass
+    active = list(getattr(db, "active_calls", []))
     lines = []
-    found = False
-    for modname in ("bobby.core.calls", "bobby.core.bot"):
-        try:
-            mod = __import__(modname, fromlist=["*"])
-            calls = getattr(mod, "calls", None) or getattr(mod, "bot", None)
-            registry = getattr(calls, "active", None) or getattr(calls, "_active", None)
-            if registry is not None:
-                lines = [f"• <code>{c}</code>" for c in list(registry)[:25]]
-                found = True
-                break
-        except Exception:
-            continue
-    if found:
-        body = "\n".join(lines) if lines else "No active streams."
-    else:
-        body = (f"Groups served: <b>{len(await db.get_chats())}</b>\n\n"
-                "<i>Use /active for the live stream list.</i>")
-    await cq.message.edit_text(f"<b>📡 Active streams</b>\n\n{body}", reply_markup=_back())
+    for cid in active[:25]:
+        playing = queue.get_current(cid)
+        t = playing.title[:25] if playing else "Active Stream"
+        lines.append(f"• <code>{cid}</code> — <b>{html.escape(t)}</b>")
+    body = "\n".join(lines) if lines else "No active streams currently."
+    await cq.message.edit_text(
+        f"<b>📡 Active streams ({len(active)})</b>\n\n{body}",
+        reply_markup=_back()
+    )
 
 
 # ── 🔒 Play mode ────────────────────────────────────────────────────────────
@@ -277,45 +266,66 @@ async def cb_own_cmds(_, cq: types.CallbackQuery):
 # ── 🛠 Group console (button-driven) ────────────────────────────────────────
 _GCN = "ogc"
 
+_chat_link_cache: dict[int, tuple[str, str]] = {}
+_chat_title_cache: dict[int, str] = {}
+_admin_groups_cache: list[int] = []
+_admin_groups_cache_ts: float = 0.0
+
+
 async def _resolve_invite_link(cid: int) -> tuple[str | None, str | None]:
-    """Resolve an invite link via Bot or Assistant without crashing on ChannelInvalid."""
+    """Resolve an invite link via Bot or Assistant fast and reliably without hanging."""
     from bobby import userbot
 
-    # 1. Bot export
-    try:
-        link = await app.export_chat_invite_link(cid)
-        if link:
-            return link, "Exported via Bot"
-    except Exception:
-        pass
+    # 0. Check link cache
+    if cid in _chat_link_cache:
+        return _chat_link_cache[cid]
 
-    # 2. Bot get_chat username or primary link
+    # 1. Fast Bot get_chat (already contains username or existing invite_link)
     try:
-        c = await app.get_chat(cid)
+        c = await asyncio.wait_for(app.get_chat(cid), timeout=1.8)
         if getattr(c, "username", None):
-            return f"https://t.me/{c.username}", "Public Username"
+            res = (f"https://t.me/{c.username}", "Public Username")
+            _chat_link_cache[cid] = res
+            return res
         if getattr(c, "invite_link", None):
-            return c.invite_link, "Primary Link"
+            res = (c.invite_link, "Primary Link")
+            _chat_link_cache[cid] = res
+            return res
     except Exception:
         pass
 
-    # 3. Assistant get_chat / export
+    # 2. Bot export_chat_invite_link with strict timeout
+    try:
+        link = await asyncio.wait_for(app.export_chat_invite_link(cid), timeout=2.0)
+        if link:
+            res = (link, "Exported via Bot")
+            _chat_link_cache[cid] = res
+            return res
+    except Exception:
+        pass
+
+    # 3. Assistant get_chat / export with strict timeout
     if getattr(userbot, "clients", None):
         for ub in userbot.clients:
             try:
-                c = await ub.get_chat(cid)
+                c = await asyncio.wait_for(ub.get_chat(cid), timeout=1.8)
                 if getattr(c, "username", None):
-                    return f"https://t.me/{c.username}", "Public Username"
+                    res = (f"https://t.me/{c.username}", "Public Username")
+                    _chat_link_cache[cid] = res
+                    return res
                 if getattr(c, "invite_link", None):
-                    return c.invite_link, "Primary Link"
-                link = await ub.export_chat_invite_link(cid)
+                    res = (c.invite_link, "Primary Link")
+                    _chat_link_cache[cid] = res
+                    return res
+                link = await asyncio.wait_for(ub.export_chat_invite_link(cid), timeout=2.0)
                 if link:
-                    return link, "Exported via Assistant"
+                    res = (link, "Exported via Assistant")
+                    _chat_link_cache[cid] = res
+                    return res
             except Exception:
                 pass
 
     return None, None
-          # callback prefix, kept short for the 64-byte limit
 
 
 def _gc_list_kb(chat_ids):
@@ -324,16 +334,14 @@ def _gc_list_kb(chat_ids):
         title = _chat_title_cache.get(cid) or str(cid)
         row.append(_ikb(("💬 " + title)[:28], "%s:open:%s" % (_GCN, cid)))
         if len(row) == 2:
-            rows.append(row); row = []
+            rows.append(row)
+            row = []
     if row:
         rows.append(row)
     if not rows:
-        rows = [[_ikb("No admin groups found", "%s:list" % _GCN)]]
+        rows = [[_ikb("No admin groups found", "%s:list:refresh" % _GCN)]]
     rows.append([_ikb("« Back", "own_back", enums.ButtonStyle.PRIMARY)])
     return _ikm(rows)
-
-
-_chat_title_cache: dict = {}
 
 
 def _gc_group_kb(cid):
@@ -342,15 +350,19 @@ def _gc_group_kb(cid):
         [_ikb("📋 Rights", "%s:rights:%s" % (_GCN, cid)),
          _ikb("🔗 Invite link", "%s:link:%s" % (_GCN, cid))],
         [_ikb("🚫 Banned list", "%s:bans:%s" % (_GCN, cid)),
-         _ikb("🔓 Unban someone", "%s:bans:%s" % (_GCN, cid))],
-        [_ikb("⚠️ Mass-ban (silent)", "%s:mbsure:%s" % (_GCN, cid), B.DANGER)],
-        [_ikb("🔄 Rescan groups", "%s:list" % _GCN),
+         _ikb("⚠️ Mass-ban (silent)", "%s:mbsure:%s" % (_GCN, cid), B.DANGER)],
+        [_ikb("🔄 Rescan groups", "%s:list:refresh" % _GCN),
          _ikb("« Back", "%s:list" % _GCN)],
     ])
 
 
-async def _gc_group_ids():
-    """Every group where the bot is currently an administrator."""
+async def _gc_group_ids(force_refresh: bool = False) -> list[int]:
+    """Every group where the bot is currently an administrator (cached for 30s)."""
+    global _admin_groups_cache, _admin_groups_cache_ts
+    now = time.monotonic()
+    if not force_refresh and _admin_groups_cache and (now - _admin_groups_cache_ts < 30.0):
+        return _admin_groups_cache
+
     candidate_ids = set()
     try:
         candidate_ids.update([int(c) for c in (await db.get_chats() or []) if int(c) < 0])
@@ -364,19 +376,19 @@ async def _gc_group_ids():
 
     async def _check_admin(cid: int):
         try:
-            m = await app.get_chat_member(cid, "me")
+            m = await asyncio.wait_for(app.get_chat_member(cid, "me"), timeout=1.8)
             if m.status in (enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER):
                 if cid not in _chat_title_cache or str(_chat_title_cache[cid]).startswith("-100"):
                     try:
-                        chat = await app.get_chat(cid)
+                        chat = await asyncio.wait_for(app.get_chat(cid), timeout=1.5)
                         _chat_title_cache[cid] = chat.title or str(cid)
                     except Exception:
                         _chat_title_cache[cid] = str(cid)
                 return cid
         except errors.FloodWait as fw:
-            await asyncio.sleep(min(fw.value, 5))
+            await asyncio.sleep(min(fw.value, 3))
             try:
-                m = await app.get_chat_member(cid, "me")
+                m = await asyncio.wait_for(app.get_chat_member(cid, "me"), timeout=1.8)
                 if m.status in (enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER):
                     return cid
             except Exception:
@@ -391,23 +403,27 @@ async def _gc_group_ids():
     else:
         admin_ids = []
 
-    return sorted(admin_ids, key=lambda c: _chat_title_cache.get(c, str(c)).lower())
+    res = sorted(admin_ids, key=lambda c: _chat_title_cache.get(c, str(c)).lower())
+    _admin_groups_cache = res
+    _admin_groups_cache_ts = now
+    return res
 
 
-@app.on_callback_query(filters.regex(r"^ogc:list$") & filters.user(config.OWNER_ID))
+@app.on_callback_query(filters.regex(r"^ogc:list(:refresh)?$") & filters.user(config.OWNER_ID))
 async def ogc_list(_, cq: types.CallbackQuery):
     await cq.answer()
-    try:
-        await cq.message.edit_text("<b>🛠 Group console</b>\n\n<i>Scanning admin groups, please wait...</i>", reply_markup=_back())
-    except Exception:
-        pass
-    ids = await _gc_group_ids()
+    refresh = ":refresh" in (cq.data or "")
+    if refresh:
+        try:
+            await cq.message.edit_text("<b>🛠 Group console</b>\n\n<i>Scanning admin groups, please wait...</i>", reply_markup=_back())
+        except Exception:
+            pass
+    ids = await _gc_group_ids(force_refresh=refresh)
     await cq.message.edit_text(
         "<b>🛠 Group console</b>\n\n"
         f"<b>{len(ids)}</b> admin group{'s' if len(ids) != 1 else ''} — tap one to manage it.\n"
         "<i>Showing only groups where the bot is an administrator.</i>",
         reply_markup=_gc_list_kb(ids))
-
 
 @app.on_callback_query(filters.regex(r"^ogc:open:(-?\d+)$") & filters.user(config.OWNER_ID))
 async def ogc_open(_, cq: types.CallbackQuery):

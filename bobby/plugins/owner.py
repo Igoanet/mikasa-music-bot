@@ -187,27 +187,45 @@ _GROUP_PERMS = [
 ]
 
 
+_assistant_group_cache: list = []
+_assistant_group_cache_ts: float = 0.0
+
 async def _assistant_group_ids() -> list:
-    """Every group id the assistant account is in."""
+    """Every group id the assistant account and db know, cached for 60s."""
+    global _assistant_group_cache, _assistant_group_cache_ts
+    now = time.monotonic()
+    if _assistant_group_cache and (now - _assistant_group_cache_ts < 60.0):
+        return _assistant_group_cache
+
+    ids = set()
+    try:
+        db_chats = await db.get_chats() or []
+        ids.update(int(c) for c in db_chats if int(c) < 0)
+    except Exception:
+        pass
+
     try:
         if getattr(userbot, "clients", None):
-            ids = []
             for ub in userbot.clients:
                 try:
-                    async for d in ub.get_dialogs():
-                        ch = d.chat
-                        if ch.type in (enums.ChatType.GROUP, enums.ChatType.SUPERGROUP):
-                            ids.append(ch.id)
-                    if ids:
-                        return sorted(list(set(ids)))
+                    async def _fetch():
+                        ub_ids = []
+                        async for d in ub.get_dialogs(limit=80):
+                            ch = d.chat
+                            if ch.type in (enums.ChatType.GROUP, enums.ChatType.SUPERGROUP):
+                                ub_ids.append(ch.id)
+                        return ub_ids
+                    ub_found = await asyncio.wait_for(_fetch(), timeout=2.5)
+                    ids.update(ub_found)
                 except Exception:
                     pass
     except Exception:
         pass
-    try:
-        return [int(c) for c in (await db.get_chats() or []) if int(c) < 0]
-    except Exception:
-        return []
+
+    result = sorted(list(ids))
+    _assistant_group_cache = result
+    _assistant_group_cache_ts = now
+    return result
 
 
 @app.on_callback_query(filters.regex(r"^own_groups$") & filters.user(config.OWNER_ID))
@@ -220,71 +238,66 @@ async def cb_own_groups(_, cq: CallbackQuery):
         )
     except Exception:
         pass
-    admin_lines, scanned, plain, capped = [], 0, 0, False
 
-    # A bot account cannot list its dialogs (Telegram answers
-    # BOT_METHOD_INVALID to messages.GetDialogs), so the groups the bot has
-    # served are the only list it can walk.
     known = await _assistant_group_ids()
-    for chat_id in known:
-        scanned += 1
-        if scanned > 400:  # keep the scan fast + flood-safe on huge accounts
-            capped = True
-            break
+    scanned = len(known)
+
+    async def _inspect_chat(chat_id: int):
         try:
-            member = await app.get_chat_member(chat_id, "me")
-        except errors.FloodWait as fw:
-            await asyncio.sleep(min(fw.value, 5))
-            continue
+            member = await asyncio.wait_for(app.get_chat_member(chat_id, "me"), timeout=1.8)
         except Exception:
-            continue  # kicked / deactivated / unreachable chat
-        if member.status != enums.ChatMemberStatus.ADMINISTRATOR:
-            plain += 1
-            continue
-        priv = member.privileges
+            return None
+        if member.status not in (enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER):
+            return False
+        priv = getattr(member, "privileges", None)
         if priv is None:
-            plain += 1
-            continue
+            return False
         try:
-            title = (await app.get_chat(chat_id)).title or "?"
+            chat = await asyncio.wait_for(app.get_chat(chat_id), timeout=1.5)
+            title = chat.title or "?"
         except Exception:
             title = "?"
         got = [l for a, l in _GROUP_PERMS if getattr(priv, a, False)]
         missing = [l for a, l in _GROUP_PERMS if not getattr(priv, a, False)]
-        line = (f"<b>{html.escape(title)}</b> "
-                f"<code>{chat_id}</code>\n"
+        line = (f"<b>{html.escape(title)}</b> <code>{chat_id}</code>\n"
                 f"└ <b>{len(got)}/{len(_GROUP_PERMS)}</b> perms")
         if missing:
             line += f" • missing: {', '.join(missing)}"
         if not getattr(priv, "can_manage_video_chats", False):
             line += " ⚠️ <b>no video-chat perm — music can't play!</b>"
-        admin_lines.append(line)
+        return line
+
+    admin_lines = []
+    plain = 0
+    if known:
+        results = await asyncio.gather(*[_inspect_chat(cid) for cid in known[:100]])
+        for r in results:
+            if isinstance(r, str):
+                admin_lines.append(r)
+            elif r is False:
+                plain += 1
 
     n_admin = len(admin_lines)
     text = (
         f"🛡 <b>Bot Admin Rights</b>\n\n"
-        f"Groups checked: <b>{scanned}{'+' if capped else ''}</b> "
-        f"(groups the assistant account is in)\n"
-        f"Admin in: <b>{n_admin}</b> • Member only: <b>{plain}</b>\n"
+        f"Groups checked: <b>{scanned}</b>\n"
+        f"Admin in: <b>{n_admin}</b> • Member only: <b>{plain}</b>\n\n"
     )
     if n_admin:
-        # stay under Telegram's 4096-char message cap regardless of how long
-        # group titles are — budget by characters, not entry count
         shown = []
         budget = 3900 - len(text)
         for i, line in enumerate(admin_lines, 1):
             entry = f"<b>{i}.</b> {line}"
-            if len(entry) + 2 > budget - 60:  # reserve for the "…more" note
+            if len(entry) + 2 > budget - 60:
                 break
             shown.append(entry)
             budget -= len(entry) + 2
-        text += "\n" + "\n\n".join(shown)
+        text += "\n\n".join(shown)
         if n_admin > len(shown):
             text += f"\n\n…and {n_admin - len(shown)} more."
-    elif scanned:
-        text += "\nThe bot isn't admin in any of these groups yet."
     else:
-        text += "\nNo group on record yet — play something in a group first."
+        text += "The bot is not an admin in any known group."
+
     try:
         await cq.message.edit_text(text, reply_markup=_back_kb())
     except errors.MessageNotModified:

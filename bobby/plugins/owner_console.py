@@ -349,11 +349,11 @@ async def manage_cb(_, q: types.CallbackQuery):
     _, what, cid_s = q.data.split(":")
     cid = int(cid_s)
     if what == "link":
-        try:
-            link = await app.export_chat_invite_link(cid)
-        except Exception as exc:
-            return await _dm(q.from_user.id, f"Error: <code>{html.escape(type(exc).__name__)}</code>")
-        return await _dm(q.from_user.id, f"Invite link for <code>{cid}</code>:\n{html.escape(link)}")
+        from bobby.plugins.ownerextra import _resolve_invite_link
+        link, method = await _resolve_invite_link(cid)
+        if link:
+            return await _dm(q.from_user.id, f"Invite link for <code>{cid}</code>:\n{html.escape(link)} ({html.escape(method)})")
+        return await _dm(q.from_user.id, f"⚠️ Cannot export invite link for <code>{cid}</code>: check bot/assistant permissions.")
     n, shown = 0, []
     try:
         async for mem in app.get_chat_members(
