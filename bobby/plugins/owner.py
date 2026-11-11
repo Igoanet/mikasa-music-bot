@@ -190,15 +190,30 @@ _GROUP_PERMS = [
 _assistant_group_cache: list = []
 _assistant_group_cache_ts: float = 0.0
 
-async def _assistant_group_ids() -> list:
-    """Every group id known from the database (chats, assistant, auth, lang) and assistant dialogs."""
-    global _assistant_group_cache, _assistant_group_cache_ts
-    now = time.monotonic()
-    if _assistant_group_cache and (now - _assistant_group_cache_ts < 30.0):
-        return _assistant_group_cache
 
-    ids = set()
-    # 1. Pull all group IDs recorded across all JSON tables in db._data
+def _collect_persisted_group_ids() -> set[int]:
+    """Collect every candidate group id stored in vc_monitor.db, group_autodel.db, and db.json."""
+    cids = set()
+    for db_name in ("vc_monitor.db", "group_autodel.db"):
+        db_path = Path("data") / db_name
+        if db_path.exists():
+            try:
+                import sqlite3
+                conn = sqlite3.connect(str(db_path), timeout=3.0)
+                tables = [r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
+                for t in tables:
+                    try:
+                        rows = conn.execute(f"SELECT DISTINCT chat_id FROM {t}").fetchall()
+                        for r in rows:
+                            cid = int(r[0])
+                            if cid < 0:
+                                cids.add(cid)
+                    except Exception:
+                        pass
+                conn.close()
+            except Exception:
+                pass
+
     try:
         data = getattr(db, "_data", None) or {}
         for category in ("assistant", "chats", "auth", "lang"):
@@ -206,13 +221,25 @@ async def _assistant_group_ids() -> list:
                 try:
                     cid = int(k)
                     if cid < 0:
-                        ids.add(cid)
+                        cids.add(cid)
                 except Exception:
                     pass
     except Exception:
         pass
 
-    # 2. Assistant dialog groups
+    return cids
+
+
+async def _assistant_group_ids() -> list:
+    """Every group id known from vc_monitor.db, db.json, and assistant dialogs."""
+    global _assistant_group_cache, _assistant_group_cache_ts
+    now = time.monotonic()
+    if _assistant_group_cache and (now - _assistant_group_cache_ts < 30.0):
+        return _assistant_group_cache
+
+    ids = _collect_persisted_group_ids()
+
+    # Also check assistant dialogs
     try:
         if getattr(userbot, "clients", None):
             for ub in userbot.clients:
@@ -246,7 +273,7 @@ async def cb_own_groups(_, cq: CallbackQuery):
     known = await _assistant_group_ids()
     scanned = len(known)
     bot_id = app.me.id if getattr(app, "me", None) else (await app.get_me()).id
-    sem = asyncio.Semaphore(10)
+    sem = asyncio.Semaphore(12)
 
     async def _inspect_chat(chat_id: int):
         async with sem:

@@ -408,35 +408,22 @@ async def _gc_group_ids(force_refresh: bool = False) -> list[int]:
 
     try:
         import bobby.plugins.owner as _ow
-        candidate_ids = set(await _ow._assistant_group_ids())
+        candidate_ids = set(_ow._collect_persisted_group_ids())
+        candidate_ids.update(await _ow._assistant_group_ids())
     except Exception:
         candidate_ids = set()
 
-    # Always ensure every JSON category in db._data is checked
-    try:
-        data = getattr(db, "_data", None) or {}
-        for category in ("assistant", "chats", "auth", "lang"):
-            for k in (data.get(category) or {}).keys():
-                try:
-                    cid = int(k)
-                    if cid < 0:
-                        candidate_ids.add(cid)
-                except Exception:
-                    pass
-    except Exception:
-        pass
-
     bot_id = app.me.id if getattr(app, "me", None) else (await app.get_me()).id
-    sem = asyncio.Semaphore(10)
+    sem = asyncio.Semaphore(12)
 
     async def _check_admin(cid: int):
         async with sem:
             try:
-                m = await asyncio.wait_for(app.get_chat_member(cid, bot_id), timeout=4.0)
+                m = await asyncio.wait_for(app.get_chat_member(cid, bot_id), timeout=3.5)
                 if m.status in (enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER):
                     if cid not in _chat_title_cache or str(_chat_title_cache[cid]).startswith("-100"):
                         try:
-                            chat = await asyncio.wait_for(app.get_chat(cid), timeout=3.0)
+                            chat = await asyncio.wait_for(app.get_chat(cid), timeout=2.5)
                             _chat_title_cache[cid] = chat.title or str(cid)
                         except Exception:
                             _chat_title_cache[cid] = str(cid)
@@ -449,7 +436,7 @@ async def _gc_group_ids(force_refresh: bool = False) -> list[int]:
             except errors.FloodWait as fw:
                 await asyncio.sleep(min(fw.value, 4))
                 try:
-                    m = await asyncio.wait_for(app.get_chat_member(cid, bot_id), timeout=4.0)
+                    m = await asyncio.wait_for(app.get_chat_member(cid, bot_id), timeout=3.5)
                     if m.status in (enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER):
                         return cid
                 except Exception:
